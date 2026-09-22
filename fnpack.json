@@ -80,7 +80,7 @@
       "categories": [
         "影音娱乐"
       ],
-      "icon_url": "https://opengraph.githubassets.com/1/javycoder/fnos_music_ext",
+      "icon_url": "assets/icons/fnapp.png",
       "run_as": "root",
       "install_type": "",
       "is_docker": true,
@@ -111,7 +111,7 @@
       "categories": [
         "影音娱乐"
       ],
-      "icon_url": "https://opengraph.githubassets.com/1/ai2ku/fnos-music-ext-kugou-fpk",
+      "icon_url": "assets/icons/fnapp.png",
       "run_as": "root",
       "install_type": "",
       "is_docker": false,

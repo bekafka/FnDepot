@@ -43,7 +43,8 @@ https://github.com/bekafka/FnDepot
 - **`中转站监控`** 作者只发布了 **x86 包**，arm64 设备上不会显示也无法安装；其 README 写的最新版是 v2.0.5，
   但 GitHub 上实际只发布到 v2.0.0，本源只收录真实发布过的版本。
 - **`veenyi/fnos-hermes-agent` 未收录**：该仓库的 release 里没有任何 `.fpk` 资产，没有可安装的东西。
-- **图标**：`fnnas.hosts`、`hermes-agent` 用作者仓库内的真实 ICON；两个音乐扩展暂用 GitHub 仓库卡片占位，后续可替换。
+- **图标**：`fnnas.hosts`、`hermes-agent` 引用作者仓库内的真实 ICON；两个音乐扩展没有图标，统一引用本源通用图标 `assets/icons/fnapp.png`。
+  **约定：应用没有图标时一律用 `assets/icons/fnapp.png`，不要删这个文件，也不要用外部占位图。**
 
 > 这些条目**没有下载整包验证**：`size` 取自下载地址的 `content-length`，`sha256` 取自 GitHub Release 页面公布的官方 digest。
 > 客户端安装时仍会按此强校验，若上游重传过资产则会被拦截。
@@ -53,7 +54,8 @@ https://github.com/bekafka/FnDepot
 ```text
 FnDepot/
 ├── fnpack.json                     # V2 索引（schema_version = "2"）
-├── assets/icons/{appname}.png      # 图标（取自安装包内 ICON_256.PNG）
+├── assets/icons/{appname}.png      # 各应用图标（取自安装包内 ICON_256.PNG 或作者仓库）
+├── assets/icons/fnapp.png          # 通用图标：应用没有自己的图标时统一引用它（勿删）
 ├── tools/new-entry.py              # 从 Release 资产反推条目
 └── README.md
 ```
@@ -130,6 +132,7 @@ python3 tools/new-entry.py <owner/repo> <tag> <asset文件名> -c 系统工具 -
 - **安装空间**默认 `""`＝存储空间；只有会写 `/boot`、注册 systemd 服务的应用才加 `--install-type root`
   （可参考作者自带 FnDepot 源里的写法交叉验证）。
 - 更新已有应用时，脚本会保留手工维护的 `icon_url` / `maintainer_url` / `bug_report_url` 与安装空间设置。
+- **图标**：优先用作者仓库/安装包内的真实图标（256×256 PNG 最佳，参考飞牛官方要求）；找不到就填 `assets/icons/fnapp.png`。
 
 ## 发布前校验
 
