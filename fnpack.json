@@ -1,0 +1,43 @@
+{
+  "schema_version": "2",
+  "source_info": {
+    "name": "bekafka 应用源",
+    "author": "bekafka",
+    "homepage": "https://github.com/bekafka/FnDepot",
+    "description": "索引第三方开发者在 GitHub Releases 官方发布的 fnOS 应用。本源只做索引与元数据整理，不重新打包、不修改安装包；FPK 直接来自原作者发布地址。"
+  },
+  "apps": {
+    "onekey-overclock": {
+      "display_name": "一键超频",
+      "desc": "一键超频 —— A73 大核四档频率管理器，快速安全地压榨性能。<br><br>1.四档一键切换：<b>乖巧</b>(2.2GHz) · <b>野兽</b>(2.4GHz) · <b>狂暴</b>(2.5GHz)，加载后<b>实时切换、无需反复重启</b>，并实时读取频率 / 电压 / 温度；<b>焚天</b>(2.64GHz) 为极限高温档，专为<b>弃用原装盒、自改带 CPU 散热风扇机箱</b>而设，原装盒散热不足<b>强烈不建议</b>使用。<br>2.烧机 + 曲线：内置大核满载烧机，实时温度 / 频率曲线验证稳定性与降频。<br>3.自愈回滚：任意未授权重启 / 宕机 / 断电后再开机自动回到默认频率，杜绝变砖。<br>4.一键恢复：随时回滚至出厂频率。硬件看门狗为可选\"保险\"。<br><br><b>⚠ 供电提醒（12V/3A≈36W 电源）：</b>插满 <b>3 块机械盘</b>且同时高速读写，或组 <b>RAID 0/1/5</b> 阵列时，总功耗趋近/超 36W 上限易致 12V 跌压、CPU 掉压不稳——此类高功耗场景建议降至「野兽」档或改用 SSD。<br><br><b>⚠ 散热提醒：</b>「狂暴」「焚天」档高频满载发热明显上升，请务必确保<b>良好风道与主动散热</b>后再使用；核心温度逼近 <b>85°C 温度墙</b>会自动降频保护，长期高温也会加速硬件老化。「焚天」档仅适用于自改散热机箱。<br><br>（本源收录作者的 <b>Python 精简版</b>；若你的环境需要自带 aarch64 node 运行时的版本，请到作者 Release 页下载。）",
+      "platform": [
+        "arm"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/icons/onekey-overclock.png",
+      "run_as": "root",
+      "install_type": "root",
+      "is_docker": false,
+      "service_port": "8090",
+      "maintainer": "很多问题的小明同学",
+      "maintainer_url": "https://github.com/gulugulupao/onekey-overclock",
+      "bug_report_url": "https://github.com/gulugulupao/onekey-overclock/issues",
+      "releases": {
+        "1.2.0": {
+          "changelog": "v1.2.0 DTB 动态适配：不再写死单一 DTB 名，改为从当前 /boot/fnEnv.txt 的 fdtfile= 动态解析基础 DTB 与 -oc 派生，自动适配 OES(Amlogic A311D/G12B) 不同主板版本（含 -00050000 后缀等），统一用于生成 / 自愈回滚 / 恢复出厂 / 卸载清理，杜绝基准 DTB 选错导致超频不生效或进不去系统。",
+          "updated_at": "2026-09-21T12:49:49Z",
+          "os_min_version": "0.9.25",
+          "packages": {
+            "arm": {
+              "download_url": "https://github.com/gulugulupao/onekey-overclock/releases/download/v1.2.0/OneKey-OC-v1.2.0-lite.fpk",
+              "sha256": "ffe856d8308edd6f04e6d90f1449bc912535244fcc1c0b91e029d8ed2d12358e",
+              "size": 261396
+            }
+          }
+        }
+      }
+    }
+  }
+}
