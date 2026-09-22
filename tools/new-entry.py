@@ -18,6 +18,10 @@
   --install-type   安装空间：""=存储空间（默认），root=系统空间（写 /boot、注册 systemd 的应用）。
   --write          直接并入仓库根目录 fnpack.json（会先写 fnpack.json.bak 备份）。
   --local <FPK>    用本地已下载的包，跳过下载（大包或弱网时先用 curl -C - 续传再传进来）。
+  --light          不下整包：元数据读仓库里提交的 manifest/config/privilege，size/sha256 读 GitHub
+                   官方 digest。前提是仓库版 manifest 的 version 与 release tag 一致，否则报错要求改走下载。
+                   走 API 会消耗配额（未认证 60 次/小时，设 GITHUB_TOKEN 可到 5000），结果缓存于 tools/.cache/。
+  --refresh        忽略 API 缓存强制重查（上游刚发新版时用）。
   --changelog-max  changelog 截断长度，默认 400 字符，0 表示不截断。
 
 下载会校验 Content-Length，截断即重试，不会把残缺包装进索引。
@@ -71,16 +75,22 @@ def download(url, dest, attempts=3):
     sys.exit(f"下载失败，已放弃：{last}")
 
 
+def parse_manifest_text(raw):
+    """manifest 是 'key = value' 文本。"""
+    fields = {}
+    for line in raw.splitlines():
+        if "=" not in line or line.lstrip().startswith("#"):
+            continue
+        key, _, value = line.partition("=")
+        fields[key.strip()] = value.strip()
+    return fields
+
+
 def read_manifest(fp_path):
     """fpk 是 tar.gz：manifest 是 'key = value' 文本，config/privilege 是 JSON。"""
     with tarfile.open(fp_path, "r:gz") as tar:
         raw = tar.extractfile(tar.getmember("manifest")).read().decode("utf-8", "replace")
-        fields = {}
-        for line in raw.splitlines():
-            if "=" not in line or line.lstrip().startswith("#"):
-                continue
-            key, _, value = line.partition("=")
-            fields[key.strip()] = value.strip()
+        fields = parse_manifest_text(raw)
         # 运行身份只写在 config/privilege 里，manifest 查不到
         try:
             priv = json.loads(tar.extractfile(tar.getmember("config/privilege")).read().decode("utf-8"))
@@ -88,6 +98,83 @@ def read_manifest(fp_path):
         except (KeyError, ValueError):
             fields["_run_as"] = ""
     return fields
+
+
+def fetch_text(url, timeout=120):
+    req = urllib.request.Request(url, headers={"User-Agent": "fndepot-source-builder"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode("utf-8", "replace")
+
+
+CACHE_DIR = os.path.join(ROOT, "tools", ".cache")
+
+
+def gh_json(url, cache_key, refresh=False):
+    """GitHub API 未认证只有 60 次/小时，故带 token 支持 + 本地缓存，避免反复烧配额。"""
+    cache_path = os.path.join(CACHE_DIR, cache_key + ".json")
+    if not refresh and os.path.exists(cache_path):
+        with open(cache_path, encoding="utf-8") as fh:
+            return json.load(fh)
+
+    headers = {"User-Agent": "fndepot-source-builder", "Accept": "application/vnd.github+json"}
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            data = json.loads(resp.read().decode("utf-8", "replace"))
+    except urllib.error.HTTPError as exc:
+        if exc.code == 403:
+            sys.exit("错误：GitHub API 配额用尽（未认证 60 次/小时）。\n"
+                     "  解法一：设置 GITHUB_TOKEN（只读公开仓库即可）→ 5000 次/小时；\n"
+                     "  解法二：等配额重置，或改用常规下载模式（下载路径完全不耗 API 配额）。")
+        raise
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    with open(cache_path, "w", encoding="utf-8") as fh:
+        json.dump(data, fh)
+    return data
+
+
+def api_asset_digest(repo, tag, asset, refresh=False):
+    """GitHub 在上传时就算好 sha256 digest，无需下载整包即可拿到哈希与大小。"""
+    data = gh_json(f"https://api.github.com/repos/{repo}/releases/tags/{tag}",
+                   f"release__{repo.replace('/', '__')}__{tag}", refresh)
+    for item in data.get("assets", []):
+        if item.get("name") == asset:
+            digest = item.get("digest") or ""
+            sha = digest.split(":", 1)[1] if digest.startswith("sha256:") else None
+            return item.get("size"), sha, data.get("published_at")
+    names = ", ".join(a.get("name", "?") for a in data.get("assets", [])) or "（无资产）"
+    sys.exit(f"错误：release {tag} 里没有资产 {asset}；实际有：{names}")
+
+
+def light_metadata(repo, tag, refresh=False):
+    """不下整包：从仓库已提交的 manifest / config/privilege 读元数据（几 KB）。
+    必须要求仓库版 manifest 的 version 与 release tag 一致，否则视为版本错位、拒绝使用。"""
+    norm = tag.lstrip("vV")
+    tree = gh_json(f"https://api.github.com/repos/{repo}/git/trees/HEAD?recursive=1",
+                   f"tree__{repo.replace('/', '__')}", refresh)
+    blobs = {t["path"] for t in tree.get("tree", []) if t.get("type") == "blob"}
+    candidates = sorted(p for p in blobs if p == "manifest" or p.endswith("/manifest"))
+    if not candidates:
+        sys.exit(f"错误：{repo} 仓库里没有提交 manifest，请改用常规下载模式")
+
+    for path in candidates:
+        raw = fetch_text(f"https://raw.githubusercontent.com/{repo}/HEAD/{path}")
+        fields = parse_manifest_text(raw)
+        if (fields.get("version") or "").lstrip("vV") == norm:
+            base = path.rsplit("/", 1)[0] if "/" in path else ""
+            priv_path = f"{base}/config/privilege" if base else "config/privilege"
+            if priv_path in blobs:
+                priv = json.loads(fetch_text(f"https://raw.githubusercontent.com/{repo}/HEAD/{priv_path}"))
+                fields["_run_as"] = (priv.get("defaults") or {}).get("run-as", "")
+            print(f"轻量模式：仓库版 {path} 的 version={fields.get('version')} 与 tag {tag} 一致", file=sys.stderr)
+            return fields
+
+    found = ", ".join(candidates)
+    sys.exit(f"错误：{repo} 仓库里的 manifest（{found}）版本与 tag {tag} 不一致；"
+             f"仓库文件可能落后于发布，请改用常规下载模式")
 
 
 def strip_html(text):
@@ -177,6 +264,10 @@ def main():
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--local", metavar="FPK路径",
                     help="用本地已下载的包（跳过下载；大包或弱网时先用 curl -C - 续传）")
+    ap.add_argument("--light", action="store_true",
+                    help="不下整包：元数据取自仓库已提交的 manifest/config/privilege，"
+                         "size/sha256 取自 GitHub 官方 digest（要求仓库版版本与 tag 一致）")
+    ap.add_argument("--refresh", action="store_true", help="忽略本地 API 缓存，强制重新查询 GitHub")
     ap.add_argument("--changelog-max", type=int, default=400)
     args = ap.parse_args()
 
@@ -190,7 +281,15 @@ def main():
     def measure(fp_path):
         return os.path.getsize(fp_path), hashlib.sha256(open(fp_path, "rb").read()).hexdigest()
 
-    if args.local:
+    published_at = None
+    if args.light:
+        fields = light_metadata(args.repo, args.tag, args.refresh)
+        size, sha256, published_at = api_asset_digest(args.repo, args.tag, args.asset, args.refresh)
+        if not sha256:
+            sys.exit("错误：该资产没有 sha256 digest（可能是较早上传的），请改用常规下载模式")
+        print(f"轻量模式：size 与 sha256 取自 GitHub 官方 digest（{size}B / {sha256[:12]}…），未下载整包",
+              file=sys.stderr)
+    elif args.local:
         fp_path = args.local
         if not os.path.isfile(fp_path):
             sys.exit(f"错误：本地包不存在 {fp_path}")
@@ -207,6 +306,8 @@ def main():
 
     appname, entry = build_entry(fields, sha256, size, url, categories, args.changelog_max, args.install_type)
     version = list(entry["releases"])[0]
+    if published_at:
+        entry["releases"][version]["updated_at"] = published_at
     print(f"appname={appname} version={version} arch={entry['platform'][0]} "
           f"run_as={entry['run_as']} size={size}B sha256={sha256[:12]}…", file=sys.stderr)
 
