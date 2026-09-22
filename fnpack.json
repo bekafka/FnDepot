@@ -70,6 +70,131 @@
       "maintainer_url": "https://github.com/sddvcm/relay-monitor",
       "service_port": "8735",
       "bug_report_url": "https://github.com/sddvcm/relay-monitor/issues"
+    },
+    "fnmusic-ext": {
+      "display_name": "fnmusic-ext 飞牛音乐扩展代理",
+      "desc": "fnmusic-ext 是专为 fnOS 自带音乐应用（trim.music）打造的无侵入增强扩展：通过接管官方后端的 Unix Socket 通信入口，在不修改官方程序、nginx 配置与数据库的前提下，让原生飞牛音乐获得在线音乐能力（musicbox / musicdl / lxmusic 三音源单选、歌词封面自动补齐、边听边存、推荐体系与多用户独立收藏），一条命令即可还原官方直连。音源与 WebUI 以 Docker 单容器运行，未安装 Docker 会直接报错退出。",
+      "platform": [
+        "all"
+      ],
+      "categories": [
+        "影音娱乐"
+      ],
+      "icon_url": "https://opengraph.githubassets.com/1/javycoder/fnos_music_ext",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": true,
+      "service_port": "8774",
+      "maintainer": "javycoder",
+      "maintainer_url": "https://github.com/javycoder/fnos_music_ext",
+      "bug_report_url": "https://github.com/javycoder/fnos_music_ext/issues",
+      "releases": {
+        "2.2.6": {
+          "packages": {
+            "all": {
+              "download_url": "https://github.com/javycoder/fnos_music_ext/releases/download/v2.2.6/fnmusic-ext-2.2.6.fpk",
+              "sha256": "efb68c29c88a3ca460648b72aba259fa67223fec7aa1f86820291227e8abf7a1",
+              "size": 2553061
+            }
+          },
+          "changelog": "修复 飞牛桌面里的管理窗口一片空白（重要）：桌面页面是 HTTPS，管理入口却把 http://主机:8774 嵌进 iframe，浏览器丢弃混合内容，窗口只有标题栏。改为走桌面网关的同源路径 /app/fnmusic-ext/，由本机 socket 转到 WebUI。直连 8774 仍然可用。 应用中心安装在启用扩展时静默失败（重要）：extend.sh 用 read 重读 VERSION。该文件没有末尾换行时 read 返回 1，set -e 在打出任何日志前退出。安装脚本已经印完成功提示，弹窗却只剩一份即将被回滚删掉的日志路径。改为 head 读取。 安装/升级日志在回滚后仍保留：过程输出追加到 /var/log/apps/fnmusic-ext-install.log（写不了则落到 /tmp/fnmusic-ext-install.log）。失败弹窗带上该路径；没有 [ERROR]",
+          "updated_at": "2026-09-22T03:12:37Z"
+        }
+      }
+    },
+    "fnmusic-ext-kugou": {
+      "display_name": "飞牛音乐酷狗扩展 FPK",
+      "desc": "为飞牛音乐（trim_music）接入自建 KuGouMusicApi 作为外部音源的反向代理扩展，一键安装 + 图形化配置向导。注意：本扩展不含音源，需先自行部署 KuGouMusicApi 实例，否则装上也无法工作。",
+      "platform": [
+        "all"
+      ],
+      "categories": [
+        "影音娱乐"
+      ],
+      "icon_url": "https://opengraph.githubassets.com/1/ai2ku/fnos-music-ext-kugou-fpk",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "service_port": "",
+      "maintainer": "ai2ku",
+      "maintainer_url": "https://github.com/ai2ku/fnos-music-ext-kugou-fpk",
+      "bug_report_url": "https://github.com/ai2ku/fnos-music-ext-kugou-fpk/issues",
+      "releases": {
+        "2.1.0": {
+          "packages": {
+            "all": {
+              "download_url": "https://github.com/ai2ku/fnos-music-ext-kugou-fpk/releases/download/v2.1.0/fnmusic_ext_kugou-2.1.0.fpk",
+              "sha256": "5f524e245c6b3f24a790c4deb20f8cf3e938fe98d6c5437a17c8d7276bdc9e54",
+              "size": 595777
+            }
+          },
+          "changelog": "飞牛音乐酷狗扩展 v2.1.0 优化音质匹配等。 本次变更 优化音质匹配等 保持零侵入 Unix Socket 接管架构，不修改飞牛官方 nginx、二进制或数据库 安装 下载 fnmusic_ext_kugou-2.1.0.fpk 飞牛 NAS → 应用中心 → 本地安装，选择该 .fpk 文件 按图形化向导填入 KuGouMusicApi 地址与凭证 依赖：trim.music:python312（os ≥ 1.2.0，x86） 产物校验和：SHA256: 5f524e245c6b3f24a790c4deb20f8cf3e938fe98d6c5437a17c8d7276bdc9e54 包内 manifest checksum：0dcbf292a14c73d935e76e3cfb6cdf56",
+          "updated_at": "2026-09-15T02:48:23Z"
+        }
+      }
+    },
+    "fnnas.hosts": {
+      "display_name": "Hosts管理器",
+      "desc": "飞牛NAS hosts文件管理工具，支持查看、新增、修改、删除 /etc/hosts 记录，修改后实时生效。 由豪子制作",
+      "platform": [
+        "all"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "https://raw.githubusercontent.com/Contribuv/fn-hosts/HEAD/ICON.PNG",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "service_port": "5080",
+      "maintainer": "Contribuv",
+      "maintainer_url": "https://github.com/Contribuv/fn-hosts",
+      "bug_report_url": "https://github.com/Contribuv/fn-hosts/issues",
+      "releases": {
+        "1.0.61": {
+          "packages": {
+            "all": {
+              "download_url": "https://github.com/Contribuv/fn-hosts/releases/download/v1.0.61/fnnas.hosts.fpk",
+              "sha256": "864b6b7e1d29838cfd02f3c8f9046f4049f4b1be83b3f6c9d0b6dde4d1a83830",
+              "size": 66070
+            }
+          },
+          "changelog": "v1.0.61 增加系统保留 IP 保护机制 禁止修改和删除以下系统默认记录：127.0.0.1、127.0.1.1、::1、ff02::1、ff02::2 前端表格对受保护记录隐藏编辑/删除按钮，显示\"系统保留\" 后端接口增加受保护 IP 校验，返回 403 拒绝",
+          "updated_at": "2026-06-01T11:59:40Z",
+          "os_min_version": "0.9.27"
+        }
+      }
+    },
+    "hermes-agent": {
+      "display_name": "Hermes Agent",
+      "desc": "Hermes Agent 开源 AI Agent，支持多平台消息网关、内置学习循环、技能系统和 MCP 扩展。通过飞牛应用中心安装，即开即用。 核心能力： • 多模型支持：OpenAI、Anthropic、Kimi、MiniMax 等 • 消息平台：微信ClawBot、QQ Bot、飞书、WhatsApp、Telegram 等 • 定时任务：自然语言描述的自动化调度 • 持久记忆：跨会话学习和技能进化 • MCP 扩展：连接 GitHub 等外部工具 免责声明： 本应用仅作为服务集成工具，不对 Hermes Agent 软件本身的安全性、稳定性作任何保证。使用过程中产生的所有风险由用户自行承担。",
+      "platform": [
+        "all"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "https://raw.githubusercontent.com/veenyi/fnos-hermes-agent-web/HEAD/fpk/ICON.PNG",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "service_port": "",
+      "maintainer": "veenyi",
+      "maintainer_url": "https://github.com/veenyi/fnos-hermes-agent-web",
+      "bug_report_url": "https://github.com/veenyi/fnos-hermes-agent-web/issues",
+      "releases": {
+        "0.21.3.1": {
+          "packages": {
+            "all": {
+              "download_url": "https://github.com/veenyi/fnos-hermes-agent-web/releases/download/v0.21.3.1/fnos-hermes-agent_v0.21.3.1.fpk",
+              "sha256": "4cccde09e2517a13e1e03deebf6e87b00dd19b84685c4e236de802b3fbab242d",
+              "size": 96924413
+            }
+          },
+          "changelog": "fnOS Hermes Agent web line 0.21.3.1（上游 v2026.9.14 / 官方 0.21.3 全量同步） 上游 0.21.3 亮点： 会话状态可靠性继续加固（hermes_state_lockguard / rewind / ids 独立模块，网关迁移守卫 gateway_migrate） 网关多路复用与平台共享入口（shared_ingress / access_policy）、profile 频道管理 cron 不可达重试、env_settings；新 optional-skills（scrollcraft / system-atlas / dream-loop / pr-lens 等） 桌面端 IME 输入、时间线、会话导出、rename-profile 等大量修复 web 线改动： 官方 0.21.3 前端重建（287 JS 语法零失败）+ web-s",
+          "updated_at": "2026-09-17T17:35:59Z"
+        }
+      }
     }
   }
 }

@@ -25,10 +25,28 @@ https://github.com/bekafka/FnDepot
 | --- | --- | --- | --- | --- | --- |
 | 一键超频 | `onekey-overclock` | 1.2.0 | arm | 很多问题的小明同学 | [gulugulupao/onekey-overclock](https://github.com/gulugulupao/onekey-overclock/releases) |
 | 中转站监控 | `relay-monitor` | 2.0.0 | x86 | sddvcm | [sddvcm/relay-monitor](https://github.com/sddvcm/relay-monitor/releases) |
+| fnMusic 扩展 | `fnmusic-ext` | 2.2.6 | all | javycoder | [javycoder/fnos_music_ext](https://github.com/javycoder/fnos_music_ext/releases) |
+| 飞牛音乐酷狗扩展 | `fnmusic-ext-kugou` | 2.1.0 | all | ai2ku | [ai2ku/fnos-music-ext-kugou-fpk](https://github.com/ai2ku/fnos-music-ext-kugou-fpk/releases) |
+| Hosts 管理器 | `fnnas.hosts` | 1.0.61 | all | 豪子 / Contribuv | [Contribuv/fn-hosts](https://github.com/Contribuv/fn-hosts/releases) |
+| Hermes Agent | `hermes-agent` | 0.21.3.1 | all | veenyi | [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web/releases) |
 
-**中转站监控**作者只发布了 **x86 包**（manifest `platform = x86`，包内自带 x86 Python 解释器），
-**arm64 设备上不会显示也无法安装**；其 README 写的最新版是 v2.0.5，但 GitHub 上实际只发布到 v2.0.0，
-本源只收录真实发布过的版本。
+各条目的可信度不一样，如实标注：
+
+- **读到作者 manifest 的**（`fnnas.hosts`、`hermes-agent`）：`appname` / `platform` / `service_port` / `run_as` 是作者自己声明的真值。
+  `hermes-agent` 用的是 [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web)（FPK 发布在这里），
+  其仓库内 manifest 版本号（0.21.0.1）落后于 tag（0.21.3.1），因此 `platform`/图标按仓库文件取，版本按 tag 取。
+- **按 README 填的**（`fnmusic-ext`、`fnmusic-ext-kugou`）：这两个仓库没提交 manifest，
+  `appname` 由资产文件名推导，`platform` 无架构声明故填 `all`，`desc`/`service_port`/`run_as` 来自 README。
+  若装不上或显示异常，优先怀疑这几项。
+- **`fnmusic-ext` 是 Docker 应用**（FPK 会起容器，未装 Docker 直接报错退出），已标 `is_docker: true`。
+- **`fnmusic-ext-kugou` 本身不含音源**，需先自行部署 KuGouMusicApi 实例才能工作。
+- **`中转站监控`** 作者只发布了 **x86 包**，arm64 设备上不会显示也无法安装；其 README 写的最新版是 v2.0.5，
+  但 GitHub 上实际只发布到 v2.0.0，本源只收录真实发布过的版本。
+- **`veenyi/fnos-hermes-agent` 未收录**：该仓库的 release 里没有任何 `.fpk` 资产，没有可安装的东西。
+- **图标**：`fnnas.hosts`、`hermes-agent` 用作者仓库内的真实 ICON；两个音乐扩展暂用 GitHub 仓库卡片占位，后续可替换。
+
+> 这些条目**没有下载整包验证**：`size` 取自下载地址的 `content-length`，`sha256` 取自 GitHub Release 页面公布的官方 digest。
+> 客户端安装时仍会按此强校验，若上游重传过资产则会被拦截。
 
 ## 目录
 
