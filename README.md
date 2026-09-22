@@ -23,6 +23,13 @@ https://github.com/bekafka/FnDepot
 | 应用 | 应用键名 | 版本 | 架构 | 作者 | 安装包来源 |
 | --- | --- | --- | --- | --- | --- |
 | 一键超频 | `onekey-overclock` | 1.2.0 | arm | 很多问题的小明同学 | [gulugulupao/onekey-overclock](https://github.com/gulugulupao/onekey-overclock/releases) |
+| 飞牛监控 | `fnmonitor` | 2.15.0 | x86 + arm | Misite齊 | [MisiteQ/fnmonitor](https://github.com/MisiteQ/fnmonitor/releases) |
+| 中转站监控 | `relay-monitor` | 2.0.0 | x86 | sddvcm | [sddvcm/relay-monitor](https://github.com/sddvcm/relay-monitor/releases) |
+
+几点如实说明：
+
+- **飞牛监控**的作者另有自制源 [MisiteQ/FnDepot](https://github.com/MisiteQ/FnDepot)；若你已添加该源，同一应用会在客户端出现两个来源，按需保留其一即可。
+- **中转站监控**作者只发布了 **x86 包**（manifest `platform = x86`，包内自带 x86 Python 解释器），**arm64 设备上不会显示也无法安装**；其 README 写的最新版是 v2.0.5，但 GitHub 上实际只发布到 v2.0.0，本源只收录真实发布过的版本。
 
 ## 目录
 
@@ -50,11 +57,23 @@ python3 tools/new-entry.py <owner/repo> <tag> <asset文件名> -c 系统工具 -
 ```
 
 脚本会下载 FPK、解开 `manifest` 与 `config/privilege`，输出 `appname`、`version`、`platform`、
-`run_as`、`sha256`、`size` 等字段。之后还需人工补两件事：
+`run_as`、`sha256`、`size` 等字段；下载会校验 `Content-Length`，截断自动重试，不会把残缺包写进索引。
+之后还需人工补两件事：
 
-1. 把图标放进 `assets/icons/{appname}.png`（可从 FPK 内 `ICON_256.PNG` 提取）：
+1. 把图标放进 `assets/icons/{appname}.png`（可从 FPK 内 `ICON_256.PNG` 提取，或直接下载作者 Release 里的 `ICON_256.PNG`）：
    `tar xzOf pkg.fpk ICON_256.PNG > assets/icons/{appname}.png`
 2. 补 `maintainer_url`、`bug_report_url`（指向作者仓库与 issue），必要时精简 `desc` / `changelog`。
+
+几个约定：
+
+- **双架构应用**（如飞牛监控）对每个架构各跑一次 `--write`，同版本的另一个架构会并进 `packages`，`platform` 自动取并集。
+- **安装空间**默认 `""`＝存储空间；只有会写 `/boot`、注册 systemd 服务的应用才加 `--install-type root`（可参考作者自带 FnDepot 源里的写法交叉验证）。
+- **大包 / 弱网**：先用 `curl -C - --retry 8` 续传下载，再喂给脚本，避免反复从头下：
+  ```bash
+  curl -fL -C - --retry 8 --retry-all-errors -o /tmp/pkg.fpk <下载地址>
+  python3 tools/new-entry.py <owner/repo> <tag> <asset文件名> --local /tmp/pkg.fpk --write
+  ```
+- 更新已有应用时，脚本会保留手工维护的 `icon_url` / `maintainer_url` / `bug_report_url` 与安装空间设置。
 
 ## 发布前校验
 

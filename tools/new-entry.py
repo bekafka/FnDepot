@@ -15,8 +15,13 @@
 
 选项:
   -c/--categories  固定分类，逗号分隔；多个时第一个作主分类。省略则用 系统工具。
+  --install-type   安装空间：""=存储空间（默认），root=系统空间（写 /boot、注册 systemd 的应用）。
   --write          直接并入仓库根目录 fnpack.json（会先写 fnpack.json.bak 备份）。
+  --local <FPK>    用本地已下载的包，跳过下载（大包或弱网时先用 curl -C - 续传再传进来）。
   --changelog-max  changelog 截断长度，默认 400 字符，0 表示不截断。
+
+下载会校验 Content-Length，截断即重试，不会把残缺包装进索引。
+同一应用重复采集时按版本合并：同版本不同架构并进 packages，发新版则替换旧版本节点。
 
 需要访问 GitHub：国内直连失败时先导出代理，例如
   export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890
@@ -30,6 +35,7 @@ import re
 import sys
 import tarfile
 import tempfile
+import time
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,14 +45,30 @@ VALID_CATEGORIES = [
 ]
 
 
-def download(url, dest):
-    req = urllib.request.Request(url, headers={"User-Agent": "fndepot-source-builder"})
-    with urllib.request.urlopen(req, timeout=300) as resp, open(dest, "wb") as fh:
-        while True:
-            chunk = resp.read(1 << 20)
-            if not chunk:
-                break
-            fh.write(chunk)
+def download(url, dest, attempts=3):
+    """下载并校验完整性——截断的包会算出错误 sha256，必须拦住。"""
+    last = None
+    for i in range(1, attempts + 1):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "fndepot-source-builder"})
+            with urllib.request.urlopen(req, timeout=600) as resp, open(dest, "wb") as fh:
+                raw_len = resp.headers.get("Content-Length")
+                expected = int(raw_len) if raw_len and raw_len.isdigit() else None
+                got = 0
+                while True:
+                    chunk = resp.read(1 << 20)
+                    if not chunk:
+                        break
+                    fh.write(chunk)
+                    got += len(chunk)
+            if expected is not None and got != expected:
+                raise IOError(f"下载不完整：收到 {got} 字节，Content-Length={expected}")
+            return got
+        except Exception as exc:  # noqa: BLE001 - 弱网下各种异常都值得重试
+            last = exc
+            print(f"下载失败（第 {i}/{attempts} 次）：{exc}", file=sys.stderr)
+            time.sleep(2)
+    sys.exit(f"下载失败，已放弃：{last}")
 
 
 def read_manifest(fp_path):
@@ -68,10 +90,28 @@ def read_manifest(fp_path):
     return fields
 
 
+def strip_html(text):
+    """changelog 纯文本化：客户端对 changelog 是否渲染 HTML 无明确规定，纯文本最稳。
+    容忍上游写残的实体（如缺分号的 &gt）。"""
+    entities = {"nbsp": " ", "gt": ">", "lt": "<", "quot": '"', "amp": "&", "#39": "'"}
+    text = re.sub(r"<br\s*/?>", "\n", text or "", flags=re.I)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = re.sub(r"&(#39|nbsp|gt|lt|quot|amp);?", lambda m: entities[m.group(1)], text)
+    return re.sub(r"[ \t]+", " ", text).strip()
+
+
 def truncate(text, limit):
     text = (text or "").strip()
     if limit and len(text) > limit:
-        return text[:limit].rstrip() + "…"
+        cut = text[:limit]
+        # 不要切在 HTML 实体或标签中间
+        amp = cut.rfind("&")
+        if amp != -1 and ";" not in cut[amp:]:
+            cut = cut[:amp]
+        lt = cut.rfind("<")
+        if lt != -1 and ">" not in cut[lt:]:
+            cut = cut[:lt]
+        return cut.rstrip() + "…"
     return text
 
 
@@ -119,7 +159,7 @@ def build_entry(fields, sha256, size, download_url, categories, changelog_max, i
 
     rel = entry["releases"][fields.get("version", "1.0.0")]
     if fields.get("changelog"):
-        rel["changelog"] = truncate(fields["changelog"], changelog_max)
+        rel["changelog"] = truncate(strip_html(fields["changelog"]), changelog_max)
     if fields.get("os_min_version") or fields.get("os_min_ver"):
         rel["os_min_version"] = fields.get("os_min_version") or fields.get("os_min_ver")
 
@@ -135,6 +175,8 @@ def main():
     ap.add_argument("--install-type", default="", choices=["", "root"],
                     help='安装空间：""=存储空间（默认），root=系统空间（写 /boot、注册 systemd 的应用选它）')
     ap.add_argument("--write", action="store_true")
+    ap.add_argument("--local", metavar="FPK路径",
+                    help="用本地已下载的包（跳过下载；大包或弱网时先用 curl -C - 续传）")
     ap.add_argument("--changelog-max", type=int, default=400)
     args = ap.parse_args()
 
@@ -144,14 +186,24 @@ def main():
         sys.exit(f"错误：分类 {bad} 不在固定分类表内：{'、'.join(VALID_CATEGORIES)}")
 
     url = f"https://github.com/{args.repo}/releases/download/{args.tag}/{args.asset}"
-    print(f"下载 {url}", file=sys.stderr)
 
-    with tempfile.TemporaryDirectory() as tmp:
-        fp_path = os.path.join(tmp, "pkg.fpk")
-        download(url, fp_path)
-        size = os.path.getsize(fp_path)
-        sha256 = hashlib.sha256(open(fp_path, "rb").read()).hexdigest()
+    def measure(fp_path):
+        return os.path.getsize(fp_path), hashlib.sha256(open(fp_path, "rb").read()).hexdigest()
+
+    if args.local:
+        fp_path = args.local
+        if not os.path.isfile(fp_path):
+            sys.exit(f"错误：本地包不存在 {fp_path}")
+        print(f"使用本地包 {fp_path}（下载地址仍记为 {url}）", file=sys.stderr)
+        size, sha256 = measure(fp_path)
         fields = read_manifest(fp_path)
+    else:
+        print(f"下载 {url}", file=sys.stderr)
+        with tempfile.TemporaryDirectory() as tmp:
+            fp_path = os.path.join(tmp, "pkg.fpk")
+            download(url, fp_path)
+            size, sha256 = measure(fp_path)
+            fields = read_manifest(fp_path)
 
     appname, entry = build_entry(fields, sha256, size, url, categories, args.changelog_max, args.install_type)
     version = list(entry["releases"])[0]
@@ -174,7 +226,32 @@ def main():
     else:
         index = {"schema_version": "2", "source_info": {"name": "FnDepot 源", "author": ""}, "apps": {}}
 
-    index.setdefault("apps", {})[appname] = entry
+    apps = index.setdefault("apps", {})
+    old = apps.get(appname)
+    if old:
+        # 人工维护的字段以仓库现有为准，避免再次采集时被冲掉
+        for key in ("icon_url", "maintainer_url", "bug_report_url"):
+            if old.get(key):
+                entry[key] = old[key]
+        # --install-type 未显式给出时，沿用现有条目的安装空间，防止退回“存储空间”
+        if not args.install_type and old.get("install_type"):
+            entry["install_type"] = old["install_type"]
+
+        old_rel = old.get("releases", {}).get(version, {})
+        if old_rel:
+            # 同版本的另一个架构：并进 packages，platform 取并集
+            pkgs = dict(old_rel.get("packages", {}))
+            pkgs.update(entry["releases"][version]["packages"])
+            entry["releases"][version]["packages"] = pkgs
+            plats = set(old.get("platform", [])) | set(entry["platform"])
+            entry["platform"] = [p for p in ("x86", "arm", "all") if p in plats]
+            print(f"合并架构：{appname} {version} 现有 branches = {sorted(pkgs)}", file=sys.stderr)
+        else:
+            dropped = [v for v in old.get("releases", {}) if v != version]
+            if dropped:
+                print(f"注意：弃用旧版本节点 {dropped}（本源每个应用只保留最新版）", file=sys.stderr)
+
+    apps[appname] = entry
     with open(index_path, "w", encoding="utf-8") as fh:
         json.dump(index, fh, ensure_ascii=False, indent=2)
         fh.write("\n")
