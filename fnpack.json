@@ -189,8 +189,8 @@
         }
       }
     },
-    "hermes-agent": {
-      "display_name": "Hermes Agent",
+    "hermes-desktop": {
+      "display_name": "hermes-desktop",
       "desc": "Hermes Agent 开源 AI Agent，支持多平台消息网关、内置学习循环、技能系统和 MCP 扩展。通过飞牛应用中心安装，即开即用。 核心能力： • 多模型支持：OpenAI、Anthropic、Kimi、MiniMax 等 • 消息平台：微信ClawBot、QQ Bot、飞书、WhatsApp、Telegram 等 • 定时任务：自然语言描述的自动化调度 • 持久记忆：跨会话学习和技能进化 • MCP 扩展：连接 GitHub 等外部工具 免责声明： 本应用仅作为服务集成工具，不对 Hermes Agent 软件本身的安全性、稳定性作任何保证。使用过程中产生的所有风险由用户自行承担。",
       "platform": [
         "all"
@@ -511,6 +511,36 @@
           },
           "changelog": "1.2.12：修复 session-shell 换行符导致的启动失败；粘贴改为普通文本样式，并优先使用系统剪贴板，支持粘贴终端外部复制的内容。",
           "os_min_version": "1.1.3100"
+        }
+      }
+    },
+    "hermes-agent": {
+      "display_name": "Hermes Agent",
+      "desc": "Hermes Agent 开源 AI Agent，支持多平台消息网关、内置学习循环、技能系统和 MCP 扩展。通过飞牛应用中心安装，即开即用。 核心能力： • 多模型支持：OpenAI、Anthropic、Kimi、MiniMax 等 • 消息平台：微信ClawBot、QQ Bot、飞书、WhatsApp、Telegram 等 • 定时任务：自然语言描述的自动化调度 • 持久记忆：跨会话学习和技能进化 • MCP 扩展：连接 GitHub 等外部工具 免责声明： 本应用仅作为服务集成工具，不对 Hermes Agent 软件本身的安全性、稳定性作任何保证。使用过程中产生的所有风险由用户自行承担。",
+      "platform": [
+        "all"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "veenyi",
+      "maintainer_url": "https://github.com/veenyi/fnos-hermes-agent",
+      "readme_url": "https://cdn.jsdelivr.net/gh/veenyi/fnos-hermes-agent@latest/README.md",
+      "releases": {
+        "0.21.149": {
+          "packages": {
+            "all": {
+              "download_url": "https://github.com/veenyi/fnos-hermes-agent/releases/download/v0.21.149/fnos-hermes-agent_v0.21.149.fpk",
+              "sha256": "aa54aa4443fa352a1f0db2fc4cbe2bc8e10c41a0e581e01e8fabb5de2628fdb5",
+              "size": 40206766
+            }
+          }
         }
       }
     }

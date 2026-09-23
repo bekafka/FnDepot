@@ -28,7 +28,8 @@ https://github.com/bekafka/FnDepot
 | fnMusic 扩展 | `fnmusic-ext` | 2.2.8 | all | javycoder | [javycoder/fnos_music_ext](https://github.com/javycoder/fnos_music_ext) |
 | 飞牛音乐酷狗扩展 | `fnmusic_ext_kugou` | 2.1.0 | x86 | ai2ku | [ai2ku/fnos-music-ext-kugou-fpk](https://github.com/ai2ku/fnos-music-ext-kugou-fpk) |
 | Hosts 管理器 | `fnnas.hosts` | 1.0.61 | all | Contribuv | [Contribuv/fn-hosts](https://github.com/Contribuv/fn-hosts) |
-| Hermes Agent | `hermes-agent` | 0.21.3.1 | all | veenyi | [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web) |
+| Hermes Agent | `hermes-agent` | 0.21.149 | all | veenyi | [veenyi/fnos-hermes-agent](https://github.com/veenyi/fnos-hermes-agent) |
+| hermes-desktop | `hermes-desktop` | 0.21.3.1 | all | veenyi | [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web) |
 | 终端 | `fnos-terminal` | 1.2.12 | arm / x86 | Eric0101 | [Eric0101/fnos-terminal](https://github.com/Eric0101/fnos-terminal) |
 | 视频转码 | `fpkconverter` | 1.0.56 | x86 | yang1245789 | [yang1245789/fpk-converter](https://github.com/yang1245789/fpk-converter) |
 | OIDC SSO Bridge | `fnosoidcbridge` | 0.7.1 | all | BeFortune | [BeFortune/fnos-oidc-bridge](https://github.com/BeFortune/fnos-oidc-bridge) |
@@ -50,7 +51,7 @@ https://github.com/bekafka/FnDepot
   `FanControlServer`、`opensync`、`cpu-tuner`、`fnwifi`、`ignis`、`fnmusic_ext_kugou`）：
   `appname` / `platform` / `service_port` / `install_type` / `run_as` 是作者自己声明的真值
   （`run_as` 取自各仓库 `config/privilege` 的 `defaults.run-as`）。
-  `hermes-agent` 用的是 [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web)（FPK 发布在这里），
+  `hermes-desktop` 用的是 [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web)（FPK 发布在这里），
   其仓库内 manifest 版本号（0.21.0.1）落后于 tag（0.21.3.1），因此 `platform`/图标按仓库文件取，版本按 tag 取。
 - **`fnmusic-ext` 是唯一没提交 manifest 的条目**：`appname` 由资产文件名推导，`platform` 无架构声明故沿用 `all`（这是猜的）。
   若装不上或显示异常，优先怀疑这两项。
@@ -63,14 +64,18 @@ https://github.com/bekafka/FnDepot
 - **`fnmusic-ext-kugou` 本身不含音源**，需先自行部署 KuGouMusicApi 实例才能工作。
 - **`中转站监控`** 作者只发布了 **x86 包**，arm64 设备上不会显示也无法安装；其 README 写的最新版是 v2.0.5，
   但 GitHub 上实际只发布到 v2.0.0，本源只收录真实发布过的版本。
-- **`veenyi/fnos-hermes-agent` 没单独占一条，但不是因为"没有 fpk"**——早先这里写成"该仓库 release 里没有任何 `.fpk`"，
-  是错的：它有几十个 release，最新 `v0.21.149`（2026-08-13）带 40.2MB 的 fpk。真正原因是它和已收录的
-  [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web) **是同一个应用**（两边包内 `appname` 都是 `hermes-agent`），
-  而本源一个 `appname` 只能有一条记录，所以取**较新且仍在更新**的那条线：
-  `-web` 最新发布 `v0.21.3.1`（2026-09-17，96.9MB，同步上游官方 0.21.3），旧线停在 `v0.21.149`（2026-08-13，40.2MB）。
-  两点提醒：① `-web` 仓库里已经 tag 到 `v0.24.4.41`，但这些 tag **没有 release/资产**（`/releases/tags/v0.24.4.41` 返回 404），
-  所以最新可安装版本仍是 `v0.21.3.1`；② 两条线版本号不同源（数字上 `0.21.149` 比 `0.21.3.1` 大），
-  已装旧线的用户可能不会被提示升级。
+- **`hermes-agent` 与 `hermes-desktop` 是"同一个 appname、两条发布线"，属于明知而为的例外**：
+  两个仓库（[veenyi/fnos-hermes-agent](https://github.com/veenyi/fnos-hermes-agent) 与
+  [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web)）打出来的包，
+  **包内 `appname` 都是 `hermes-agent`**（按发布 tag 取 manifest 核实；构建脚本 `scripts/build.sh` 只用 sed 改
+  `version`/`checksum`，不改 `appname`），两边的 `desktop_applaunchname` 也都是 `hermes-agent.Application`——
+  也就是说**系统层面它们是同一个应用**。
+  按本源规则"键名必须等于包内 appname"，这两条本不该并存；此处按用户明确要求收录两条，**风险已知并接受**：
+  客户端可能匹配不上包内应用名（装了却仍显示未安装、反复提示安装），或两条互相覆盖（后装的顶掉先装的）。
+  **不要"顺手修正"成一条**，除非用户改口径。
+  两条线的关系：`-web` 线最新发布 `v0.21.3.1`（2026-09-17，96.9MB，同步上游官方 0.21.3）；旧线 `v0.21.149`（2026-08-13，40.2MB）。
+  另外 `-web` 仓库已 tag 到 `v0.24.4.41` 但没有对应 release/资产（`/releases/tags/v0.24.4.41` 返回 404），那还不是可安装版本。
+  两条线版本号也不同源（数字上 `0.21.149` 比 `0.21.3.1` 大）。
 - **`fpkconverter` 仓库里的 manifest 版本（1.0.57）超前于当前 tag（v1.0.56）**，因此 `display_name`/`desc`/`arch` 按仓库文件取、
   版本与哈希按 release 取；作者下一个 tag 发出来后两项会对齐。
 - **`FanControlServer` 每个架构都发两个包**（`-iframe` 与 `-url`，桌面入口打开方式不同）；本源收录 **iframe 版**。
@@ -130,7 +135,7 @@ FnDepot/
    用 CDN 是因为它带 CORS 头、国内可达，客户端可以直接抓正文渲染（GitHub 的 blob/raw 地址都做不到）；
    `@latest` 由 jsDelivr 解析到仓库最新的 semver tag（仓库没有 tag 时退回默认分支），所以展示的始终是最新文档。
    注意它是**可变引用**（jsDelivr 对 `latest` 缓存 7 天，钉版本则是永久），因此可能比本源收录的版本更新——
-   例如 `hermes-agent` 仓库已经 tag 到 `v0.24.4.41`，但只发布过 `v0.21.3.1` 的 release。
+   例如 `hermes-desktop` 用的那个仓库已经 tag 到 `v0.24.4.41`，但只发布过 `v0.21.3.1` 的 release。
 
 第 7～9 条由 `tools/add-app.py` 自动写入、`tools/verify.py` 强制校验（含 `readme_url` 可达性），手改索引也绕不过去。
 
