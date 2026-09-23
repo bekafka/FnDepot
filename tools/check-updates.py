@@ -22,28 +22,12 @@ import sys
 import urllib.error
 import urllib.request
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _gh import gh_token  # noqa: E402  （token 查找见 tools/_gh.py）
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UA = {"User-Agent": "fndepot-source-checker"}
 _token_warned = []
-
-
-def gh_token():
-    """按序找 token：环境变量 → $FNDEPOT_GH_TOKEN_FILE → ~/.config/fndepot/token → 仓库内 .gh_token。"""
-    for name in ("GITHUB_TOKEN", "GH_TOKEN"):
-        val = os.environ.get(name)
-        if val and val.strip():
-            return val.strip()
-    for path in (os.environ.get("FNDEPOT_GH_TOKEN_FILE"),
-                 os.path.expanduser("~/.config/fndepot/token"),
-                 os.path.join(ROOT, ".gh_token")):
-        if path and os.path.isfile(path):
-            try:
-                val = open(path, encoding="utf-8").read().strip()
-            except OSError:
-                continue
-            if val:
-                return val
-    return None
 
 
 def http(url, method="GET", timeout=45):

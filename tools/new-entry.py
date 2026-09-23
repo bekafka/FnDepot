@@ -42,6 +42,9 @@ import tempfile
 import time
 import urllib.request
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _gh import gh_token  # noqa: E402  （token 查找见 tools/_gh.py）
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VALID_CATEGORIES = [
     "影音娱乐", "系统工具", "编程开发", "AI赋能", "生活服务",
@@ -107,25 +110,6 @@ def fetch_text(url, timeout=120):
 
 
 CACHE_DIR = os.path.join(ROOT, "tools", ".cache")
-
-
-def gh_token():
-    """按序找 token：环境变量 → $FNDEPOT_GH_TOKEN_FILE → ~/.config/fndepot/token → 仓库内 .gh_token。"""
-    for name in ("GITHUB_TOKEN", "GH_TOKEN"):
-        val = os.environ.get(name)
-        if val and val.strip():
-            return val.strip()
-    for path in (os.environ.get("FNDEPOT_GH_TOKEN_FILE"),
-                 os.path.expanduser("~/.config/fndepot/token"),
-                 os.path.join(ROOT, ".gh_token")):
-        if path and os.path.isfile(path):
-            try:
-                val = open(path, encoding="utf-8").read().strip()
-            except OSError:
-                continue
-            if val:
-                return val
-    return None
 
 
 def gh_json(url, cache_key, refresh=False):
@@ -236,7 +220,7 @@ def build_entry(fields, sha256, size, download_url, categories, changelog_max, i
         "desc": fields.get("desc", ""),
         "platform": [arch],
         "categories": categories,
-        "icon_url": f"assets/icons/{appname}.png",
+        "icon_url": "assets/icons/fnapp.png",  # 统一图标，见 README
         "run_as": "root" if fields.get("_run_as") == "root" else "package",
         "install_type": install_type,
         "is_docker": fields.get("source", "") == "docker",
@@ -369,9 +353,12 @@ def main():
             entry["platform"] = [p for p in ("x86", "arm", "all") if p in plats]
             print(f"合并架构：{appname} {version} 现有 branches = {sorted(pkgs)}", file=sys.stderr)
         else:
-            dropped = [v for v in old.get("releases", {}) if v != version]
-            if dropped:
-                print(f"注意：弃用旧版本节点 {dropped}（本源每个应用只保留最新版）", file=sys.stderr)
+            # 跟版：追加新版本（自首次收录起累积，不回溯补历史）
+            kept = list(old.get("releases", {}))
+            if kept:
+                print(f"跟版：新增 {version}，保留已收录版本 {kept}", file=sys.stderr)
+        # 无论同版本合并还是跟版，都保留已收录过的版本节点
+        entry["releases"] = {**old.get("releases", {}), **entry["releases"]}
 
     apps[appname] = entry
     with open(index_path, "w", encoding="utf-8") as fh:
