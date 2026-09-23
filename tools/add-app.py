@@ -563,8 +563,12 @@ def job_cats(value, default):
     return [c.strip() for c in value.split(",") if c.strip()]
 
 
-def sanity_check(appname, entry):
-    """写盘前的最后一道闸：这几项错了客户端会静默跳过该应用。"""
+def sanity_check(appname, entry, relaxed=False):
+    """写盘前的最后一道闸：这几项错了客户端会静默跳过该应用。
+
+    relaxed=True 供批量导入用：那批条目不写 sha256/size（用户定的口径），图标用上游仓库的真实图标。
+    其余检查（categories/platform/包键名/地址形状）仍然照旧。
+    """
     errs = []
     if not isinstance(entry.get("categories"), list) or not entry["categories"]:
         errs.append(f"categories 必须是数组，现在是 {entry.get('categories')!r}")
@@ -582,8 +586,10 @@ def sanity_check(appname, entry):
         errs.append(f"install_type={entry.get('install_type')!r}")
     if not isinstance(entry.get("is_docker"), bool):
         errs.append("is_docker 必须是布尔")
-    if entry.get("icon_url") != DEFAULT_ICON:
-        errs.append(f"icon_url 必须是 {DEFAULT_ICON}")
+    icon = entry.get("icon_url") or ""
+    if icon != DEFAULT_ICON and not (relaxed and icon.startswith("https://")):
+        errs.append(f"icon_url 必须是 {DEFAULT_ICON}"
+                    + ("（relaxed 模式下也必须是绝对 https 地址）" if relaxed else ""))
     # 固定口径：本源 distributor + 上游项目作者/项目页/README
     if entry.get("distributor") != DISTRIBUTOR or entry.get("distributor_url") != DISTRIBUTOR_URL:
         errs.append(f"distributor 必须是 {DISTRIBUTOR} / {DISTRIBUTOR_URL}，现在是 "
@@ -616,9 +622,15 @@ def sanity_check(appname, entry):
             if not re.match(r"^https://github\.com/[^/]+/[^/]+/releases/download/[^/]+/.+$",
                             pk.get("download_url") or ""):
                 errs.append(f"{ver}/{arch} download_url 不是带 tag 的 release 地址")
-            if not re.fullmatch(r"[0-9a-f]{64}", pk.get("sha256") or ""):
+            sha = pk.get("sha256")
+            if sha is None and relaxed:
+                pass                                    # 批量导入不写 sha256（用户定的口径）
+            elif not re.fullmatch(r"[0-9a-f]{64}", sha or ""):
                 errs.append(f"{ver}/{arch} sha256 不是 64 位十六进制")
-            if not isinstance(pk.get("size"), int) or pk["size"] <= 0:
+            size = pk.get("size")
+            if size is None and relaxed:
+                pass                                    # 同上，不写 size
+            elif not isinstance(size, int) or size <= 0:
                 errs.append(f"{ver}/{arch} size 必须是正整数")
     if errs:
         raise RuntimeError(f"{appname} 未通过写盘前自检：{'；'.join(errs)}")

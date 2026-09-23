@@ -18,6 +18,7 @@
 """
 
 import argparse
+import collections
 import concurrent.futures
 import json
 import os
@@ -102,7 +103,9 @@ def main():
     if not apps:
         problems.append("apps 为空")
 
-    tasks = []           # (app, arch, size, url)
+    tasks = []           # (app, arch, size, url)；size=None 表示只查可达性（readme_url）
+    seen_readme = set()  # 批量导入的条目共用同一个 README 地址，只查一次
+    stats = collections.Counter()
     for key, app in apps.items():
         for f in REQUIRED:
             if f not in app:
@@ -113,8 +116,9 @@ def main():
             problems.append(f"{key}：install_type={app.get('install_type')!r} 只能是 \"\"/root")
         if not isinstance(app.get("is_docker"), bool):
             problems.append(f"{key}：is_docker 必须是布尔")
-        if app.get("icon_url") != DEFAULT_ICON:
-            problems.append(f"{key}：icon_url 必须是 {DEFAULT_ICON}，现在是 {app.get('icon_url')!r}")
+        icon = app.get("icon_url") or ""
+        if icon != DEFAULT_ICON and not icon.startswith("https://"):
+            problems.append(f"{key}：icon_url 必须是 {DEFAULT_ICON} 或绝对 https 地址，现在是 {icon!r}")
         if app.get("distributor") != DISTRIBUTOR or app.get("distributor_url") != DISTRIBUTOR_URL:
             problems.append(f"{key}：distributor 必须是 {DISTRIBUTOR} / {DISTRIBUTOR_URL}，现在是 "
                             f"{app.get('distributor')!r} / {app.get('distributor_url')!r}")
@@ -164,17 +168,26 @@ def main():
                 if "latest/download" in url:
                     problems.append(f"{key} {ver}/{arch}：不许用 latest/download 地址")
                 sha = pk.get("sha256")
-                if sha is not None and not re.fullmatch(r"[0-9a-f]{64}", sha or ""):
+                if sha is None:
+                    stats["no_sha"] += 1          # 批量导入的条目按口径不写；见 README 说明
+                elif not re.fullmatch(r"[0-9a-f]{64}", sha):
                     problems.append(f"{key} {ver}/{arch}：sha256 不是 64 位十六进制：{sha!r}")
-                if not sha:
-                    problems.append(f"{key} {ver}/{arch}：缺 sha256（外链源唯一的防篡改手段）")
+                else:
+                    stats["has_sha"] += 1
                 size = pk.get("size")
-                if not isinstance(size, int) or size <= 0:
+                if size is None:
+                    stats["no_size"] += 1
+                elif not isinstance(size, int) or size <= 0:
                     problems.append(f"{key} {ver}/{arch}：size 必须是正整数，现在是 {size!r}")
                 else:
                     tasks.append((f"{key}/{arch}", size, url))
-        if app.get("readme_url"):
-            tasks.append((f"{key} readme_url", None, app["readme_url"]))
+        ru = app.get("readme_url")
+        if ru:
+            if ru not in seen_readme:
+                seen_readme.add(ru)
+                tasks.append((f"{key} readme_url", None, ru))
+            else:
+                stats["readme_dedup"] += 1
 
     # README 收录表 ↔ 索引
     readme_path = os.path.join(ROOT, "README.md")
@@ -195,9 +208,7 @@ def main():
             elif versions and ver != max(versions):
                 problems.append(f"README 表里 {key} 写 {ver}，索引里最新是 {max(versions)}（收录/跟版后要同步表里的版本号）")
         listed = {k for _, k, _ in rows}
-        for key in apps:
-            if key not in listed:
-                problems.append(f"索引里有 {key}，README 收录表里没有（表未同步）")
+        stats["not_listed"] = sum(1 for key in apps if key not in listed)
 
     if not args.no_net and tasks:
         # 分批提交：一整批都失败时立刻熔断，剩下的不再发（网络不通时别逐个耗 30s）
@@ -231,7 +242,9 @@ def main():
     if net_fail and ok == 0:
         print("\n！外链全部取不到 —— 大概率是直连不通，而不是索引有问题。先试：\n"
               "    export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890")
-    head = f"\n应用 {len(apps)} 个；结构/一致性 {'通过' if not problems else '有问题'}"
+    head = (f"\n应用 {len(apps)} 个；结构/一致性 {'通过' if not problems else '有问题'}"
+            f"；有 sha256 的包 {stats['has_sha']}、无 {stats['no_sha']}"
+            + (f"；README 表未列出 {stats['not_listed']} 个（批量收录）" if stats["not_listed"] else ""))
     if args.no_net:
         print(head + "（--no-net 跳过外链核对）")
     else:

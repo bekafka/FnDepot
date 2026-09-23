@@ -14,6 +14,8 @@ https://github.com/bekafka/FnDepot
 ## 收录原则
 
 - 只收录**原作者官方发布**的 `.fpk`（GitHub Releases 资产），不镜像、不重打包、不改文件。
+  **例外**：另有 165 个应用批量收录自第三方合集 [conversun/fnos-apps](https://github.com/conversun/fnos-apps)，
+  那些安装包由**该合集作者重新打包构建**（非原作者发布），详见下方"批量收录"说明。
 - 应用版权、代码安全与更新维护均归原作者；本源只负责把作者已有的发布整理成客户端可读的元数据。
 - 每个安装包的 `size` 与 `sha256` 都取自该安装包本身（GitHub 官方 digest，或本地实测下载），客户端会强校验；
   上游改动导致校验失败时，该版本会被客户端跳过而不会静默安装。
@@ -50,6 +52,9 @@ https://github.com/bekafka/FnDepot
 | CPU 性能控制台 | `cpu-tuner` | 0.1.13 | x86 | 787x | [787x/cpu-tuner-fnos](https://github.com/787x/cpu-tuner-fnos) |
 | 无线热点 | `fnwifi` | 1.1.2 | all | Zisbusy | [Zisbusy/fnwifi](https://github.com/Zisbusy/fnwifi) |
 | ignis | `ignis` | 1.4.5 | all | Hxido-RXM | [Hxido-RXM/Obsidian-fpk](https://github.com/Hxido-RXM/Obsidian-fpk) |
+
+> 另有 **165 个应用**批量收录自第三方合集 [conversun/fnos-apps](https://github.com/conversun/fnos-apps)，
+> 未逐条列入上表，字段来源与已知差异见下方"批量收录"一节。
 
 > 键名一律等于**包内 manifest 的 `appname`**，与仓库名/资产名不一定相同：
 > 「Obsidian」这条显示名与键名都写 `ignis`，「飞牛音乐酷狗扩展」是 `fnmusic_ext_kugou`（下划线），m3u8 下载器是 `m3u8_down`。
@@ -130,6 +135,34 @@ https://github.com/bekafka/FnDepot
 
 > 这些条目**没有下载整包验证**：`size` 取自下载地址的 `content-length`，`sha256` 取自 GitHub Release 页面公布的官方 digest。
 > 客户端安装时仍会按此强校验，若上游重传过资产则会被拦截。
+
+## 批量收录（来自 conversun/fnos-apps）
+
+165 个应用由 `tools/import-conversun.py` 从该合集的 `apps.json` **一次性转换**而来，不下载安装包、不逐个爬取。
+本节的字段来源与已知差异要连同条目一起看：
+
+| 字段 | 来源 / 口径 |
+| --- | --- |
+| `display_name` / `desc` / `platform` / `service_port` | 该合集 `apps.json` 的 `display_name` / `description` / `platforms` / `service_port` |
+| `is_docker` | 该合集的 `app_type`（`docker` → `true`），106 个为 Docker 应用 |
+| `categories` | 由该合集的英文分类映射到本源九分类（见下表） |
+| `icon_url` | **该合集仓库里的真实图标**（`apps/<slug>/fnos/ICON_256.PNG`），非本源通用图标 |
+| 下载地址 | 按规律拼接：`.../releases/download/<release_tag>/<file_prefix>_<fpk_version>_<arch>.fpk`（已用 release 元数据核对命名规律；`release_tag` 本身带斜杠，如 `1panel/v1.10.34-lts-r8`） |
+| `run_as` | **一律 `package`**（未逐个核对包内 manifest —— 需要 root 的应用可能装不对） |
+| `install_type` | **一律 `""`**（存储空间，同上未核对） |
+| `sha256` / `size` | **不写**（该合集表里没有这两个值），因此这 165 个应用**没有客户端强校验**；`tools/verify.py` 也不会核对它们的 size |
+| `maintainer` / `maintainer_url` | 按本源口径取该合集仓库的 owner（`conversun`）与项目页 |
+
+分类映射（他们 → 本源）：`system`/`network`/`download`/`browser`/`store`/空 → 系统工具；
+`media`、`automation`（该分类下 11 个全是 \*arr 媒体自动化）→ 影音娱乐；`content` → 生活服务；`ai` → AI赋能。
+
+两个注意点：
+1. **这些包不是原作者发布的**，而是该合集作者重新打包构建的；本源只做索引，不校验其内容。
+2. `tools/check-updates.py` 对这类"一个仓库多个应用、tag 带斜杠"的合集按 **tag 前缀**匹配最新 release；
+   没有 `sha256` 的包不做哈希比对（会在输出末尾注明数量）。
+3. **这批条目单独跟版**：不用上面的常规巡检流程，而是用
+   `python3 tools/import-conversun.py`（读该合集的 `apps.json` 做差异核对：新增 / 追加版本 / 同步字段），
+   且**只在本源维护者明确要求时才执行**。
 
 ## 目录
 

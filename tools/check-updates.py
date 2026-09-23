@@ -22,6 +22,7 @@ import os
 import re
 import sys
 import threading
+import time
 import urllib.error
 import urllib.request
 
@@ -80,8 +81,24 @@ def parse_assets(html_text):
     return assets
 
 
-def upstream(repo):
-    """→ (tag, {资产名: sha256}, 数据来源) ；失败返回 (None, {}, 原因)"""
+def upstream(repo, our_tag=""):
+    """→ (tag, {资产名: sha256}, 数据来源) ；失败返回 (None, {}, 原因)
+
+    our_tag 里带斜杠（如 `1panel/v1.10.34-lts-r8`）= 这个仓库是多应用合集，
+    `/releases/latest` 给的是"全仓库最新"，对这个应用没意义；改为按 tag 前缀挑该应用的最新 release。
+    """
+    if "/" in our_tag:
+        prefix = our_tag.rsplit("/", 1)[0]
+        rels_all, err = repo_releases(repo)
+        if err:
+            return None, {}, err
+        rels = [r for r in rels_all if r.get("tag_name", "").split("/")[0] == prefix]
+        if not rels:
+            return None, {}, f"合集仓库里找不到前缀 {prefix}/ 的 release"
+        newest = max(rels, key=lambda r: r.get("published_at") or "")
+        return (newest["tag_name"],
+                {a["name"]: (a.get("digest") or "").replace("sha256:", "") for a in newest.get("assets", [])},
+                "api(合集)")
     _tls.last_error = None
     data = http(f"https://api.github.com/repos/{repo}/releases/latest")
     if data:
@@ -123,6 +140,48 @@ def norm(tag):
     return tag.lstrip("vV")
 
 
+def ver_of(tag):
+    """版本号：合集仓库的 tag 形如 `1panel/v1.10.34-lts-r8`，版本在最后一段。"""
+    return norm(tag.rsplit("/", 1)[-1])
+
+
+_release_list_cache = {}
+_release_list_lock = threading.Lock()
+
+
+def repo_releases(repo, attempts=3):
+    """→ (release 列表, 错误说明)。按仓库缓存，避免 165 个应用各拉一遍。"""
+    with _release_list_lock:
+        if repo in _release_list_cache:
+            return _release_list_cache[repo], ""
+    out, page, err = [], 1, ""
+    while page <= 5:
+        data = None
+        for _ in range(attempts):
+            data = http(f"https://api.github.com/repos/{repo}/releases?per_page=100&page={page}")
+            if data:
+                break
+            time.sleep(1.5)
+        if not data:
+            err = f"release 列表取不到（网络/配额：{_tls.last_error or '未知'}）"
+            break
+        try:
+            js = json.loads(data)
+        except ValueError:
+            err = "release 列表不是合法 JSON"
+            break
+        if not isinstance(js, list) or not js:
+            break
+        out += js
+        if len(js) < 100:
+            break
+        page += 1
+    if not err:
+        with _release_list_lock:
+            _release_list_cache[repo] = out
+    return out, err
+
+
 def main():
     ap = argparse.ArgumentParser(description="巡检已收录应用的上游是否发新版 / 资产被重传")
     ap.add_argument("apps", nargs="*", help="只查这些应用键名，省略则全查")
@@ -159,7 +218,7 @@ def main():
             continue
         our_ver = versions[-1]
         for arch, pkg in entry["releases"][our_ver].get("packages", {}).items():
-            m = re.match(r"https://github\.com/([^/]+/[^/]+)/releases/download/([^/]+)/(.+)$",
+            m = re.match(r"https://github\.com/([^/]+/[^/]+)/releases/download/(.+)/([^/]+)$",
                          pkg.get("download_url", ""))
             if not m:
                 failed.append(f"{app}/{arch}: 下载地址不是 GitHub release 形式")
@@ -169,33 +228,39 @@ def main():
 
     ups = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
-        futs = {pool.submit(upstream, r): r for r in {i["repo"] for i in items}}
+        futs = {pool.submit(upstream, rp[0], rp[1]): rp for rp in {(i["repo"], i["tag"]) for i in items}}
         for fut in concurrent.futures.as_completed(futs):
-            repo = futs[fut]
+            repo, tag = futs[fut]
             try:
-                ups[repo] = fut.result()
+                ups[(repo, tag)] = fut.result()
             except Exception as exc:  # noqa: BLE001
-                ups[repo] = (None, {}, f"查询异常：{exc}")
+                ups[(repo, tag)] = (None, {}, f"查询异常：{exc}")
 
     heads = []          # 需要核对 size 的包（仅在没有官方 digest 时），第二轮并发
     checked = []
+    unverified = []     # 没钉 sha256、无从比对的包（批量导入的条目）
     for it in items:
-        tag, assets, src = ups.get(it["repo"], (None, {}, "未查询"))
+        tag, assets, src = ups.get((it["repo"], it["tag"]), (None, {}, "未查询"))
         if tag is None:
             failed.append(f"{it['app']}/{it['arch']}: {src}")
             continue
         rx = asset_regex(it["asset"], it["ver"])
         match = next((n for n in assets if rx.match(n)), None)
-        if norm(tag) != norm(it["ver"]):
-            busy.append(f"{it['app']}/{it['arch']}: 有新版本 {it['ver']} → {norm(tag)}"
+        if ver_of(tag) != ver_of(it["ver"]):
+            busy.append(f"{it['app']}/{it['arch']}: 有新版本 {it['ver']} → {ver_of(tag)}"
                         f"（新资产 {match or '命名变了，需人工看'}）")
         elif match is None:
             busy.append(f"{it['app']}/{it['arch']}: 版本未变但上游资产名对不上（原有 {it['asset']}）")
         else:
+            ours = it["pkg"].get("sha256") or ""
             up_digest = assets.get(match) or ""
-            if up_digest and up_digest != it["pkg"].get("sha256"):
+            if not ours:
+                # 批量导入的条目按口径没写 sha256：无从比对，不算"被重传"
+                unverified.append(f"{it['app']}/{it['arch']}")
+                checked.append(f"  最新  {it['app']}/{it['arch']}  {it['ver']}（{src}）")
+            elif up_digest and up_digest != ours:
                 busy.append(f"{it['app']}/{it['arch']}: 同版本资产被重传！我们钉的 sha256 已失效"
-                            f"（我们 {it['pkg'].get('sha256','')[:12]}… / 上游 {up_digest[:12]}…）")
+                            f"（我们 {ours[:12]}… / 上游 {up_digest[:12]}…）")
             elif up_digest:
                 # 官方 digest 一致 ⇒ 内容没变 ⇒ size 必然没变，不必再发 HEAD（省一轮请求）
                 checked.append(f"  最新  {it['app']}/{it['arch']}  {it['ver']}（{src}）")
@@ -210,7 +275,8 @@ def main():
             for fut in concurrent.futures.as_completed(futs):
                 it, match, src = futs[fut]
                 up_size = fut.result()
-                if up_size and up_size != it["pkg"].get("size"):
+                ours_size = it["pkg"].get("size")
+                if up_size and ours_size and up_size != ours_size:
                     busy.append(f"{it['app']}/{it['arch']}: 同版本资产大小变了"
                                 f"（{it['pkg'].get('size')} → {up_size}）")
                 else:
@@ -227,6 +293,8 @@ def main():
         print("查询失败：")
         for line in sorted(failed):
             print("  ? " + line)
+    if unverified:
+        print(f"\n注：{len(unverified)} 个包没有钉 sha256（批量收录的条目按口径不写），未做哈希比对")
     if not busy and not failed:
         print("全部已是最新 ✓")
         return 0
