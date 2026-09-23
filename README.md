@@ -63,7 +63,14 @@ https://github.com/bekafka/FnDepot
 - **`fnmusic-ext-kugou` 本身不含音源**，需先自行部署 KuGouMusicApi 实例才能工作。
 - **`中转站监控`** 作者只发布了 **x86 包**，arm64 设备上不会显示也无法安装；其 README 写的最新版是 v2.0.5，
   但 GitHub 上实际只发布到 v2.0.0，本源只收录真实发布过的版本。
-- **`veenyi/fnos-hermes-agent` 未收录**：该仓库的 release 里没有任何 `.fpk` 资产，没有可安装的东西。
+- **`veenyi/fnos-hermes-agent` 没单独占一条，但不是因为"没有 fpk"**——早先这里写成"该仓库 release 里没有任何 `.fpk`"，
+  是错的：它有几十个 release，最新 `v0.21.149`（2026-08-13）带 40.2MB 的 fpk。真正原因是它和已收录的
+  [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web) **是同一个应用**（两边包内 `appname` 都是 `hermes-agent`），
+  而本源一个 `appname` 只能有一条记录，所以取**较新且仍在更新**的那条线：
+  `-web` 最新发布 `v0.21.3.1`（2026-09-17，96.9MB，同步上游官方 0.21.3），旧线停在 `v0.21.149`（2026-08-13，40.2MB）。
+  两点提醒：① `-web` 仓库里已经 tag 到 `v0.24.4.41`，但这些 tag **没有 release/资产**（`/releases/tags/v0.24.4.41` 返回 404），
+  所以最新可安装版本仍是 `v0.21.3.1`；② 两条线版本号不同源（数字上 `0.21.149` 比 `0.21.3.1` 大），
+  已装旧线的用户可能不会被提示升级。
 - **`fpkconverter` 仓库里的 manifest 版本（1.0.57）超前于当前 tag（v1.0.56）**，因此 `display_name`/`desc`/`arch` 按仓库文件取、
   版本与哈希按 release 取；作者下一个 tag 发出来后两项会对齐。
 - **`FanControlServer` 每个架构都发两个包**（`-iframe` 与 `-url`，桌面入口打开方式不同）；本源收录 **iframe 版**。
