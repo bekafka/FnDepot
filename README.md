@@ -177,25 +177,52 @@ curl -s -H "Authorization: Bearer $(cat .gh_token)" https://api.github.com/rate_
 
 ## 新增 / 更新一个应用
 
+**常规做法：一条命令**（给链接就行，不需要图标、不需要下载包）
+
 ```bash
-# 国内直连 GitHub 失败时先走代理
-export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890
-
-# 方式一：不下整包（推荐，前提是作者仓库里提交了 manifest）
-python3 tools/new-entry.py <owner/repo> <tag> <asset文件名> -c 系统工具 --light
-
-# 方式二：下载整包（最权威；大包先用 curl 续传再喂进来）
-curl -fL -C - --retry 8 --retry-all-errors -o /tmp/pkg.fpk <下载地址>
-python3 tools/new-entry.py <owner/repo> <tag> <asset文件名> -c 系统工具 --local /tmp/pkg.fpk
-
-# 确认无误后加 --write 写入 fnpack.json（自动备份 fnpack.json.bak）
+export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890   # 直连不通时
+python3 tools/add-app.py <仓库链接> -c 系统工具          # dry-run，先看要写什么
+python3 tools/add-app.py <仓库链接> -c 系统工具 --write   # 确认后落盘（自动备份 fnpack.json.bak）
 ```
 
-之后还需人工补两件事：
+`add-app.py` 会自己完成：取最新 tag 与 `.fpk` 资产 → 取官方 `sha256` digest 与 `content-length`
+→ 读作者仓库里的 `manifest`/`config/privilege`（版本须与 tag 一致）→ 组装条目。
+元数据读不到 manifest 时退回 README + 资产名推导，**会把"哪些字段是猜的"打印出来**。
 
-1. 把图标放进 `assets/icons/{appname}.png`（可从 FPK 内 `ICON_256.PNG` 提取，或下载作者 Release 里的 `ICON_256.PNG`）：
-   `tar xzOf pkg.fpk ICON_256.PNG > assets/icons/{appname}.png`
-2. 补 `maintainer_url`、`bug_report_url`（指向作者仓库与 issue），必要时精简 `desc`。
+底层工具（需要指定 tag / 本地包实测哈希等特殊情况才用）：
+
+```bash
+# 读仓库 manifest + API digest，不下整包
+python3 tools/new-entry.py <owner/repo> <tag> <asset文件名> -c 系统工具 --light
+
+# 下载整包后本地实测 sha256（大包先用 curl 续传）
+curl -fL -C - --retry 8 --retry-all-errors -o /tmp/pkg.fpk <下载地址>
+python3 tools/new-entry.py <owner/repo> <tag> <asset文件名> -c 系统工具 --local /tmp/pkg.fpk
+```
+
+（以上都需加 `--write` 才落盘。）
+
+**不需要**手工补图标：所有应用统一 `assets/icons/fnapp.png`。
+`maintainer_url` / `bug_report_url` 之类非必填项拿不到就不管。
+
+## 自动推送
+
+本仓库已配好 git 凭据助手 `tools/git-credential-fndepot`：它**实时**从 `tools/_gh.py` 取 token
+（即 `$DSH_HOME/.env` 里的 `GITHUB_TOKEN`），**不把 token 写进 `.git/config`，也不写 `.git-credentials`**。
+
+```bash
+git config credential."https://github.com".helper "!$PWD/tools/git-credential-fndepot"
+git config credential."https://github.com".username bekafka
+```
+
+配好之后提交完直接推即可（实测直连可用，不必带代理参数）：
+
+```bash
+git push origin main
+```
+
+推送前建议先看差异：`git log --oneline origin/main..HEAD`。
+注意 token 是 classic PAT（含写权限）；若换成只读 token，推送会失败而读取不受影响。
 
 几个约定：
 
@@ -203,7 +230,8 @@ python3 tools/new-entry.py <owner/repo> <tag> <asset文件名> -c 系统工具 -
 - **安装空间**默认 `""`＝存储空间；只有会写 `/boot`、注册 systemd 服务的应用才加 `--install-type root`
   （可参考作者自带 FnDepot 源里的写法交叉验证）。
 - 更新已有应用时，脚本会保留手工维护的 `icon_url` / `maintainer_url` / `bug_report_url` 与安装空间设置。
-- **图标**：优先用作者仓库/安装包内的真实图标（256×256 PNG 最佳，参考飞牛官方要求）；找不到就填 `assets/icons/fnapp.png`。
+- **图标**：统一用 `assets/icons/fnapp.png`（所有应用都一样，不必为每个应用单独找图标）。
+- **版本**：只从首次收录算起；跟版时追加新版本节点并保留已收录版本，不回溯补历史。
 
 ## 发布前校验
 
