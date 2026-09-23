@@ -15,10 +15,13 @@
 退出码: 0 全部最新 | 1 有需要处理的 | 2 有应用查询失败
 """
 
+import argparse
+import concurrent.futures
 import json
 import os
 import re
 import sys
+import threading
 import urllib.error
 import urllib.request
 
@@ -28,15 +31,22 @@ from _gh import gh_token  # noqa: E402  （token 查找见 tools/_gh.py）
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UA = {"User-Agent": "fndepot-source-checker"}
 _token_warned = []
-_last_error = None      # 最近一次请求失败的原因，降级时告知用户，避免静默降级
+_tls = threading.local()   # 线程各自的「最近一次失败原因」——并发跑时不能共用一个全局
+_TOKEN = [None]
 
 
-def http(url, method="GET", timeout=45):
-    global _last_error
+def token():
+    """token 只解析一次（每次调用都要读 .env，并发下没必要反复读盘）。"""
+    if _TOKEN[0] is None:
+        _TOKEN[0] = gh_token() or ""
+    return _TOKEN[0]
+
+
+def http(url, method="GET", timeout=30):
     headers = dict(UA)
-    token = gh_token()
-    if token and "api.github.com" in url:
-        headers["Authorization"] = f"Bearer {token}"
+    tok = token()
+    if tok and "api.github.com" in url:
+        headers["Authorization"] = f"Bearer {tok}"
         headers["Accept"] = "application/vnd.github+json"
     try:
         req = urllib.request.Request(url, method=method, headers=headers)
@@ -46,14 +56,14 @@ def http(url, method="GET", timeout=45):
                 return int(cl) if cl and cl.isdigit() else None
             return resp.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as exc:
-        _last_error = f"HTTP {exc.code}"
+        _tls.last_error = f"HTTP {exc.code}"
         if exc.code == 401 and "api.github.com" in url and not _token_warned:
             _token_warned.append(1)
             print("  ！GitHub token 被拒（401 Bad credentials）：检查 token 是否正确或已过期",
                   file=sys.stderr)
         return None
     except Exception as exc:
-        _last_error = type(exc).__name__
+        _tls.last_error = type(exc).__name__
         return None
 
 
@@ -72,8 +82,7 @@ def parse_assets(html_text):
 
 def upstream(repo):
     """→ (tag, {资产名: sha256}, 数据来源) ；失败返回 (None, {}, 原因)"""
-    global _last_error
-    _last_error = None
+    _tls.last_error = None
     data = http(f"https://api.github.com/repos/{repo}/releases/latest")
     if data:
         try:
@@ -84,10 +93,10 @@ def upstream(repo):
         except ValueError:
             pass
     # 降级：不耗配额
-    note = f"（api 失败：{_last_error}）" if _last_error else ""
+    note = f"（api 失败：{_tls.last_error}）" if _tls.last_error else ""
     atom = http(f"https://github.com/{repo}/releases.atom")
     if not atom:
-        return None, {}, f"atom 也取不到（网络/代理？{_last_error or ''}）"
+        return None, {}, f"atom 也取不到（网络/代理？{_tls.last_error or ''}）"
     tags = re.findall(r"releases/tag/([^\"<]+)", atom)
     if not tags:
         return None, {}, "该仓库没有 release"
@@ -115,10 +124,15 @@ def norm(tag):
 
 
 def main():
+    ap = argparse.ArgumentParser(description="巡检已收录应用的上游是否发新版 / 资产被重传")
+    ap.add_argument("apps", nargs="*", help="只查这些应用键名，省略则全查")
+    ap.add_argument("--jobs", type=int, default=8, help="并发查询数，默认 8")
+    args = ap.parse_args()
+    only = set(args.apps)
+
     with open(os.path.join(ROOT, "fnpack.json"), encoding="utf-8") as fh:
         index = json.load(fh)
-    only = set(sys.argv[1:])
-    todo, failed, busy = [], [], []
+    failed, busy = [], []
 
     # README 收录表里的版本号是否与索引同步（表容易忘改）
     readme_path = os.path.join(ROOT, "README.md")
@@ -127,8 +141,16 @@ def main():
             readme = fh.read()
         for key, shown in re.findall(r"^\|\s*[^|]+\|\s*`([^`]+)`\s*\|\s*([0-9][^|\s]*)\s*\|", readme, re.M):
             entry = index.get("apps", {}).get(key)
-            if entry and shown not in entry.get("releases", {}):
-                busy.append(f"{key}: README 表里写 {shown}，索引里是 {sorted(entry['releases'])}（表未同步）")
+            if not entry:
+                continue
+            versions = entry.get("releases", {})
+            if shown not in versions:
+                busy.append(f"{key}: README 表里写 {shown}，索引里是 {sorted(versions)}（表未同步）")
+            elif versions and shown != max(versions):
+                busy.append(f"{key}: README 表里写 {shown}，索引里最新是 {max(versions)}（表未同步）")
+
+    # 摊平成待查清单，再按仓库并发取上游（同一仓库的多个架构只查一次）
+    items = []
     for app, entry in sorted(index.get("apps", {}).items()):
         if only and app not in only:
             continue
@@ -136,45 +158,74 @@ def main():
         if not versions:
             continue
         our_ver = versions[-1]
-        pkgs = entry["releases"][our_ver].get("packages", {})
-        for arch, pkg in pkgs.items():
+        for arch, pkg in entry["releases"][our_ver].get("packages", {}).items():
             m = re.match(r"https://github\.com/([^/]+/[^/]+)/releases/download/([^/]+)/(.+)$",
                          pkg.get("download_url", ""))
             if not m:
                 failed.append(f"{app}/{arch}: 下载地址不是 GitHub release 形式")
                 continue
-            repo, our_tag, our_asset = m.group(1), m.group(2), m.group(3)
-            tag, assets, src = upstream(repo)
-            if tag is None:
-                failed.append(f"{app}/{arch}: {src}"); continue
+            items.append({"app": app, "arch": arch, "ver": our_ver, "pkg": pkg,
+                          "repo": m.group(1), "tag": m.group(2), "asset": m.group(3)})
 
-            rx = asset_regex(our_asset, our_ver)
-            match = next((n for n in assets if rx.match(n)), None)
-            if norm(tag) != norm(our_ver):
-                busy.append(f"{app}/{arch}: 有新版本 {our_ver} → {norm(tag)}"
-                            f"（新资产 {match or '命名变了，需人工看'}）")
-            elif match is None:
-                busy.append(f"{app}/{arch}: 版本未变但上游资产名对不上（原有 {our_asset}）")
+    ups = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
+        futs = {pool.submit(upstream, r): r for r in {i["repo"] for i in items}}
+        for fut in concurrent.futures.as_completed(futs):
+            repo = futs[fut]
+            try:
+                ups[repo] = fut.result()
+            except Exception as exc:  # noqa: BLE001
+                ups[repo] = (None, {}, f"查询异常：{exc}")
+
+    heads = []          # 需要核对 size 的包（仅在没有官方 digest 时），第二轮并发
+    checked = []
+    for it in items:
+        tag, assets, src = ups.get(it["repo"], (None, {}, "未查询"))
+        if tag is None:
+            failed.append(f"{it['app']}/{it['arch']}: {src}")
+            continue
+        rx = asset_regex(it["asset"], it["ver"])
+        match = next((n for n in assets if rx.match(n)), None)
+        if norm(tag) != norm(it["ver"]):
+            busy.append(f"{it['app']}/{it['arch']}: 有新版本 {it['ver']} → {norm(tag)}"
+                        f"（新资产 {match or '命名变了，需人工看'}）")
+        elif match is None:
+            busy.append(f"{it['app']}/{it['arch']}: 版本未变但上游资产名对不上（原有 {it['asset']}）")
+        else:
+            up_digest = assets.get(match) or ""
+            if up_digest and up_digest != it["pkg"].get("sha256"):
+                busy.append(f"{it['app']}/{it['arch']}: 同版本资产被重传！我们钉的 sha256 已失效"
+                            f"（我们 {it['pkg'].get('sha256','')[:12]}… / 上游 {up_digest[:12]}…）")
+            elif up_digest:
+                # 官方 digest 一致 ⇒ 内容没变 ⇒ size 必然没变，不必再发 HEAD（省一轮请求）
+                checked.append(f"  最新  {it['app']}/{it['arch']}  {it['ver']}（{src}）")
             else:
-                up_digest = assets.get(match) or ""
-                if up_digest and up_digest != pkg.get("sha256"):
-                    busy.append(f"{app}/{arch}: 同版本资产被重传！我们钉的 sha256 已失效"
-                                f"（我们 {pkg.get('sha256','')[:12]}… / 上游 {up_digest[:12]}…）")
+                heads.append((it, match, src))   # 上游没给 digest，只能靠 HEAD 核对 size
+
+    if heads:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
+            futs = {pool.submit(http, f"https://github.com/{it['repo']}/releases/download/"
+                                      f"{it['tag']}/{match}", "HEAD"): (it, match, src)
+                    for it, match, src in heads}
+            for fut in concurrent.futures.as_completed(futs):
+                it, match, src = futs[fut]
+                up_size = fut.result()
+                if up_size and up_size != it["pkg"].get("size"):
+                    busy.append(f"{it['app']}/{it['arch']}: 同版本资产大小变了"
+                                f"（{it['pkg'].get('size')} → {up_size}）")
                 else:
-                    up_size = http(f"https://github.com/{repo}/releases/download/{tag}/{match}", "HEAD")
-                    if up_size and up_size != pkg.get("size"):
-                        busy.append(f"{app}/{arch}: 同版本资产大小变了（{pkg.get('size')} → {up_size}）")
-                    else:
-                        print(f"  最新  {app}/{arch}  {our_ver}（{src}）")
+                    checked.append(f"  最新  {it['app']}/{it['arch']}  {it['ver']}（{src}）")
+        for line in sorted(checked):
+            print(line)
 
     print()
     if busy:
         print("需要处理：")
-        for line in busy:
+        for line in sorted(busy):
             print("  ! " + line)
     if failed:
         print("查询失败：")
-        for line in failed:
+        for line in sorted(failed):
             print("  ? " + line)
     if not busy and not failed:
         print("全部已是最新 ✓")

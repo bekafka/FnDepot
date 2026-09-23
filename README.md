@@ -76,9 +76,11 @@ https://github.com/bekafka/FnDepot
 FnDepot/
 ├── fnpack.json                     # V2 索引（schema_version = "2"）
 ├── assets/icons/fnapp.png          # 统一图标：所有应用都用它（勿删）
-├── tools/add-app.py                # 【主】丢一个仓库链接就能收录（不下载整包）
+├── tools/add-app.py                # 【主】丢一个仓库链接就能收录（可批量、并发、带缓存，不下载整包）
+├── tools/verify.py                 # 【发布前】结构自检 + 并发核对全部外链 size + README↔索引一致性
 ├── tools/check-updates.py          # 巡检上游是否有新版 / 资产被重传
 ├── tools/new-entry.py              # 底层采集：--light / --local / 下载整包
+├── tools/.cache/                   # API 与文件响应缓存（已 gitignore，--refresh 可强制重查）
 ├── .gh_token                       # 可选：GitHub token（已 gitignore，勿提交）
 └── README.md
 ```
@@ -206,11 +208,21 @@ curl -s -H "Authorization: Bearer $(cat .gh_token)" https://api.github.com/rate_
 export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890   # 直连不通时
 python3 tools/add-app.py <仓库链接> -c 系统工具          # dry-run，先看要写什么
 python3 tools/add-app.py <仓库链接> -c 系统工具 --write   # 确认后落盘（自动备份 fnpack.json.bak）
+
+# 一次收录多个（并发抓取，串行合并；每行可写成 "链接 分类"）
+python3 tools/add-app.py --batch repos.txt -c 系统工具 --write
 ```
 
 `add-app.py` 会自己完成：取最新 tag 与 `.fpk` 资产 → 取官方 `sha256` digest 与 `content-length`
-→ 读作者仓库里的 `manifest`/`config/privilege`（版本须与 tag 一致）→ 组装条目。
-元数据读不到 manifest 时退回 README + 资产名推导，**会把"哪些字段是猜的"打印出来**。
+→ **按仓库文件树定位** `manifest`/`config/privilege`（路径不固定，`fpk/ignis/manifest`、`packaging/fnos/manifest` 都见过）
+→ 组装条目，并在写盘前做一次自检。元数据读不到 manifest 时退回 README + 资产名推导，**会把"哪些字段是猜的"打印出来**。
+
+两点口径：
+- manifest 的 `version` 与 release tag **不一致时，`appname`/`platform`/`run_as` 等身份字段仍用 manifest**
+  （作者常常先改仓库后发版），只把 `version`/`changelog` 按 tag 取——旧版会整体退回"按文件名猜"，曾因此把键名写错。
+- 该 release 实际发布了两个架构的包时，`platform` 取并集，不必为另一个架构再跑一次。
+
+网络结果缓存在 `tools/.cache/`：同一仓库重复跑近乎零网络（`--refresh` 强制重查）。
 
 底层工具（需要指定 tag / 本地包实测哈希等特殊情况才用）：
 
@@ -249,7 +261,8 @@ git push origin main
 
 几个约定：
 
-- **双架构应用**：对每个架构各跑一次 `--write`，同版本的另一个架构会并进 `packages`，`platform` 自动取并集。
+- **双架构应用**：脚本会自动把同一 release 里两个架构的包并进 `packages`、`platform` 取并集（无需跑两次）。
+- **同架构多个包**（如 `-iframe` / `-url`）默认取 `-iframe`，需要时用 `--asset 文件名` 指定。
 - **安装空间**默认 `""`＝存储空间；只有会写 `/boot`、注册 systemd 服务的应用才加 `--install-type root`
   （可参考作者自带 FnDepot 源里的写法交叉验证）。
 - 更新已有应用时，脚本会保留手工维护的 `icon_url` / `maintainer_url` / `bug_report_url` 与安装空间设置。
@@ -259,10 +272,13 @@ git push origin main
 ## 发布前校验
 
 ```bash
-jq empty fnpack.json                       # 严格 JSON
-jq -r '.apps | keys[]' fnpack.json         # 应用键名清单
-curl -sI "$(jq -r '.apps[].releases[].packages[].download_url' fnpack.json)" | head -1
+python3 tools/verify.py            # 一条命令：结构 + 外链 size + README↔索引一致性（约 13s）
+python3 tools/verify.py --no-net   # 只做结构检查，不联网
 ```
+
+逐项检查必填字段与取值域、图标文件、包键名与 `platform` 自洽、`download_url` 必须是带 tag 的地址
+（不许 `latest/download`）、`sha256` 格式、`size` 正整数，并**并发**核对每个外链的 `Content-Length` 是否等于索引里的 `size`，
+最后核对 README 收录表的键名与版本是否与索引一致（键名写错＝客户端静默装不上）。
 
 正文改动直接 push 到默认分支 `main` 即可，客户端同步时按 `version` 变化感知更新。
 **已发布的「版本号 + 架构」对应的文件视为不可变**：上游发新版本时新增版本节点，不要静默替换同版本条目。

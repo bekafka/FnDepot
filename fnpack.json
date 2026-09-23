@@ -225,7 +225,7 @@
     },
     "fpkconverter": {
       "display_name": "视频转码",
-      "desc": "NAS 视频转码（本地自用硬件转码版）。定时扫描授权目录，把符合条件的视频串行转码为 H.264/H.265，支持 Intel Quick Sync Video（QSV）与 AMD VAAPI 硬件编码，需访问 GPU 设备。",
+      "desc": "NAS视频转码（本地自用硬件转码版，支持访问 GPU 设备）",
       "platform": [
         "x86"
       ],
@@ -247,6 +247,7 @@
           }
         }
       },
+      "maintainer": "yang",
       "maintainer_url": "https://github.com/yang1245789/fpk-converter"
     },
     "fnosoidcbridge": {
@@ -281,7 +282,7 @@
     },
     "fnwifi": {
       "display_name": "无线热点",
-      "desc": "在飞牛 fnOS 中利用无线网卡开启一个无线热点（AP）。",
+      "desc": "在飞牛中利用无线网卡开启一个无线热点。",
       "platform": [
         "all"
       ],
@@ -303,11 +304,12 @@
           }
         }
       },
-      "maintainer_url": "https://github.com/Zisbusy/fnwifi"
+      "maintainer": "大哲",
+      "maintainer_url": "https://zhebk.cn/"
     },
     "ignis": {
       "display_name": "Obsidian",
-      "desc": "在浏览器中运行 Obsidian，无需远程桌面。基于 Ignis（Electron API 兼容层），让 Obsidian 官方网页资源运行在标准浏览器中，vault 数据完整保存在 NAS 上。首次安装时自动从官方源下载 Obsidian 资源（不含程序本体），vault 目录可在安装向导自定义，支持登录认证保护与多端实时同步。",
+      "desc": "在浏览器中运行 Obsidian，无需远程桌面。基于 Ignis（Electron API 兼容层），让 Obsidian 官方网页资源运行在标准浏览器中，vault 数据完整保存在 NAS 上。 特性： • 登录认证保护：访问需用户名/密码（安装向导设置），凭据持久化，重启升级不掉配置 • 启动自愈：Obsidian 资源缺失时启动阶段自动从官方源重新下载，无需手动干预 • 退出登录：设置内一键清除会话（服务端令牌轮换，旧会话立即失效） • vault 数据目录可自定义（安装向导设置），支持在飞牛文件管理器中直接管理 • 实时文件监听，多端修改即时同步；WebSocket 实时通信，完整编辑体验 • 端口 19527，支持 HTTPS 反向代理 说明： 本应用为 Ignis 项目的第三方打包（AGPL-3.0）， 不含 Obsidian 程序本体 ——首次安装时自动多源下载（官方源+国内加速镜像自动回退）并解包（离线环境可配置 OBSIDIAN_PACKAGE 指向本地安装包，下载地址见 GitHub 仓库 README）。使用需遵守 Obsidian 的服务条款。",
       "platform": [
         "all"
       ],
@@ -326,18 +328,20 @@
               "sha256": "93e37c8d67171d067ea5adf565f984fce6edcd6182e4a804e80b8fcb57f9368a",
               "size": 6924736
             }
-          }
+          },
+          "changelog": "1.4.5：安装向导新增下载代理选填项（obsidian_proxy），优先经代理下载 Obsidian（如 http://192.168.31.2:20171），多源回退（官方+gh-proxy+ghfast+ghproxy）保留；下载失败转后台补下载。"
         }
       },
-      "maintainer_url": "https://github.com/Hxido-RXM/Obsidian-fpk",
-      "service_port": "19527"
+      "service_port": "19527",
+      "maintainer": "Hxido",
+      "maintainer_url": "https://github.com/Nystik-gh/ignis"
     },
     "opensync": {
       "display_name": "OpenSync",
       "desc": "OpenSync 是运行在飞牛 fnOS 上的文件同步与备份工具，可作为群晖 Cloud Sync 的替代方案。 应用依赖 OpenList / AList 作为存储引擎。添加本地存储、阿里云盘、百度网盘、OneDrive、S3、WebDAV 等存储后，即可在不同存储之间自动同步文件。 支持增量同步与全量同步，满足备份和镜像场景。 支持 Cron、固定间隔和手动触发。 支持文件名、文件后缀、文件目录、系统目录过滤和文件大小限制。 提供实时进度、执行历史、失败重试和任务超时控制。 支持 Webhook、Server酱、钉钉、企业微信、飞书通知。 开源地址： https://github.com/chenbin3625/OpenSync-fnOS",
       "platform": [
-        "arm",
-        "x86"
+        "x86",
+        "arm"
       ],
       "categories": [
         "系统工具"
@@ -369,7 +373,7 @@
     },
     "m3u8_down": {
       "display_name": "m3u8下载器",
-      "desc": "基于开源项目 N_m3u8DL-RE 封装的可视化 DASH/HLS/MSS 流媒体下载工具。支持点播与直播、多线程下载、音视频混流、字幕、解密、代理等完整命令行能力，全部参数均可可视化配置；内置 x86_64 / arm64 双架构官方二进制，通过 Web 界面实时查看下载进度与管理文件。",
+      "desc": "m3u8下载器：基于开源项目 N_m3u8DL-RE（github.com/nilaoda/N_m3u8DL-RE，MIT License）封装的可视化 DASH/HLS/MSS 流媒体下载工具。支持点播与直播、多线程下载、音视频混流、字幕、解密、代理等完整命令行能力，全部参数均可视化配置；内置 x86_64 / arm64 双架构官方二进制，通过 Web 界面实时查看下载进度与文件管理。开发者：Youngxj（github.com/Youngxj/N_m3u8DL-RE-FN）",
       "platform": [
         "all"
       ],
@@ -391,11 +395,12 @@
           }
         }
       },
+      "maintainer": "Youngxj",
       "maintainer_url": "https://github.com/Youngxj/N_m3u8DL-RE-FN"
     },
     "cpu-tuner": {
-      "display_name": "CPU 性能控制台（CPU Tuner）",
-      "desc": "面向飞牛 fnOS NAS 的原生 FPK 应用。它读取 Linux CPUFreq 与 hwmon/thermal 接口，展示 CPU、policy、驱动报告频率和温度；在明确授权后事务式调整 scaling_max_freq，提供目标温度闭环、开机恢复，以及可停止、有温度保护的内置性能测试。",
+      "display_name": "CPU 性能控制台",
+      "desc": "查看和安全调整 CPU 最高频率限制，并进行性能与温度测试",
       "platform": [
         "x86"
       ],
@@ -417,14 +422,15 @@
           }
         }
       },
+      "maintainer": "cpu-tuner contributors",
       "maintainer_url": "https://github.com/787x/cpu-tuner-fnos"
     },
     "fnos-terminal": {
       "display_name": "终端",
       "desc": "在飞牛 fnOS 桌面中打开仅限管理员使用的 Debian Web 终端。基于 ttyd，通过统一网关访问，不开放额外端口。",
       "platform": [
-        "arm",
-        "x86"
+        "x86",
+        "arm"
       ],
       "categories": [
         "系统工具"
