@@ -36,6 +36,9 @@ https://github.com/bekafka/FnDepot
 | 极测-性能跑分 | `chipbeat` | 1.0.0 | arm | gulugulupao | [gulugulupao/chipbeat](https://github.com/gulugulupao/chipbeat) |
 | WireGuard 管理工具 | `fn-wireguard` | 0.9.0 | arm / x86 | newcdl | [newcdl/fn-WireGuard](https://github.com/newcdl/fn-WireGuard) |
 | 重复文件清理 | `dupclean` | 0.6.50 | all | QickBlue | [QickBlue/fnos_dupclean](https://github.com/QickBlue/fnos_dupclean) |
+| 综合磁盘检测 | `com.gulugulupao.smartdisk` | 0.1.4 | arm | gulugulupao | [gulugulupao/fnsmartdisk](https://github.com/gulugulupao/fnsmartdisk) |
+| ClamSentinel | `clamsentinel` | 1.5 | arm | gulugulupao | [gulugulupao/clamsentinel](https://github.com/gulugulupao/clamsentinel) |
+| PicHost | `pichost` | 1.4.2 | all | O96u | [O96u/PicHost](https://github.com/O96u/PicHost) |
 | 视频转码 | `fpkconverter` | 1.0.56 | x86 | yang1245789 | [yang1245789/fpk-converter](https://github.com/yang1245789/fpk-converter) |
 | OIDC SSO Bridge | `fnosoidcbridge` | 0.7.1 | all | BeFortune | [BeFortune/fnos-oidc-bridge](https://github.com/BeFortune/fnos-oidc-bridge) |
 | m3u8 下载器 | `m3u8_down` | 0.6.0-beta.25 | all | Youngxj | [Youngxj/N_m3u8DL-RE-FN](https://github.com/Youngxj/N_m3u8DL-RE-FN) |
@@ -105,6 +108,11 @@ https://github.com/bekafka/FnDepot
   该 tag 不是版本号，所以版本取自**包内 manifest**（`0.6.50`）、`sha256`/`size` 为**本地下载实测**
   （`3cccddc0…` / 3534326B，与 GitHub 官方 digest 逐字节一致）。
   副作用：巡检会一直报「有新版本 0.6.50 → 0.6.77」，但那个版本没有可安装资产；等作者发回裸 `.fpk` 即可跟版。
+- **`com.gulugulupao.smartdisk`、`clamsentinel` 是 arm 专用**（manifest 声明 `platform=arm`），x86 设备上看不到；
+  两者作者与"一键超频""极测"同为 gulugulupao。
+- **`pichost` 的仓库里没有 manifest**，元数据是把 1.4.2 的 fpk 下载下来按**包内 manifest** 校正的
+  （`display_name=PicHost`、`desc`、`service_port=6892` 都取自包内；`run_as=package` 取自包内 `config/privilege`）；
+  包内 `maintainer` 写的是 `Muxui`，按本源口径 `maintainer` 仍取仓库 owner `O96u`。
 - **图标**：所有条目统一引用本源通用图标 `assets/icons/fnapp.png`。
   **约定：图标统一用它，不要删这个文件，也不要用外部占位图。**
 

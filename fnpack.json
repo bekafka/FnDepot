@@ -712,6 +712,104 @@
           "os_min_version": "0.9.0"
         }
       }
+    },
+    "com.gulugulupao.smartdisk": {
+      "display_name": "综合磁盘检测",
+      "desc": "离线综合评估板载 eMMC、SATA 接口硬盘、USB 桥接硬盘的 SMART 健康信息，一键扫描给出磁盘健康分与剩余写入寿命、使用年限。适用于 OEC / OES 等飞牛设备。 作者：很多问题的小明同学 · 公众号：很多问题的小明同学 · github.com/gulugulupao/fnsmartdisk",
+      "platform": [
+        "arm"
+      ],
+      "categories": [
+        "硬件驱动"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "gulugulupao",
+      "maintainer_url": "https://github.com/gulugulupao/fnsmartdisk",
+      "readme_url": "https://cdn.jsdelivr.net/gh/gulugulupao/fnsmartdisk@latest/README.md",
+      "releases": {
+        "0.1.4": {
+          "packages": {
+            "arm": {
+              "download_url": "https://github.com/gulugulupao/fnsmartdisk/releases/download/v0.1.4/FnSmartdisk.fpk",
+              "sha256": "8cef77c825befc8fcaa7eb83250b6043a1362a231c6973f60732c654a08fc0c7",
+              "size": 296624
+            }
+          },
+          "changelog": "v0.1.4：新增三星 SATA(860/870 EVO/PRO/QVO、850 EVO/PRO)剩余寿命识别——按官方 TBW 表(来源 Samsung 官网/Data Sheet)对比 attr241 写入量估算剩余寿命%，写入量按 LBA×512 精确换算，明示\"TBW估算\"标签；UI 底部新增常驻\"说明\"区块(覆盖寿命识别/磨损等级/写入量等估算数据的免责声明，置作者信息行上方，高亮度高对比)；寿命仪表盘区间值显示优化(等宽数字、区间取中点、eMMC 与 SATA 统一渐变弧)，eMMC 状态徽标随寿命等级着色。v0.1.3：重构厂商属性识别为三档(标准通用+厂商专属+SSD兜底)，修正跨厂商属性 ID 语义冲突(如 168/169/202/233)；Lenovo 等品牌贴牌盘按主控识别(如 SL700=Phison)；强化剩余寿命估算(SATA 用 231、SMI 用 169，结",
+          "os_min_version": "0.9.0"
+        }
+      },
+      "service_port": "8091"
+    },
+    "clamsentinel": {
+      "display_name": "ClamSentinel",
+      "desc": "ClamSentinel 哨兵杀毒 V1.5 —— ARM 版飞牛 OS 上的原生轻量防护方案。 1.ClamAV 权威病毒库：复用国际主流开源杀毒引擎的病毒库，安全可靠。 2.智能睡眠机制：Sentinel 守护进程空闲时自动停止 Web 与 clamd 进程，实测可释放约 1.05GB 内存（仅保留约 30MB），随叫随醒。 3.已实测适配 RK35XX（RK3566/3576/3588 等）、晶晨（A311D/S905X4等）设备，2GB 小运存设备专项调优。 4.免 Docker 独立部署：不依赖容器环境，减少一层开销，资源占用更干净 5.性能调节器：节能/均衡 双档位，内存有限设备可选节能防卡顿，切换即时生效无需重启 6.诊断日志导出：一键打包 app/sentinel/clamd 日志 + 机型内存等环境信息，方便报障排查 7.病毒库就绪判定兼容 daily.cvd / daily.cld 两种命名（修复新版 freshclam 将增量库存为 .cld 时被误判为缺失的 bug） 8.前端交互增强：累计威胁可点击直达「威胁清单」、错误明细可点开查看具体路径、扫描状态实时显示当前性能档位",
+      "platform": [
+        "arm"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "gulugulupao",
+      "maintainer_url": "https://github.com/gulugulupao/clamsentinel",
+      "readme_url": "https://cdn.jsdelivr.net/gh/gulugulupao/clamsentinel@latest/README.md",
+      "releases": {
+        "1.5": {
+          "packages": {
+            "arm": {
+              "download_url": "https://github.com/gulugulupao/clamsentinel/releases/download/v1.5/clamsentinel-v1.5.fpk",
+              "sha256": "e6c5e6d89c7d1874040d8991bdbe2bd959b82c4feccfdb214270778573325c08",
+              "size": 60247748
+            }
+          },
+          "changelog": "v1.5 正式大版本：新增「性能调节器」（节能/均衡双档位，切换即时生效无需重启，针对 2G/4G 内存设备防卡顿）、「诊断日志导出」（一键打包 app/sentinel/clamd 日志+机型内存等环境信息供报障）、「威胁清单」聚合页，累计威胁可点击直达、错误明细可点开查看具体路径、缓存强制 no-store 不再被旧前端卡住；修复病毒库就绪误判（兼容 daily.cvd/.cld）。v1.0.4h 修复病毒库就绪误判：新版 freshclam 将每日增量库存为 daily.cld，原判定只认 daily.cvd 导致界面长期误报「病毒库未就绪（缺 daily.cvd）」；现兼容 .cvd/.cld 任一命名即视为就绪。v1.0.4g 新增「诊断日志导出」。v1.0.4f 性能调节器收窄为双档位。v1.0.4e 新增「性能调节器」。v1.0.4d 前端交互增强。V1.0 阈值改 10 分",
+          "os_min_version": "0.9.25"
+        }
+      },
+      "service_port": "8080"
+    },
+    "pichost": {
+      "display_name": "PicHost",
+      "desc": "自托管图床：多用户、彩色标签、本地/对象存储、整站备份与跨后端同步、双域名分离、WebP 压缩、API/Twikoo，安装向导创建管理员",
+      "platform": [
+        "all"
+      ],
+      "categories": [
+        "生活服务"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "O96u",
+      "maintainer_url": "https://github.com/O96u/PicHost",
+      "readme_url": "https://cdn.jsdelivr.net/gh/O96u/PicHost@latest/README.md",
+      "releases": {
+        "1.4.2": {
+          "packages": {
+            "all": {
+              "download_url": "https://github.com/O96u/PicHost/releases/download/v1.4.2/pichost-1.4.2.fpk",
+              "sha256": "abd8c4f8d9ad37430cc3b6dd817618d33d3fb45bd4ba630faf9366a4c5500e38",
+              "size": 132548
+            }
+          },
+          "os_min_version": "0.9.27"
+        }
+      },
+      "service_port": "6892"
     }
   }
 }
