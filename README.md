@@ -31,6 +31,11 @@ https://github.com/bekafka/FnDepot
 | Hermes Agent | `hermes-agent` | 0.21.149 | all | veenyi | [veenyi/fnos-hermes-agent](https://github.com/veenyi/fnos-hermes-agent) |
 | hermes-desktop | `hermes-desktop` | 0.21.3.1 | all | veenyi | [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web) |
 | 终端 | `fnos-terminal` | 1.2.12 | arm / x86 | Eric0101 | [Eric0101/fnos-terminal](https://github.com/Eric0101/fnos-terminal) |
+| NAS硬件监控 | `com.dashboard.nasdash` | 2.3.3 | x86 | han951meng | [han951meng/nasdash](https://github.com/han951meng/nasdash) |
+| OpenClaw 管家 | `openclaw.studio` | 1.3.3 | x86 | sunnyday666 | [sunnyday666/fn-openclaw-launcher](https://github.com/sunnyday666/fn-openclaw-launcher) |
+| 极测-性能跑分 | `chipbeat` | 1.0.0 | arm | gulugulupao | [gulugulupao/chipbeat](https://github.com/gulugulupao/chipbeat) |
+| WireGuard 管理工具 | `fn-wireguard` | 0.9.0 | arm / x86 | newcdl | [newcdl/fn-WireGuard](https://github.com/newcdl/fn-WireGuard) |
+| 重复文件清理 | `dupclean` | 0.6.50 | all | QickBlue | [QickBlue/fnos_dupclean](https://github.com/QickBlue/fnos_dupclean) |
 | 视频转码 | `fpkconverter` | 1.0.56 | x86 | yang1245789 | [yang1245789/fpk-converter](https://github.com/yang1245789/fpk-converter) |
 | OIDC SSO Bridge | `fnosoidcbridge` | 0.7.1 | all | BeFortune | [BeFortune/fnos-oidc-bridge](https://github.com/BeFortune/fnos-oidc-bridge) |
 | m3u8 下载器 | `m3u8_down` | 0.6.0-beta.25 | all | Youngxj | [Youngxj/N_m3u8DL-RE-FN](https://github.com/Youngxj/N_m3u8DL-RE-FN) |
@@ -91,6 +96,15 @@ https://github.com/bekafka/FnDepot
   据此改掉了 5 条不指向项目页的 `maintainer_url`（`fnwifi` 曾写作者主页 `zhebk.cn`、`ignis` 曾写上游 `Nystik-gh/ignis`、
   `opensync`/`fnos-terminal`/`FanControlServer` 曾只写到 owner）；作者在 manifest 里写的显示名
   （`大哲`、`金木炎`、`豪子`、`如烟`、`很多问题的小明同学`）按这一口径不再使用，已从索引移除。
+- **`com.dashboard.nasdash`、`openclaw.studio` 是 x86 专用**（manifest 声明 `platform=x86`），arm64 设备上看不到。
+- **`chipbeat` 反过来是 arm 专用**（manifest 声明 `platform=arm`），x86 设备上看不到；作者与"一键超频"同为 gulugulupao。
+- **`fn-wireguard` 走双架构合并**：仓库内 manifest 只写了单架构，但 release 同时发了 `-amd64` 与 `-arm64` 两个包，
+  与 `fnos-terminal`/`opensync` 同样处理（`platform` 取并集）。它的 manifest 在 `apps/fn-wireguard/manifest`。
+- **`dupclean` 收的是 0.6.50，不是作者最新版**：其最新 release `v0.6.77` 只发布了 `dupclean_v0.6.77.fpk.zip`
+  （压缩包，客户端不认），最后一个可直接安装的裸 `.fpk` 在 tag 叫 `Main` 的那个 release 里（`dupclean_v0.6.50.fpk`）。
+  该 tag 不是版本号，所以版本取自**包内 manifest**（`0.6.50`）、`sha256`/`size` 为**本地下载实测**
+  （`3cccddc0…` / 3534326B，与 GitHub 官方 digest 逐字节一致）。
+  副作用：巡检会一直报「有新版本 0.6.50 → 0.6.77」，但那个版本没有可安装资产；等作者发回裸 `.fpk` 即可跟版。
 - **图标**：所有条目统一引用本源通用图标 `assets/icons/fnapp.png`。
   **约定：图标统一用它，不要删这个文件，也不要用外部占位图。**
 
