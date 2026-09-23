@@ -810,6 +810,113 @@
         }
       },
       "service_port": "6892"
+    },
+    "ps5-ftp-manager": {
+      "display_name": "PS5 FTP Manager",
+      "desc": "面向 PS5 FTP 服务的飞牛 fnOS 游戏文件传输与文件管理工具，支持持久化任务、实时进度、ETA 和取消。",
+      "platform": [
+        "x86"
+      ],
+      "categories": [
+        "游戏地带"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "aydencharles",
+      "maintainer_url": "https://github.com/aydencharles/ps5-ftp-fnOS",
+      "readme_url": "https://cdn.jsdelivr.net/gh/aydencharles/ps5-ftp-fnOS@latest/README.md",
+      "releases": {
+        "0.3.0": {
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/aydencharles/ps5-ftp-fnOS/releases/download/v0.3.0/ps5-ftp-manager.fpk",
+              "sha256": "04252553aba4c456210b66b362501218ad226093341b8ed04b24eb6c1cad30a6",
+              "size": 6595353
+            }
+          }
+        }
+      },
+      "service_port": "8100"
+    },
+    "openvpn-client": {
+      "display_name": "OpenVPN 客户端",
+      "desc": "OpenVPN 客户端 让飞牛私有云 (fnOS) 作为 VPN 客户端连接任意 OpenVPN 服务器（公司 VPN、异地组网、服务商 VPN 等）。 功能： - 导入 .ovpn 配置（粘贴文本，支持证书内嵌），可保存多套配置切换 - 一键连接 / 断开，实时状态（服务器地址、隧道 IP、连接时间） - 连接日志查看，开机自启（NAS 重启自动拨号） - Web 管理界面（经系统门户访问） - 数据持久化到应用数据卷，升级或重装不丢失 适用前提： - 目标 OpenVPN 服务器可达（公网 IP / 域名 / 内网） - 需要 root 启动以创建 TUN 设备（与 openvpn 服务器应用相同的官方许可场景） 来源与许可： OpenVPN 为 GPLv2（Community Edition）。本 FPK 由 Panda（www.aykeji.cn）打包发布。 项目仓库： https://github.com/IamAyang233/fnos-openvpn",
+      "platform": [
+        "x86",
+        "arm"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "IamAyang233",
+      "maintainer_url": "https://github.com/IamAyang233/fnos-openvpn-client",
+      "releases": {
+        "0.1.10": {
+          "packages": {
+            "arm": {
+              "download_url": "https://github.com/IamAyang233/fnos-openvpn-client/releases/download/v0.1.10/openvpn-client_0.1.10_arm.fpk",
+              "sha256": "ec790f2c04a8d763ba72982a4ad44c0664d89c25fd2281f7dd5874d6e3fadbe8",
+              "size": 10745999
+            },
+            "x86": {
+              "download_url": "https://github.com/IamAyang233/fnos-openvpn-client/releases/download/v0.1.10/openvpn-client_0.1.10_x86.fpk",
+              "sha256": "90b7c86d70335d89d577d900cbff156d41acc0fee88a22188bbe1a010c3b30c2",
+              "size": 19453879
+            }
+          },
+          "changelog": "【v0.1.10】关于页「Bug 反馈」勾选区新增红色「交流QQ群：511725692」入口（与 OpenVPN 服务端保持一致）；本次并入此前已修复的两处问题：删除配置时连带清除同名的 .auth 凭据文件避免密码残留泄露、流量统计全局变量加并发锁消除 data race（go -race）。【v0.1.9】修复日志页永远显示空日志的根因：openvpn 以 root 写入 client.log 属主为 root:600，Web 后端（nobody）读不到返回空；现于连接前将 client.log / openvpn-status.log 属主改为 nobody 可读，连接/断开动作后立即刷新日志（保留 15 秒兜底轮询）。【v0.1.8】修复导入配置弹窗在“选择 .ovpn 文件”后消失的问题（浏览器文件选择框关闭后补发的游离 click 被误判为点击弹窗外而关闭）；前端 JS 缓存号",
+          "os_min_version": "1.1.3100"
+        }
+      }
+    },
+    "miproxy": {
+      "display_name": "MiProxy",
+      "desc": "MiProxy v2.7.0 - 飞牛 NAS 代理网关：一键 TUN 全局代理 + 订阅自动刷新 + 双控制面板 + DNS 防泄露，基于 mihomo 内核（仅支持 Clash 格式订阅）",
+      "platform": [
+        "x86",
+        "arm"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "56025192",
+      "maintainer_url": "https://github.com/56025192/miproxy-fpk",
+      "readme_url": "https://cdn.jsdelivr.net/gh/56025192/miproxy-fpk@latest/README.md",
+      "releases": {
+        "2.7.0": {
+          "packages": {
+            "arm": {
+              "download_url": "https://github.com/56025192/miproxy-fpk/releases/download/v2.7.0/miproxy-2.7.0-arm64.fpk",
+              "sha256": "87eb1e20ed0b4646332a58222b53df52a4adeb128c7e683d688e422bf4dedcb2",
+              "size": 33597656
+            },
+            "x86": {
+              "download_url": "https://github.com/56025192/miproxy-fpk/releases/download/v2.7.0/miproxy-2.7.0-x86_64.fpk",
+              "sha256": "abf6d0d7d91f3781b38bf3dc8bf42e873da1a774fe368e77553d96bbd9e95468",
+              "size": 35341864
+            }
+          },
+          "changelog": "v2.7.0: 全面代码审查 + 日志模块重构 + TUN 配置优化 | v2.6.39: TUN 配置优化（strict-route防DNS泄露 + gso性能 + miproxy网卡名）+ 修复订阅解析 bug | v2.6.38: 优化订阅解析逻辑",
+          "os_min_version": "1.1.0"
+        }
+      },
+      "service_port": "9090"
     }
   }
 }

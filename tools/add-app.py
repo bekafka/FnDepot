@@ -32,7 +32,9 @@ import os
 import re
 import sys
 import threading
+import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -213,6 +215,29 @@ def readme_cdn_url(repo, path, ref="latest"):
     latest 由 jsDelivr 解析成仓库最新的 semver tag（没有 tag 时退回默认分支）。
     """
     return f"https://cdn.jsdelivr.net/gh/{repo}@{ref}/{path}"
+
+
+def cdn_ok(url, attempts=2):
+    """探测 jsDelivr 地址是否真的可取到。
+
+    jsDelivr 对单个版本有 50MB 上限、且仓库某版本可能压根没有 README，
+    这两种情况都会返回 403/404——此时宁可不写 readme_url，也不要留一个死链
+    （用户定的口径是"必须走 CDN"，所以不退回 GitHub 原始地址）。
+    """
+    for i in range(attempts):
+        try:
+            req = urllib.request.Request(urllib.parse.quote(url, safe=":/?#[]@!$&'()*+,;=%~"),
+                                         method="HEAD", headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+                return resp.status == 200, ""
+        except urllib.error.HTTPError as exc:
+            if exc.code in (403, 404):
+                return False, f"HTTP {exc.code}"
+        except Exception as exc:  # noqa: BLE001
+            last = type(exc).__name__
+        if i == 0:
+            time.sleep(1.0)
+    return False, "网络查询失败"
 
 
 def strip_md(text):
@@ -489,12 +514,18 @@ def build_entry(repo, cats, arch_flag, asset_flag, refresh):
         # maintainer 按用户定的口径一律取仓库 owner（不取 manifest 里可能写着上游厂商的 maintainer）
         "maintainer": repo.split("/")[0],
         "maintainer_url": project_url,
-        "readme_url": readme_cdn_url(repo, readme_path) if readme_path else "",
+        "readme_url": readme_cdn_url(repo, readme_path) if readme_path else "",  # 下面探测，不可达就删掉
         "releases": {ver: {"packages": packages}},
     }
     if not entry["readme_url"]:
         del entry["readme_url"]
         notes.append("取不到 README 路径 → 本次不写 readme_url")
+    else:
+        ok, why = cdn_ok(entry["readme_url"])
+        if not ok:
+            notes.append(f"jsDelivr 取不到 README（{why}；常见原因：仓库超 50MB 上限、或该版本没有 README）"
+                         f"→ 本次不写 readme_url（不退回首 GitHub 原始地址）")
+            del entry["readme_url"]
     if fields.get("service_port"):
         entry["service_port"] = fields["service_port"]
     if fields.get("changelog") and not drift:

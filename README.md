@@ -39,6 +39,9 @@ https://github.com/bekafka/FnDepot
 | 综合磁盘检测 | `com.gulugulupao.smartdisk` | 0.1.4 | arm | gulugulupao | [gulugulupao/fnsmartdisk](https://github.com/gulugulupao/fnsmartdisk) |
 | ClamSentinel | `clamsentinel` | 1.5 | arm | gulugulupao | [gulugulupao/clamsentinel](https://github.com/gulugulupao/clamsentinel) |
 | PicHost | `pichost` | 1.4.2 | all | O96u | [O96u/PicHost](https://github.com/O96u/PicHost) |
+| PS5 FTP Manager | `ps5-ftp-manager` | 0.3.0 | x86 | aydencharles | [aydencharles/ps5-ftp-fnOS](https://github.com/aydencharles/ps5-ftp-fnOS) |
+| OpenVPN 客户端 | `openvpn-client` | 0.1.10 | arm / x86 | IamAyang233 | [IamAyang233/fnos-openvpn-client](https://github.com/IamAyang233/fnos-openvpn-client) |
+| MiProxy | `miproxy` | 2.7.0 | arm / x86 | 56025192 | [56025192/miproxy-fpk](https://github.com/56025192/miproxy-fpk) |
 | 视频转码 | `fpkconverter` | 1.0.56 | x86 | yang1245789 | [yang1245789/fpk-converter](https://github.com/yang1245789/fpk-converter) |
 | OIDC SSO Bridge | `fnosoidcbridge` | 0.7.1 | all | BeFortune | [BeFortune/fnos-oidc-bridge](https://github.com/BeFortune/fnos-oidc-bridge) |
 | m3u8 下载器 | `m3u8_down` | 0.6.0-beta.25 | all | Youngxj | [Youngxj/N_m3u8DL-RE-FN](https://github.com/Youngxj/N_m3u8DL-RE-FN) |
@@ -113,6 +116,15 @@ https://github.com/bekafka/FnDepot
 - **`pichost` 的仓库里没有 manifest**，元数据是把 1.4.2 的 fpk 下载下来按**包内 manifest** 校正的
   （`display_name=PicHost`、`desc`、`service_port=6892` 都取自包内；`run_as=package` 取自包内 `config/privilege`）；
   包内 `maintainer` 写的是 `Muxui`，按本源口径 `maintainer` 仍取仓库 owner `O96u`。
+- **`ps5-ftp-manager` 是 x86 专用**（manifest 声明 `platform=x86`），arm64 设备上看不到。
+- **`openvpn-client` 走双架构合并**：仓库里存了**两份按架构分开的 manifest**（`fnos/manifest` 声明 x86、
+  `fnos_arm64_v4/manifest` 声明 arm），两者 `appname`/`version` 完全相同，所以同一条目合并两个包、`platform` 取并集。
+- **`miproxy` 的 manifest 写 `platform=all`，但 release 分别发了 `-arm64` 与 `-x86_64` 两个包**，故按资产各归其架构。
+  注意它的默认服务端口是 **9090**，与很多设备上 mihomo 的控制端口相同，装之前先确认端口占用。
+- **`openvpn-client` 没有 `readme_url`**：该仓库 89.8MB，超过 jsDelivr 的 50MB 单版本上限（`@latest` 返回 403），
+  而它 tag `v0.1.10` 那一版压根没有 README 文件（返回 404）——CDN 上无解，故按规则不写该字段。
+- **`qilin-zhu/fnos_music_lx` 未收录**：该仓库没有任何 release、没有任何 tag、仓库里也没有 `.fpk`
+  （只有源码），没有可安装的东西；等作者发版后再收。
 - **图标**：所有条目统一引用本源通用图标 `assets/icons/fnapp.png`。
   **约定：图标统一用它，不要删这个文件，也不要用外部占位图。**
 
@@ -158,6 +170,9 @@ FnDepot/
    `@latest` 由 jsDelivr 解析到仓库最新的 semver tag（仓库没有 tag 时退回默认分支），所以展示的始终是最新文档。
    注意它是**可变引用**（jsDelivr 对 `latest` 缓存 7 天，钉版本则是永久），因此可能比本源收录的版本更新——
    例如 `hermes-desktop` 用的那个仓库已经 tag 到 `v0.24.4.41`，但只发布过 `v0.21.3.1` 的 release。
+   **例外**：jsDelivr 拒服务时（仓库超 50MB 单版本上限、或该版本没有 README）**不写 `readme_url`**——
+   它是可选字段，留一个 403/404 死链比不写更糟；也不退回 GitHub 原始地址（那条口径是定死的）。
+   `tools/add-app.py` 写入前会探测（`cdn_ok()`），不通就不写并打印原因。
 
 第 7～9 条由 `tools/add-app.py` 自动写入、`tools/verify.py` 强制校验（含 `readme_url` 可达性），手改索引也绕不过去。
 
