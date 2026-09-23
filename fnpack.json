@@ -1,7 +1,7 @@
 {
   "schema_version": "2",
   "source_info": {
-    "name": "bekafka 应用源",
+    "name": "第三方飞牛应用源",
     "author": "bekafka",
     "homepage": "https://github.com/bekafka/FnDepot",
     "description": "索引第三方开发者在 GitHub Releases 官方发布的 fnOS 应用。本源只做索引与元数据整理，不重新打包、不修改安装包；FPK 直接来自原作者发布地址。"
