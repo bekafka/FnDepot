@@ -109,15 +109,34 @@ def fetch_text(url, timeout=120):
 CACHE_DIR = os.path.join(ROOT, "tools", ".cache")
 
 
+def gh_token():
+    """按序找 token：环境变量 → $FNDEPOT_GH_TOKEN_FILE → ~/.config/fndepot/token → 仓库内 .gh_token。"""
+    for name in ("GITHUB_TOKEN", "GH_TOKEN"):
+        val = os.environ.get(name)
+        if val and val.strip():
+            return val.strip()
+    for path in (os.environ.get("FNDEPOT_GH_TOKEN_FILE"),
+                 os.path.expanduser("~/.config/fndepot/token"),
+                 os.path.join(ROOT, ".gh_token")):
+        if path and os.path.isfile(path):
+            try:
+                val = open(path, encoding="utf-8").read().strip()
+            except OSError:
+                continue
+            if val:
+                return val
+    return None
+
+
 def gh_json(url, cache_key, refresh=False):
-    """GitHub API 未认证只有 60 次/小时，故带 token 支持 + 本地缓存，避免反复烧配额。"""
+    """GitHub API 未认证只有 60 次/小时（且按出口 IP 算），故带 token 支持 + 本地缓存。"""
     cache_path = os.path.join(CACHE_DIR, cache_key + ".json")
     if not refresh and os.path.exists(cache_path):
         with open(cache_path, encoding="utf-8") as fh:
             return json.load(fh)
 
     headers = {"User-Agent": "fndepot-source-builder", "Accept": "application/vnd.github+json"}
-    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    token = gh_token()
     if token:
         headers["Authorization"] = f"Bearer {token}"
     req = urllib.request.Request(url, headers=headers)
@@ -125,10 +144,12 @@ def gh_json(url, cache_key, refresh=False):
         with urllib.request.urlopen(req, timeout=120) as resp:
             data = json.loads(resp.read().decode("utf-8", "replace"))
     except urllib.error.HTTPError as exc:
+        if exc.code == 401:
+            sys.exit("错误：GitHub token 被拒（401 Bad credentials），请检查 .gh_token 是否正确或已过期。")
         if exc.code == 403:
-            sys.exit("错误：GitHub API 配额用尽（未认证 60 次/小时）。\n"
-                     "  解法一：设置 GITHUB_TOKEN（只读公开仓库即可）→ 5000 次/小时；\n"
-                     "  解法二：等配额重置，或改用常规下载模式（下载路径完全不耗 API 配额）。")
+            sys.exit("错误：GitHub API 配额用尽（未认证 60 次/小时，按出口 IP 计）。\n"
+                     "  解法一：把 token 放到 .gh_token（或设 GITHUB_TOKEN）→ 5000 次/小时；\n"
+                     "  解法二：等配额重置，或改用不耗配额的路径（--local 下载 / 巡检脚本的降级路径）。")
         raise
     os.makedirs(CACHE_DIR, exist_ok=True)
     with open(cache_path, "w", encoding="utf-8") as fh:

@@ -101,8 +101,47 @@ FnDepot/
 > 排在包内第 17 位，前面是占全包 99.9% 的 `app.tgz`，流式读到它等于把整包读完。
 > 是否可行取决于作者打包时的成员顺序，所以没把它做成默认路径。
 
-`--light` 走 API，会消耗配额：未认证 **60 次/小时**（每个应用约 2 次）。设置 `GITHUB_TOKEN` 可提到 5000 次/小时；
-查询结果缓存在 `tools/.cache/`，`--refresh` 可强制重查。
+`--light` 走 API，会消耗配额：未认证 **60 次/小时**（每个应用约 2 次）。结果缓存在 `tools/.cache/`，`--refresh` 可强制重查。
+
+## 跟版 / 巡检（不下载安装包）
+
+```bash
+python3 tools/check-updates.py              # 检查全部已收录应用
+python3 tools/check-updates.py fnmusic-ext  # 只查一个
+```
+
+报出三类情况：
+
+- 上游发了**新版本**（tag 变了）
+- **同版本但资产被重传**——我们钉在 `fnpack.json` 里的 `sha256` 已失效，客户端会拒装（这是外链源最容易悄悄坏掉的方式）
+- 上游**资产命名变了**，自动匹配不到，需人工确认
+
+退出码 `0` 全部最新 / `1` 有需处理的 / `2` 有查询失败，可直接挂 cron。
+取数优先走 GitHub API（一次请求拿到 tag + 资产名 + size + digest）；配额不可用时**自动降级**到不耗配额的路径
+（`releases.atom` 取 tag + release 页面取官方 digest + `HEAD` 取 content-length）。
+
+## GitHub API token（可选，但建议配）
+
+未认证配额是 **60 次/小时，且按出口 IP 计**——走代理时出口可能是共享 IP，更容易被别人用光；配上 token 后是 **5000 次/小时**。
+
+**不要把 token 写进命令行或聊天记录**（会留在 shell 历史/会话日志里）。放到文件里让脚本自己读，脚本按序查找：
+
+`GITHUB_TOKEN` / `GH_TOKEN` 环境变量 → `$FNDEPOT_GH_TOKEN_FILE` → `~/.config/fndepot/token` → 仓库根目录 `.gh_token`
+
+```bash
+cd /vol1/@team/公共/FnDepot
+umask 077; printf '%s' '把token粘贴在这里' > .gh_token   # 权限 600
+```
+
+`.gh_token` 已在 `.gitignore` 中，不会被提交。验证（不会打印 token 本身）：
+
+```bash
+curl -s -H "Authorization: Bearer $(cat .gh_token)" https://api.github.com/rate_limit | jq .rate
+# limit 应为 5000；返回 Bad credentials 则说明 token 抄错或已过期
+```
+
+建议用 **fine-grained token 且只给公开仓库的只读权限**（公开仓库的读接口对 classic token 也无需任何 scope），并设一个有效期。
+配错或过期时脚本会明确报 `401`，并自动退回不耗配额的路径，不会因此中断。
 
 ## 新增 / 更新一个应用
 
