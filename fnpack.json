@@ -16,7 +16,7 @@
       "categories": [
         "系统工具"
       ],
-      "icon_url": "assets/icons/onekey-overclock.png",
+      "icon_url": "assets/icons/fnapp.png",
       "run_as": "root",
       "install_type": "root",
       "is_docker": false,
@@ -48,7 +48,7 @@
       "categories": [
         "系统工具"
       ],
-      "icon_url": "assets/icons/relay-monitor.png",
+      "icon_url": "assets/icons/fnapp.png",
       "run_as": "package",
       "install_type": "",
       "is_docker": false,
@@ -142,7 +142,7 @@
       "categories": [
         "系统工具"
       ],
-      "icon_url": "https://raw.githubusercontent.com/Contribuv/fn-hosts/HEAD/ICON.PNG",
+      "icon_url": "assets/icons/fnapp.png",
       "run_as": "root",
       "install_type": "",
       "is_docker": false,
@@ -174,7 +174,7 @@
       "categories": [
         "系统工具"
       ],
-      "icon_url": "https://raw.githubusercontent.com/veenyi/fnos-hermes-agent-web/HEAD/fpk/ICON.PNG",
+      "icon_url": "assets/icons/fnapp.png",
       "run_as": "package",
       "install_type": "",
       "is_docker": false,

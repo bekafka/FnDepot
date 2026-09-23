@@ -54,10 +54,29 @@ https://github.com/bekafka/FnDepot
 ```text
 FnDepot/
 ├── fnpack.json                     # V2 索引（schema_version = "2"）
-├── assets/icons/{appname}.png      # 各应用图标（取自安装包内 ICON_256.PNG 或作者仓库）
-├── assets/icons/fnapp.png          # 通用图标：应用没有自己的图标时统一引用它（勿删）
-├── tools/new-entry.py              # 从 Release 资产反推条目
+├── assets/icons/fnapp.png          # 统一图标：所有应用都用它（勿删）
+├── tools/add-app.py                # 【主】丢一个仓库链接就能收录（不下载整包）
+├── tools/check-updates.py          # 巡检上游是否有新版 / 资产被重传
+├── tools/new-entry.py              # 底层采集：--light / --local / 下载整包
+├── .gh_token                       # 可选：GitHub token（已 gitignore，勿提交）
 └── README.md
+```
+
+## 收录规则（固定口径）
+
+1. **丢链接即收录**：给一个 GitHub 仓库链接，先抓项目主页/仓库里的关键信息，把**必填项**填齐即可；
+   非必填项拿不到就不管（只有仓库 manifest 里免费带的才顺手写上）。
+2. **图标统一**：`"icon_url": "assets/icons/fnapp.png"` —— 不用各应用自己的图标，也不用外部占位图。
+3. **下载地址只由脚本取**：`download_url` / `sha256` / `size` 一律从上游 release 现取
+   （GitHub 官方 digest + `content-length`），不手写、不靠文件名猜。
+4. **版本只从首次收录算起**：不回溯补历史版本；以后巡检到新版本就**追加**新版本节点，已收录的版本保留
+   （可用于回滚、以及老 fnOS 的系统版本兜底）。
+5. 全程**不下载安装包**；只有确实需要本地实测哈希时才走 `--local`。
+
+一条命令完成收录（`--write` 才落盘，不加是 dry-run）：
+
+```bash
+python3 tools/add-app.py <仓库链接> -c 分类 --write
 ```
 
 ## 常见疑问
@@ -124,16 +143,29 @@ python3 tools/check-updates.py fnmusic-ext  # 只查一个
 
 未认证配额是 **60 次/小时，且按出口 IP 计**——走代理时出口可能是共享 IP，更容易被别人用光；配上 token 后是 **5000 次/小时**。
 
-**不要把 token 写进命令行或聊天记录**（会留在 shell 历史/会话日志里）。放到文件里让脚本自己读，脚本按序查找：
+**本机已经配好了**：token 写在 DSH 的用户层环境变量文件 `$DSH_HOME/.env` 里（键名 `GITHUB_TOKEN`）。
+`tools/_gh.py` 会**直接解析这个 `.env`**，所以即使该文件"需重启 dsh 才注入进程环境"，脚本也立刻能用——
+`check-updates.py` 输出里的来源显示 `(api)` 就代表 token 已生效（未认证时是 `(html)`）。
 
-`GITHUB_TOKEN` / `GH_TOKEN` 环境变量 → `$FNDEPOT_GH_TOKEN_FILE` → `~/.config/fndepot/token` → 仓库根目录 `.gh_token`
+查找顺序（`tools/_gh.py`）：
+
+```text
+GITHUB_TOKEN / GH_TOKEN 环境变量
+  → $DSH_HOME/.env                    ← 本机用的就是这个
+  → $FNDEPOT_GH_TOKEN_FILE
+  → ~/.config/fndepot/token
+  → 仓库根目录 .gh_token              （已 gitignore）
+```
+
+**不要把 token 写进命令行、回复或提交里**（会留在 shell 历史 / 会话日志 / git 记录中）。
+如果哪天要临时换一个 token，放到仓库根的 `.gh_token`（权限 600）即可，它已被 `.gitignore` 忽略：
 
 ```bash
 cd /vol1/@team/公共/FnDepot
-umask 077; printf '%s' '把token粘贴在这里' > .gh_token   # 权限 600
+umask 077; printf '%s' '把token粘贴在这里' > .gh_token
 ```
 
-`.gh_token` 已在 `.gitignore` 中，不会被提交。验证（不会打印 token 本身）：
+验证（不会打印 token 本身）：
 
 ```bash
 curl -s -H "Authorization: Bearer $(cat .gh_token)" https://api.github.com/rate_limit | jq .rate

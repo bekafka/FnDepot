@@ -2,3 +2,5 @@ fnpack.json.bak
 tools/.cache/
 # GitHub API token（放在仓库根目录时绝不能被提交）
 .gh_token
+__pycache__/
+*.pyc
