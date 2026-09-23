@@ -26,10 +26,14 @@ import sys
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_ICON = "assets/icons/fnapp.png"
+# 固定口径：本源 distributor / 上游项目作者与项目页 / 项目 README（readme_url 走 jsDelivr CDN）
+DISTRIBUTOR = "bekafka"
+DISTRIBUTOR_URL = "https://github.com/bekafka/FnDepot"
 VALID_CATEGORIES = ["影音娱乐", "系统工具", "编程开发", "AI赋能", "生活服务",
                     "智能智控", "教育学习", "游戏地带", "硬件驱动"]
 REQUIRED = ["display_name", "desc", "platform", "categories", "icon_url", "run_as",
@@ -38,7 +42,7 @@ UA = {"User-Agent": "Mozilla/5.0 fndepot-verify"}
 
 
 _abort = threading.Event()
-_stats = {"fail": 0, "ok": 0}
+_stats = {"fail": 0, "ok": 0, "done": 0}
 _stats_lock = threading.Lock()
 
 
@@ -50,7 +54,9 @@ def head_size(url, timeout=12):
     last = ""
     for attempt in range(2):
         try:
-            req = urllib.request.Request(url, method="HEAD", headers=UA)
+            # URL 可能含非 ASCII（中文文件名等），不转义会抛 UnicodeEncodeError 被误判成网络失败
+            req = urllib.request.Request(urllib.parse.quote(url, safe=":/?#[]@!$&'()*+,;=%~"),
+                                        method="HEAD", headers=UA)
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 cl = resp.headers.get("Content-Length")
                 return (int(cl) if cl and cl.isdigit() else None), ""
@@ -68,6 +74,7 @@ def head_size(url, timeout=12):
 def _record(ok):
     with _stats_lock:
         _stats["ok" if ok else "fail"] += 1
+        _stats["done"] += 1
         if not ok and _stats["ok"] == 0 and _stats["fail"] >= 3:
             _abort.set()
 
@@ -108,6 +115,24 @@ def main():
             problems.append(f"{key}：is_docker 必须是布尔")
         if app.get("icon_url") != DEFAULT_ICON:
             problems.append(f"{key}：icon_url 必须是 {DEFAULT_ICON}，现在是 {app.get('icon_url')!r}")
+        if app.get("distributor") != DISTRIBUTOR or app.get("distributor_url") != DISTRIBUTOR_URL:
+            problems.append(f"{key}：distributor 必须是 {DISTRIBUTOR} / {DISTRIBUTOR_URL}，现在是 "
+                            f"{app.get('distributor')!r} / {app.get('distributor_url')!r}")
+        repos = {m.group(1) for m in
+                 (re.match(r"https://github\.com/([^/]+/[^/]+)/releases/download/",
+                           pk.get("download_url") or "")
+                  for rel in (app.get("releases") or {}).values()
+                  for pk in (rel.get("packages") or {}).values()) if m}
+        if len(repos) == 1:
+            repos_holder = repos.pop()
+            project = f"https://github.com/{repos_holder}"
+            if app.get("maintainer_url") != project:
+                problems.append(f"{key}：maintainer_url 必须是项目页 {project}，现在是 {app.get('maintainer_url')!r}")
+            if not app.get("maintainer"):
+                problems.append(f"{key}：maintainer 不能为空（上游项目作者）")
+            ru = app.get("readme_url")
+            if ru and not ru.startswith(f"https://cdn.jsdelivr.net/gh/{repos_holder}@"):
+                problems.append(f"{key}：readme_url 必须用 jsDelivr CDN 地址，现在是 {ru!r}")
         plats = app.get("platform") or []
         if not isinstance(plats, list):
             problems.append(f"{key}：platform 必须是数组，现在是 {plats!r}（客户端会跳过该应用）")
@@ -148,6 +173,8 @@ def main():
                     problems.append(f"{key} {ver}/{arch}：size 必须是正整数，现在是 {size!r}")
                 else:
                     tasks.append((f"{key}/{arch}", size, url))
+        if app.get("readme_url"):
+            tasks.append((f"{key} readme_url", None, app["readme_url"]))
 
     # README 收录表 ↔ 索引
     readme_path = os.path.join(ROOT, "README.md")
@@ -186,16 +213,21 @@ def main():
                     remote, err = fut.result()
                     _record(err == "")
                     if err:
-                        net_fail.append(f"{label}：{err}")
-                    elif remote != size:
+                        # readme_url 是网页，4xx 说明链接写错（不是网络问题）；包是文件，4xx 也只当查询失败记着
+                        if size is None and err.startswith("HTTP 4"):
+                            problems.append(f"{label}：{err} —— 链接写错了？")
+                        else:
+                            net_fail.append(f"{label}：{err}")
+                    elif size is not None and remote != size:
                         problems.append(f"{label}：索引 size={size} ≠ 远端 Content-Length={remote}（上游重传过？）")
+                    # size 为 None（readme_url）只要求请求成功：网页没有 Content-Length，不能拿它判失败
 
     for p in problems:
         print(f"✗ {p}")
     for n in net_fail:
         print(f"? {n}（网络查询失败，未核对该包）")
     ok = _stats["ok"]
-    skipped = len(tasks) - ok - len(net_fail)
+    skipped = len(tasks) - _stats["done"]
     if net_fail and ok == 0:
         print("\n！外链全部取不到 —— 大概率是直连不通，而不是索引有问题。先试：\n"
               "    export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890")

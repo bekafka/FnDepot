@@ -20,9 +20,12 @@
       "run_as": "root",
       "install_type": "root",
       "is_docker": false,
-      "service_port": "8090",
-      "maintainer": "很多问题的小明同学",
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "gulugulupao",
       "maintainer_url": "https://github.com/gulugulupao/onekey-overclock",
+      "readme_url": "https://cdn.jsdelivr.net/gh/gulugulupao/onekey-overclock@latest/README.md",
+      "service_port": "8090",
       "bug_report_url": "https://github.com/gulugulupao/onekey-overclock/issues",
       "releases": {
         "1.2.0": {
@@ -52,6 +55,11 @@
       "run_as": "package",
       "install_type": "",
       "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "sddvcm",
+      "maintainer_url": "https://github.com/sddvcm/relay-monitor",
+      "readme_url": "https://cdn.jsdelivr.net/gh/sddvcm/relay-monitor@latest/README.md",
       "releases": {
         "2.0.0": {
           "packages": {
@@ -66,8 +74,6 @@
           "updated_at": "2026-09-07T01:47:45Z"
         }
       },
-      "maintainer": "sddvcm",
-      "maintainer_url": "https://github.com/sddvcm/relay-monitor",
       "service_port": "8735",
       "bug_report_url": "https://github.com/sddvcm/relay-monitor/issues"
     },
@@ -84,10 +90,11 @@
       "run_as": "root",
       "install_type": "",
       "is_docker": true,
-      "service_port": "8774",
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
       "maintainer": "javycoder",
       "maintainer_url": "https://github.com/javycoder/fnos_music_ext",
-      "bug_report_url": "https://github.com/javycoder/fnos_music_ext/issues",
+      "readme_url": "https://cdn.jsdelivr.net/gh/javycoder/fnos_music_ext@latest/README.md",
       "releases": {
         "2.2.7": {
           "packages": {
@@ -99,14 +106,25 @@
           },
           "changelog": "<h3>修复</h3> <ul> <li><strong>搜索在音源回包前就交出空列表</strong>：在线搜索只留一个超时，默认 15 秒。有在线结果立刻返回，本地歌曲在前；到时还没有就放弃这次还没回来的结果，只返回本地歌曲。管理页「音乐源」下方可改「搜索超时时间」，保存后立即生效。</li> <li><strong>搜索在停手 1 秒后才发给音源</strong>：1 秒内继续输入就换成最新关键词并重新计时，窗口过去才真正搜索。</li> <li><strong>输入过程中搜索先空白、过一会儿再搜才有结果</strong>：每个音源同时只搜一个关键词。同一用户继续输入时只保留最后那个词；洛雪会取消上一轮，musicdl 和网易等当前请求结束后丢掉旧结果再搜。被换掉的空结果不再缓存。</li> <li><strong>洛雪源 URL 测试显示 502</strong>：桌面网关连接 W",
           "updated_at": "2026-09-23T07:21:14Z"
+        },
+        "2.2.8": {
+          "packages": {
+            "all": {
+              "download_url": "https://github.com/javycoder/fnos_music_ext/releases/download/v2.2.8/fnmusic-ext-2.2.8.fpk",
+              "sha256": "934eee842b19364a10cea27cec428d19f7ddccb8567186fb94527ddd033af1a5",
+              "size": 1480691
+            }
+          }
         }
-      }
+      },
+      "service_port": "8774",
+      "bug_report_url": "https://github.com/javycoder/fnos_music_ext/issues"
     },
-    "fnmusic-ext-kugou": {
-      "display_name": "飞牛音乐酷狗扩展 FPK",
+    "fnmusic_ext_kugou": {
+      "display_name": "飞牛音乐酷狗扩展",
       "desc": "为飞牛音乐（trim_music）接入自建 KuGouMusicApi 作为外部音源的反向代理扩展，一键安装 + 图形化配置向导。注意：本扩展不含音源，需先自行部署 KuGouMusicApi 实例，否则装上也无法工作。",
       "platform": [
-        "all"
+        "x86"
       ],
       "categories": [
         "影音娱乐"
@@ -115,14 +133,17 @@
       "run_as": "root",
       "install_type": "",
       "is_docker": false,
-      "service_port": "",
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
       "maintainer": "ai2ku",
       "maintainer_url": "https://github.com/ai2ku/fnos-music-ext-kugou-fpk",
+      "readme_url": "https://cdn.jsdelivr.net/gh/ai2ku/fnos-music-ext-kugou-fpk@latest/README.md",
+      "service_port": "",
       "bug_report_url": "https://github.com/ai2ku/fnos-music-ext-kugou-fpk/issues",
       "releases": {
         "2.1.0": {
           "packages": {
-            "all": {
+            "x86": {
               "download_url": "https://github.com/ai2ku/fnos-music-ext-kugou-fpk/releases/download/v2.1.0/fnmusic_ext_kugou-2.1.0.fpk",
               "sha256": "5f524e245c6b3f24a790c4deb20f8cf3e938fe98d6c5437a17c8d7276bdc9e54",
               "size": 595777
@@ -144,11 +165,14 @@
       ],
       "icon_url": "assets/icons/fnapp.png",
       "run_as": "root",
-      "install_type": "",
+      "install_type": "root",
       "is_docker": false,
-      "service_port": "5080",
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
       "maintainer": "Contribuv",
       "maintainer_url": "https://github.com/Contribuv/fn-hosts",
+      "readme_url": "https://cdn.jsdelivr.net/gh/Contribuv/fn-hosts@latest/README.md",
+      "service_port": "5080",
       "bug_report_url": "https://github.com/Contribuv/fn-hosts/issues",
       "releases": {
         "1.0.61": {
@@ -178,9 +202,12 @@
       "run_as": "package",
       "install_type": "",
       "is_docker": false,
-      "service_port": "",
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
       "maintainer": "veenyi",
       "maintainer_url": "https://github.com/veenyi/fnos-hermes-agent-web",
+      "readme_url": "https://cdn.jsdelivr.net/gh/veenyi/fnos-hermes-agent-web@latest/README.md",
+      "service_port": "",
       "bug_report_url": "https://github.com/veenyi/fnos-hermes-agent-web/issues",
       "releases": {
         "0.21.3.1": {
@@ -209,6 +236,11 @@
       "run_as": "root",
       "install_type": "",
       "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "guan-ry",
+      "maintainer_url": "https://github.com/guan-ry/FanControlServerApp",
+      "readme_url": "https://cdn.jsdelivr.net/gh/guan-ry/FanControlServerApp@latest/README.md",
       "releases": {
         "1.3.7.1": {
           "packages": {
@@ -219,9 +251,7 @@
             }
           }
         }
-      },
-      "maintainer": "guan-ry",
-      "maintainer_url": "https://github.com/guan-ry"
+      }
     },
     "fpkconverter": {
       "display_name": "视频转码",
@@ -236,6 +266,11 @@
       "run_as": "root",
       "install_type": "",
       "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "yang1245789",
+      "maintainer_url": "https://github.com/yang1245789/fpk-converter",
+      "readme_url": "https://cdn.jsdelivr.net/gh/yang1245789/fpk-converter@latest/README.md",
       "releases": {
         "1.0.56": {
           "packages": {
@@ -246,9 +281,7 @@
             }
           }
         }
-      },
-      "maintainer": "yang",
-      "maintainer_url": "https://github.com/yang1245789/fpk-converter"
+      }
     },
     "fnosoidcbridge": {
       "display_name": "OIDC SSO Bridge",
@@ -263,6 +296,11 @@
       "run_as": "root",
       "install_type": "",
       "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "BeFortune",
+      "maintainer_url": "https://github.com/BeFortune/fnos-oidc-bridge",
+      "readme_url": "https://cdn.jsdelivr.net/gh/BeFortune/fnos-oidc-bridge@latest/README.md",
       "releases": {
         "0.7.1": {
           "packages": {
@@ -276,9 +314,7 @@
           "os_min_version": "1.2.0"
         }
       },
-      "service_port": "4223",
-      "maintainer": "fnos-oidc-bridge",
-      "maintainer_url": "https://github.com/BeFortune/fnos-oidc-bridge"
+      "service_port": "4223"
     },
     "fnwifi": {
       "display_name": "无线热点",
@@ -293,6 +329,11 @@
       "run_as": "root",
       "install_type": "root",
       "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "Zisbusy",
+      "maintainer_url": "https://github.com/Zisbusy/fnwifi",
+      "readme_url": "https://cdn.jsdelivr.net/gh/Zisbusy/fnwifi@latest/README.md",
       "releases": {
         "1.1.2": {
           "packages": {
@@ -303,9 +344,7 @@
             }
           }
         }
-      },
-      "maintainer": "大哲",
-      "maintainer_url": "https://zhebk.cn/"
+      }
     },
     "ignis": {
       "display_name": "Obsidian",
@@ -320,6 +359,11 @@
       "run_as": "root",
       "install_type": "",
       "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "Hxido-RXM",
+      "maintainer_url": "https://github.com/Hxido-RXM/Obsidian-fpk",
+      "readme_url": "https://cdn.jsdelivr.net/gh/Hxido-RXM/Obsidian-fpk@latest/README.md",
       "releases": {
         "1.4.5": {
           "packages": {
@@ -332,9 +376,7 @@
           "changelog": "1.4.5：安装向导新增下载代理选填项（obsidian_proxy），优先经代理下载 Obsidian（如 http://192.168.31.2:20171），多源回退（官方+gh-proxy+ghfast+ghproxy）保留；下载失败转后台补下载。"
         }
       },
-      "service_port": "19527",
-      "maintainer": "Hxido",
-      "maintainer_url": "https://github.com/Nystik-gh/ignis"
+      "service_port": "19527"
     },
     "opensync": {
       "display_name": "OpenSync",
@@ -350,6 +392,11 @@
       "run_as": "package",
       "install_type": "",
       "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "chenbin3625",
+      "maintainer_url": "https://github.com/chenbin3625/OpenSync-fnOS",
+      "readme_url": "https://cdn.jsdelivr.net/gh/chenbin3625/OpenSync-fnOS@latest/README.md",
       "releases": {
         "0.0.25": {
           "packages": {
@@ -367,9 +414,7 @@
           "changelog": "v0.0.25：统一暗色主题的页面与控件颜色，提高浅色模式辅助文字对比度；优化窄屏设置布局和任务标签滚动，修复顶部工具栏溢出；将模拟任务超时默认值统一为 48 小时。",
           "os_min_version": "1.2.0401"
         }
-      },
-      "maintainer": "chenbin3625",
-      "maintainer_url": "https://github.com/chenbin3625"
+      }
     },
     "m3u8_down": {
       "display_name": "m3u8下载器",
@@ -384,6 +429,11 @@
       "run_as": "package",
       "install_type": "",
       "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "Youngxj",
+      "maintainer_url": "https://github.com/Youngxj/N_m3u8DL-RE-FN",
+      "readme_url": "https://cdn.jsdelivr.net/gh/Youngxj/N_m3u8DL-RE-FN@latest/README.md",
       "releases": {
         "0.6.0-beta.25": {
           "packages": {
@@ -394,9 +444,7 @@
             }
           }
         }
-      },
-      "maintainer": "Youngxj",
-      "maintainer_url": "https://github.com/Youngxj/N_m3u8DL-RE-FN"
+      }
     },
     "cpu-tuner": {
       "display_name": "CPU 性能控制台",
@@ -411,6 +459,11 @@
       "run_as": "root",
       "install_type": "",
       "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "787x",
+      "maintainer_url": "https://github.com/787x/cpu-tuner-fnos",
+      "readme_url": "https://cdn.jsdelivr.net/gh/787x/cpu-tuner-fnos@latest/README.md",
       "releases": {
         "0.1.13": {
           "packages": {
@@ -421,9 +474,7 @@
             }
           }
         }
-      },
-      "maintainer": "cpu-tuner contributors",
-      "maintainer_url": "https://github.com/787x/cpu-tuner-fnos"
+      }
     },
     "fnos-terminal": {
       "display_name": "终端",
@@ -439,6 +490,11 @@
       "run_as": "root",
       "install_type": "",
       "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "Eric0101",
+      "maintainer_url": "https://github.com/Eric0101/fnos-terminal",
+      "readme_url": "https://cdn.jsdelivr.net/gh/Eric0101/fnos-terminal@latest/README.md",
       "releases": {
         "1.2.12": {
           "packages": {
@@ -456,9 +512,7 @@
           "changelog": "1.2.12：修复 session-shell 换行符导致的启动失败；粘贴改为普通文本样式，并优先使用系统剪贴板，支持粘贴终端外部复制的内容。",
           "os_min_version": "1.1.3100"
         }
-      },
-      "maintainer": "金木炎",
-      "maintainer_url": "https://github.com/Eric0101"
+      }
     }
   }
 }

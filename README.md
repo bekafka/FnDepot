@@ -23,34 +23,42 @@ https://github.com/bekafka/FnDepot
 
 | 应用 | 应用键名 | 版本 | 架构 | 作者 | 安装包来源 |
 | --- | --- | --- | --- | --- | --- |
-| 一键超频 | `onekey-overclock` | 1.2.0 | arm | 很多问题的小明同学 | [gulugulupao/onekey-overclock](https://github.com/gulugulupao/onekey-overclock) |
+| 一键超频 | `onekey-overclock` | 1.2.0 | arm | gulugulupao | [gulugulupao/onekey-overclock](https://github.com/gulugulupao/onekey-overclock) |
 | 中转站监控 | `relay-monitor` | 2.0.0 | x86 | sddvcm | [sddvcm/relay-monitor](https://github.com/sddvcm/relay-monitor) |
-| fnMusic 扩展 | `fnmusic-ext` | 2.2.7 | all | javycoder | [javycoder/fnos_music_ext](https://github.com/javycoder/fnos_music_ext) |
-| 飞牛音乐酷狗扩展 | `fnmusic-ext-kugou` | 2.1.0 | all | ai2ku | [ai2ku/fnos-music-ext-kugou-fpk](https://github.com/ai2ku/fnos-music-ext-kugou-fpk) |
-| Hosts 管理器 | `fnnas.hosts` | 1.0.61 | all | 豪子 / Contribuv | [Contribuv/fn-hosts](https://github.com/Contribuv/fn-hosts) |
+| fnMusic 扩展 | `fnmusic-ext` | 2.2.8 | all | javycoder | [javycoder/fnos_music_ext](https://github.com/javycoder/fnos_music_ext) |
+| 飞牛音乐酷狗扩展 | `fnmusic_ext_kugou` | 2.1.0 | x86 | ai2ku | [ai2ku/fnos-music-ext-kugou-fpk](https://github.com/ai2ku/fnos-music-ext-kugou-fpk) |
+| Hosts 管理器 | `fnnas.hosts` | 1.0.61 | all | Contribuv | [Contribuv/fn-hosts](https://github.com/Contribuv/fn-hosts) |
 | Hermes Agent | `hermes-agent` | 0.21.3.1 | all | veenyi | [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web) |
-| 终端 | `fnos-terminal` | 1.2.12 | arm / x86 | 金木炎 | [Eric0101/fnos-terminal](https://github.com/Eric0101/fnos-terminal) |
-| 视频转码 | `fpkconverter` | 1.0.56 | x86 | yang | [yang1245789/fpk-converter](https://github.com/yang1245789/fpk-converter) |
+| 终端 | `fnos-terminal` | 1.2.12 | arm / x86 | Eric0101 | [Eric0101/fnos-terminal](https://github.com/Eric0101/fnos-terminal) |
+| 视频转码 | `fpkconverter` | 1.0.56 | x86 | yang1245789 | [yang1245789/fpk-converter](https://github.com/yang1245789/fpk-converter) |
 | OIDC SSO Bridge | `fnosoidcbridge` | 0.7.1 | all | BeFortune | [BeFortune/fnos-oidc-bridge](https://github.com/BeFortune/fnos-oidc-bridge) |
 | m3u8 下载器 | `m3u8_down` | 0.6.0-beta.25 | all | Youngxj | [Youngxj/N_m3u8DL-RE-FN](https://github.com/Youngxj/N_m3u8DL-RE-FN) |
 | 风扇控制服务 | `FanControlServer` | 1.3.7.1 | x86 | guan-ry | [guan-ry/FanControlServerApp](https://github.com/guan-ry/FanControlServerApp) |
 | OpenSync | `opensync` | 0.0.25 | arm / x86 | chenbin3625 | [chenbin3625/OpenSync-fnOS](https://github.com/chenbin3625/OpenSync-fnOS) |
-| CPU 性能控制台 | `cpu-tuner` | 0.1.13 | x86 | cpu-tuner contributors | [787x/cpu-tuner-fnos](https://github.com/787x/cpu-tuner-fnos) |
-| 无线热点 | `fnwifi` | 1.1.2 | all | 大哲 | [Zisbusy/fnwifi](https://github.com/Zisbusy/fnwifi) |
-| Obsidian | `ignis` | 1.4.5 | all | Hxido | [Hxido-RXM/Obsidian-fpk](https://github.com/Hxido-RXM/Obsidian-fpk) |
+| CPU 性能控制台 | `cpu-tuner` | 0.1.13 | x86 | 787x | [787x/cpu-tuner-fnos](https://github.com/787x/cpu-tuner-fnos) |
+| 无线热点 | `fnwifi` | 1.1.2 | all | Zisbusy | [Zisbusy/fnwifi](https://github.com/Zisbusy/fnwifi) |
+| Obsidian | `ignis` | 1.4.5 | all | Hxido-RXM | [Hxido-RXM/Obsidian-fpk](https://github.com/Hxido-RXM/Obsidian-fpk) |
 
-> 「Obsidian」的应用键名是 `ignis`（包内 manifest 的 `appname`），不是 `obsidian`。
+> 键名一律等于**包内 manifest 的 `appname`**，与仓库名/资产名不一定相同：
+> 「Obsidian」是 `ignis`，「飞牛音乐酷狗扩展」是 `fnmusic_ext_kugou`（下划线），m3u8 下载器是 `m3u8_down`。
+> 表里的「作者」= 索引里的 `maintainer`，统一取**仓库 owner**。
+
 
 各条目的可信度不一样，如实标注：
 
 - **读到作者 manifest 的**（`fnnas.hosts`、`hermes-agent`、`fnos-terminal`、`fpkconverter`、`fnosoidcbridge`、`m3u8_down`、
-  `FanControlServer`、`opensync`、`cpu-tuner`、`fnwifi`、`ignis`）：`appname` / `platform` / `service_port` / `run_as` 是作者自己声明的真值
+  `FanControlServer`、`opensync`、`cpu-tuner`、`fnwifi`、`ignis`、`fnmusic_ext_kugou`）：
+  `appname` / `platform` / `service_port` / `install_type` / `run_as` 是作者自己声明的真值
   （`run_as` 取自各仓库 `config/privilege` 的 `defaults.run-as`）。
   `hermes-agent` 用的是 [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web)（FPK 发布在这里），
   其仓库内 manifest 版本号（0.21.0.1）落后于 tag（0.21.3.1），因此 `platform`/图标按仓库文件取，版本按 tag 取。
-- **按 README 填的**（`fnmusic-ext`、`fnmusic-ext-kugou`）：这两个仓库没提交 manifest，
-  `appname` 由资产文件名推导，`platform` 无架构声明故填 `all`，`desc`/`service_port`/`run_as` 来自 README。
-  若装不上或显示异常，优先怀疑这几项。
+- **`fnmusic-ext` 是唯一没提交 manifest 的条目**：`appname` 由资产文件名推导，`platform` 无架构声明故沿用 `all`（这是猜的）。
+  若装不上或显示异常，优先怀疑这两项。
+- **`fnmusic_ext_kugou` 的键名与架构已按包内真值修正**：仓库里那份 manifest 藏在 `fnmusic-ext-kugou.fpk/manifest`
+  （打包模板目录），早先按 README 推导时没找到，于是键名写成了仓库名 `fnmusic-ext-kugou`、架构写成 `all`。
+  下载 v2.1.0 的 fpk 核对后确认：包内 `appname = fnmusic_ext_kugou`（下划线）、`platform = x86`，
+  作者在 release 说明里也写了「依赖 trim.music:python312（os ≥ 1.2.0，x86）」。
+  **键名与包内 appname 不一致时客户端会静默装不上**，所以一并改了；副作用是它不再出现在 arm64 设备上（作者声明 x86）。
 - **`fnmusic-ext` 是 Docker 应用**（FPK 会起容器，未装 Docker 直接报错退出），已标 `is_docker: true`。
 - **`fnmusic-ext-kugou` 本身不含音源**，需先自行部署 KuGouMusicApi 实例才能工作。
 - **`中转站监控`** 作者只发布了 **x86 包**，arm64 设备上不会显示也无法安装；其 README 写的最新版是 v2.0.5，
@@ -63,9 +71,16 @@ https://github.com/bekafka/FnDepot
 - **`opensync` / `fnos-terminal` 走双架构合并**：两者仓库里的 manifest 只写了单一 `platform`，
   但构建脚本会在打包时按架构替换（`PLATFORM = { amd64: "x86", arm64: "arm" }`、`setManifestValue(..., "platform", requestedArch)`），
   且 release 里两个架构的包都真实发布过，所以本源把 arm 与 x86 并进同一版本、`platform` 取并集。
-- **`fnwifi` 标 `install_type: root`**：作者 manifest 自己声明安装在系统空间。
-- **图标**：`fnnas.hosts`、`hermes-agent` 引用作者仓库内的真实 ICON；两个音乐扩展没有图标，统一引用本源通用图标 `assets/icons/fnapp.png`。
-  **约定：应用没有图标时一律用 `assets/icons/fnapp.png`，不要删这个文件，也不要用外部占位图。**
+- **`fnwifi` 与 `fnnas.hosts` 标 `install_type: root`**：两者的 manifest 都自己声明安装在系统空间
+  （`fnnas.hosts` 此前漏填，这次按 manifest 补上）。
+- **`maintainer` / `maintainer_url` / `distributor` / `readme_url` 的统一口径**（见上方"收录规则"第 7～9 条）：
+  `maintainer` 一律取**仓库 owner**，`maintainer_url` 一律取项目页，`distributor` 一律为 `bekafka`，
+  `readme_url` 一律为 jsDelivr CDN 地址（统一用 `@latest`）。
+  据此改掉了 5 条不指向项目页的 `maintainer_url`（`fnwifi` 曾写作者主页 `zhebk.cn`、`ignis` 曾写上游 `Nystik-gh/ignis`、
+  `opensync`/`fnos-terminal`/`FanControlServer` 曾只写到 owner）；作者在 manifest 里写的显示名
+  （`大哲`、`金木炎`、`豪子`、`如烟`、`很多问题的小明同学`）按这一口径不再使用，已从索引移除。
+- **图标**：所有条目统一引用本源通用图标 `assets/icons/fnapp.png`。
+  **约定：图标统一用它，不要删这个文件，也不要用外部占位图。**
 
 > 这些条目**没有下载整包验证**：`size` 取自下载地址的 `content-length`，`sha256` 取自 GitHub Release 页面公布的官方 digest。
 > 客户端安装时仍会按此强校验，若上游重传过资产则会被拦截。
@@ -97,6 +112,20 @@ FnDepot/
 5. 全程**不下载安装包**；只有确实需要本地实测哈希时才走 `--local`。
 6. **README 收录表里的链接指向项目主页**（`https://github.com/owner/repo`），不要链到 `.../releases` 页面；
    收录后同步更新表里的版本号。
+7. **`distributor` / `distributor_url` 固定写本源**：`"bekafka"` / `"https://github.com/bekafka/FnDepot"`。
+8. **`maintainer` / `maintainer_url` 写被收录项目的作者与项目页**：`maintainer` 取该项目 manifest 的 `maintainer`
+   （没提交 manifest 时用仓库 owner），`maintainer_url` 一律是**该项目仓库首页** `https://github.com/<owner>/<repo>`——
+   不写作者的个人主页，也不写它所基于的上游同名项目（例如 fnwifi 作者主页 `zhebk.cn`、
+   Obsidian 所基于的 `Nystik-gh/ignis` 都曾误填，已改回被收录项目的仓库页）。
+9. **`readme_url` 指被收录项目的 README 主文件，且走 jsDelivr CDN**（不用 GitHub 原始地址）：
+   `https://cdn.jsdelivr.net/gh/<owner>/<repo>@latest/<README 文件>`。
+   文件名由脚本按仓库文件树定位（优先根目录 `README.md`，兼容 `README.rst` / `README_zh.md` / 子目录 README）。
+   用 CDN 是因为它带 CORS 头、国内可达，客户端可以直接抓正文渲染（GitHub 的 blob/raw 地址都做不到）；
+   `@latest` 由 jsDelivr 解析到仓库最新的 semver tag（仓库没有 tag 时退回默认分支），所以展示的始终是最新文档。
+   注意它是**可变引用**（jsDelivr 对 `latest` 缓存 7 天，钉版本则是永久），因此可能比本源收录的版本更新——
+   例如 `hermes-agent` 仓库已经 tag 到 `v0.24.4.41`，但只发布过 `v0.21.3.1` 的 release。
+
+第 7～9 条由 `tools/add-app.py` 自动写入、`tools/verify.py` 强制校验（含 `readme_url` 可达性），手改索引也绕不过去。
 
 一条命令完成收录（`--write` 才落盘，不加是 dry-run）：
 

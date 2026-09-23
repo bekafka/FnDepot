@@ -40,6 +40,9 @@ from _gh import gh_token  # noqa: E402  （token 查找见 tools/_gh.py）
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_ICON = "assets/icons/fnapp.png"
+# 固定口径（用户定死）：distributor 永远是本源；maintainer 是上游项目 owner（与项目页一一对应）
+DISTRIBUTOR = "bekafka"
+DISTRIBUTOR_URL = "https://github.com/bekafka/FnDepot"
 CACHE_DIR = os.path.join(ROOT, "tools", ".cache")
 VALID_CATEGORIES = ["影音娱乐", "系统工具", "编程开发", "AI赋能", "生活服务",
                     "智能智控", "教育学习", "游戏地带", "硬件驱动"]
@@ -194,6 +197,23 @@ def release_info(repo, refresh=False):
 
 
 # ---------------------------------------------------------------- manifest
+
+def find_readme(paths):
+    """→ 仓库里 README 主文件的路径（优先根目录 README.md）。找不到返回 None。"""
+    cands = [p for p in (paths or []) if re.fullmatch(r"(?:.*/)?readme[^/]*", p, re.I)]
+    if not cands:
+        return None
+    return sorted(cands, key=lambda p: (p.lower() != "readme.md", p.count("/"), len(p)))[0]
+
+
+def readme_cdn_url(repo, path, ref="latest"):
+    """readme_url 一律用 jsDelivr CDN（用户定死：不要 GitHub 原始地址），ref 用 latest。
+
+    比 blob/raw 原始地址好在：带 CORS 头、国内可达，客户端可直接抓正文渲染。
+    latest 由 jsDelivr 解析成仓库最新的 semver tag（没有 tag 时退回默认分支）。
+    """
+    return f"https://cdn.jsdelivr.net/gh/{repo}@{ref}/{path}"
+
 
 def strip_md(text):
     text = re.sub(r"<[^>]+>", " ", text or "")
@@ -396,11 +416,15 @@ def build_entry(repo, cats, arch_flag, asset_flag, refresh):
             notes.append(f"config/privilege 的 run-as={run_as} 不是 root/package → 按 package 处理")
         run_as = "package"
 
-    readme = ""
-    for br in ("HEAD", "main", "master"):
-        readme = fetch_text(repo, "README.md", br, refresh) or ""
-        if readme:
-            break
+    # README 主文件：按文件树定位（不猜文件名），拿它当 readme_url 与 desc 的兜底来源
+    readme_path = find_readme(paths)
+    readme = fetch_text(repo, readme_path, "HEAD", refresh) if readme_path else ""
+    if not readme:
+        for br in ("HEAD", "main", "master"):
+            readme = fetch_text(repo, "README.md", br, refresh) or ""
+            if readme:
+                readme_path = readme_path or "README.md"
+                break
 
     appname = fields.get("appname") or (hints[0].replace("_", "-") if hints else repo.split("/")[-1])
     declared = map_declared(fields.get("platform")) or map_declared(fields.get("arch"))
@@ -449,6 +473,7 @@ def build_entry(repo, cats, arch_flag, asset_flag, refresh):
 
     ver = tag.lstrip("vV")
     desc = strip_md(fields.get("desc") or "") or first_prose(readme) or appname
+    project_url = f"https://github.com/{repo}"
     entry = {
         "display_name": fields.get("display_name") or (_readme_title(readme) or appname),
         "desc": desc[:600] + ("…" if len(desc) > 600 else ""),
@@ -458,14 +483,20 @@ def build_entry(repo, cats, arch_flag, asset_flag, refresh):
         "run_as": run_as,
         "install_type": "root" if (fields.get("install_type") or "").strip().lower() == "root" else "",
         "is_docker": (fields.get("source") or "").strip().lower() == "docker",
+        # 固定口径：distributor 是本源；maintainer 是上游项目作者与项目页；readme_url 指项目 README 主文件
+        "distributor": DISTRIBUTOR,
+        "distributor_url": DISTRIBUTOR_URL,
+        # maintainer 按用户定的口径一律取仓库 owner（不取 manifest 里可能写着上游厂商的 maintainer）
+        "maintainer": repo.split("/")[0],
+        "maintainer_url": project_url,
+        "readme_url": readme_cdn_url(repo, readme_path) if readme_path else "",
         "releases": {ver: {"packages": packages}},
     }
-    for k, v in (("service_port", fields.get("service_port")),
-                 ("maintainer", fields.get("maintainer")),
-                 ("maintainer_url", fields.get("maintainer_url"))):
-        if v:
-            entry[k] = v
-    entry.setdefault("maintainer_url", f"https://github.com/{repo}")
+    if not entry["readme_url"]:
+        del entry["readme_url"]
+        notes.append("取不到 README 路径 → 本次不写 readme_url")
+    if fields.get("service_port"):
+        entry["service_port"] = fields["service_port"]
     if fields.get("changelog") and not drift:
         cl = re.sub(r"<br\s*/?>", " ", fields["changelog"])
         entry["releases"][ver]["changelog"] = strip_md(cl)[:400]
@@ -522,6 +553,24 @@ def sanity_check(appname, entry):
         errs.append("is_docker 必须是布尔")
     if entry.get("icon_url") != DEFAULT_ICON:
         errs.append(f"icon_url 必须是 {DEFAULT_ICON}")
+    # 固定口径：本源 distributor + 上游项目作者/项目页/README
+    if entry.get("distributor") != DISTRIBUTOR or entry.get("distributor_url") != DISTRIBUTOR_URL:
+        errs.append(f"distributor 必须是 {DISTRIBUTOR} / {DISTRIBUTOR_URL}，现在是 "
+                    f"{entry.get('distributor')!r} / {entry.get('distributor_url')!r}")
+    repos = {m.group(1) for m in
+             (re.match(r"https://github\.com/([^/]+/[^/]+)/releases/download/", pk.get("download_url") or "")
+              for rel in (entry.get("releases") or {}).values()
+              for pk in (rel.get("packages") or {}).values()) if m}
+    if len(repos) == 1:
+        repos_holder = repos.pop()
+        project_url = f"https://github.com/{repos_holder}"
+        if entry.get("maintainer_url") != project_url:
+            errs.append(f"maintainer_url 必须是项目页 {project_url}，现在是 {entry.get('maintainer_url')!r}")
+        if not entry.get("maintainer"):
+            errs.append("maintainer 不能为空（上游项目作者）")
+        ru = entry.get("readme_url")
+        if ru and not ru.startswith(f"https://cdn.jsdelivr.net/gh/{repos_holder}@"):
+            errs.append(f"readme_url 必须用 jsDelivr CDN 地址，现在是 {ru!r}")
     if not entry.get("releases"):
         errs.append("没有 releases")
     for ver, rel in (entry.get("releases") or {}).items():
@@ -554,11 +603,14 @@ def write_entry(appname, entry, ver, truth=True):
     old = index["apps"].get(appname)
     if old:
         if not truth:
-            # 这次的元数据是猜的（仓库没 manifest）→ 不许覆盖已有条目里人工维护的值
+            # 这次的元数据是猜的（仓库没 manifest）→ 不许覆盖已有条目里人工维护的值。
+            # 但固定口径字段（distributor / maintainer_url / readme_url）是算出来的，必须按规则更新。
             derived_plats = entry["platform"]
             kept = []
             for k, v in old.items():
-                if k == "releases" or v in (None, "", [], {}):
+                if k == "releases" or k in ("distributor", "distributor_url", "maintainer_url", "readme_url"):
+                    continue
+                if v in (None, "", [], {}):
                     continue
                 if entry.get(k) != v:
                     kept.append(k)
