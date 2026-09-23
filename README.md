@@ -23,12 +23,12 @@ https://github.com/bekafka/FnDepot
 
 | 应用 | 应用键名 | 版本 | 架构 | 作者 | 安装包来源 |
 | --- | --- | --- | --- | --- | --- |
-| 一键超频 | `onekey-overclock` | 1.2.0 | arm | 很多问题的小明同学 | [gulugulupao/onekey-overclock](https://github.com/gulugulupao/onekey-overclock/releases) |
-| 中转站监控 | `relay-monitor` | 2.0.0 | x86 | sddvcm | [sddvcm/relay-monitor](https://github.com/sddvcm/relay-monitor/releases) |
-| fnMusic 扩展 | `fnmusic-ext` | 2.2.6 | all | javycoder | [javycoder/fnos_music_ext](https://github.com/javycoder/fnos_music_ext/releases) |
-| 飞牛音乐酷狗扩展 | `fnmusic-ext-kugou` | 2.1.0 | all | ai2ku | [ai2ku/fnos-music-ext-kugou-fpk](https://github.com/ai2ku/fnos-music-ext-kugou-fpk/releases) |
-| Hosts 管理器 | `fnnas.hosts` | 1.0.61 | all | 豪子 / Contribuv | [Contribuv/fn-hosts](https://github.com/Contribuv/fn-hosts/releases) |
-| Hermes Agent | `hermes-agent` | 0.21.3.1 | all | veenyi | [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web/releases) |
+| 一键超频 | `onekey-overclock` | 1.2.0 | arm | 很多问题的小明同学 | [gulugulupao/onekey-overclock](https://github.com/gulugulupao/onekey-overclock) |
+| 中转站监控 | `relay-monitor` | 2.0.0 | x86 | sddvcm | [sddvcm/relay-monitor](https://github.com/sddvcm/relay-monitor) |
+| fnMusic 扩展 | `fnmusic-ext` | 2.2.7 | all | javycoder | [javycoder/fnos_music_ext](https://github.com/javycoder/fnos_music_ext) |
+| 飞牛音乐酷狗扩展 | `fnmusic-ext-kugou` | 2.1.0 | all | ai2ku | [ai2ku/fnos-music-ext-kugou-fpk](https://github.com/ai2ku/fnos-music-ext-kugou-fpk) |
+| Hosts 管理器 | `fnnas.hosts` | 1.0.61 | all | 豪子 / Contribuv | [Contribuv/fn-hosts](https://github.com/Contribuv/fn-hosts) |
+| Hermes Agent | `hermes-agent` | 0.21.3.1 | all | veenyi | [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web) |
 
 各条目的可信度不一样，如实标注：
 
@@ -72,6 +72,8 @@ FnDepot/
 4. **版本只从首次收录算起**：不回溯补历史版本；以后巡检到新版本就**追加**新版本节点，已收录的版本保留
    （可用于回滚、以及老 fnOS 的系统版本兜底）。
 5. 全程**不下载安装包**；只有确实需要本地实测哈希时才走 `--local`。
+6. **README 收录表里的链接指向项目主页**（`https://github.com/owner/repo`），不要链到 `.../releases` 页面；
+   收录后同步更新表里的版本号。
 
 一条命令完成收录（`--write` 才落盘，不加是 dry-run）：
 

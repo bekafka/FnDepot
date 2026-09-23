@@ -28,9 +28,11 @@ from _gh import gh_token  # noqa: E402  （token 查找见 tools/_gh.py）
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UA = {"User-Agent": "fndepot-source-checker"}
 _token_warned = []
+_last_error = None      # 最近一次请求失败的原因，降级时告知用户，避免静默降级
 
 
 def http(url, method="GET", timeout=45):
+    global _last_error
     headers = dict(UA)
     token = gh_token()
     if token and "api.github.com" in url:
@@ -44,12 +46,14 @@ def http(url, method="GET", timeout=45):
                 return int(cl) if cl and cl.isdigit() else None
             return resp.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as exc:
+        _last_error = f"HTTP {exc.code}"
         if exc.code == 401 and "api.github.com" in url and not _token_warned:
             _token_warned.append(1)
-            print("  ！GitHub token 被拒（401 Bad credentials）：检查 .gh_token 是否正确或已过期",
+            print("  ！GitHub token 被拒（401 Bad credentials）：检查 token 是否正确或已过期",
                   file=sys.stderr)
         return None
-    except Exception:
+    except Exception as exc:
+        _last_error = type(exc).__name__
         return None
 
 
@@ -68,6 +72,8 @@ def parse_assets(html_text):
 
 def upstream(repo):
     """→ (tag, {资产名: sha256}, 数据来源) ；失败返回 (None, {}, 原因)"""
+    global _last_error
+    _last_error = None
     data = http(f"https://api.github.com/repos/{repo}/releases/latest")
     if data:
         try:
@@ -78,15 +84,16 @@ def upstream(repo):
         except ValueError:
             pass
     # 降级：不耗配额
+    note = f"（api 失败：{_last_error}）" if _last_error else ""
     atom = http(f"https://github.com/{repo}/releases.atom")
     if not atom:
-        return None, {}, "atom 取不到（网络/代理？）"
+        return None, {}, f"atom 也取不到（网络/代理？{_last_error or ''}）"
     tags = re.findall(r"releases/tag/([^\"<]+)", atom)
     if not tags:
         return None, {}, "该仓库没有 release"
     tag = tags[0]
     html = http(f"https://github.com/{repo}/releases/expanded_assets/{tag}") or ""
-    return tag, parse_assets(html), "html"
+    return tag, parse_assets(html), "html" + note
 
 
 def asset_regex(our_name, our_version):
@@ -104,6 +111,16 @@ def main():
         index = json.load(fh)
     only = set(sys.argv[1:])
     todo, failed, busy = [], [], []
+
+    # README 收录表里的版本号是否与索引同步（表容易忘改）
+    readme_path = os.path.join(ROOT, "README.md")
+    if os.path.isfile(readme_path):
+        with open(readme_path, encoding="utf-8") as fh:
+            readme = fh.read()
+        for key, shown in re.findall(r"^\|\s*[^|]+\|\s*`([^`]+)`\s*\|\s*([0-9][^|\s]*)\s*\|", readme, re.M):
+            entry = index.get("apps", {}).get(key)
+            if entry and shown not in entry.get("releases", {}):
+                busy.append(f"{key}: README 表里写 {shown}，索引里是 {sorted(entry['releases'])}（表未同步）")
     for app, entry in sorted(index.get("apps", {}).items()):
         if only and app not in only:
             continue
