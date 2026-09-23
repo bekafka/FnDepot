@@ -97,9 +97,17 @@ def upstream(repo):
 
 
 def asset_regex(our_name, our_version):
-    """把资产名里的版本号变成通配，用来匹配上游新版本的同类资产（保留 -arm/-x86 等区分）。"""
-    pattern = re.escape(our_name).replace(re.escape(our_version), r"[\d.]+")
-    return re.compile(pattern + "$")
+    """把资产名里的版本号变成通配，用来匹配上游新版本的同类资产（保留 -arm/-x86 等区分）。
+
+    版本号可能带非数字片段（如 0.6.0-beta.25），只替换成 [\\d.]+ 会连自己都匹配不上，
+    导致误报「资产名对不上」——这里先用宽松的 [\\w.+-]+ 兜住，始终把原名放进去比对。
+    """
+    esc_ver = re.escape(our_version)
+    if esc_ver and esc_ver in re.escape(our_name):
+        pattern = re.escape(our_name).replace(esc_ver, r"[\w.+-]+")
+    else:
+        pattern = re.escape(our_name)
+    return re.compile(pattern + r"$|" + re.escape(our_name) + r"$")
 
 
 def norm(tag):

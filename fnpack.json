@@ -195,6 +195,264 @@
           "updated_at": "2026-09-17T17:35:59Z"
         }
       }
+    },
+    "FanControlServer": {
+      "display_name": "Fan Control Server",
+      "desc": "FanControlServer 是一款智能风扇与温度管理工具，专为飞牛私有云及 Linux 服务器设计。 📁 风扇控制： - 独立设置每个风扇的智能温控曲线 - 手动/自动模式随时切换，支持 0‑255 精确 PWM 值 - 自动扫描硬件 PWM 通道，支持多风扇管理 🌡️ 硬件监控： - 实时 CPU/GPU/内存/硬盘温度及使用率 - 支持 NVMe/SATA 硬盘温度读取 - 历史温度曲线图表（ECharts） 🔔 安全机制： - 可配置过热阈值，超限强制全速运转 - 停转温差防止频繁启停 - 系统登录态 + 管理员写保护 ⚙️ 其他特点： - 响应式 Web 界面，深色主题 - WebSocket 实时推送，无需手动刷新 - 通过系统统一网关访问：/app/FanControlServer（需 fnOS V1.1.31+） 🐛 反馈与支持： GitHub Issues",
+      "platform": [
+        "x86"
+      ],
+      "categories": [
+        "硬件驱动"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "releases": {
+        "1.3.7.1": {
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/guan-ry/FanControlServerApp/releases/download/v1.3.7.1/FanControlServer-v1.3.7.1-linux-amd64-iframe.fpk",
+              "sha256": "f94a49d01e604ac14eb00120e919913558915c6a8988ca00d264eb78944ae28e",
+              "size": 6354481
+            }
+          }
+        }
+      },
+      "maintainer": "guan-ry",
+      "maintainer_url": "https://github.com/guan-ry"
+    },
+    "fpkconverter": {
+      "display_name": "视频转码",
+      "desc": "NAS 视频转码（本地自用硬件转码版）。定时扫描授权目录，把符合条件的视频串行转码为 H.264/H.265，支持 Intel Quick Sync Video（QSV）与 AMD VAAPI 硬件编码，需访问 GPU 设备。",
+      "platform": [
+        "x86"
+      ],
+      "categories": [
+        "影音娱乐"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "releases": {
+        "1.0.56": {
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/yang1245789/fpk-converter/releases/download/v1.0.56/fpkconverter.fpk",
+              "sha256": "231272619c1e2349db7fb49579446754967d5899305582ce2605bfcf3eea16b4",
+              "size": 718863
+            }
+          }
+        }
+      },
+      "maintainer_url": "https://github.com/yang1245789/fpk-converter"
+    },
+    "fnosoidcbridge": {
+      "display_name": "OIDC SSO Bridge",
+      "desc": "Turn fnOS account login into a standard OIDC identity provider for self-hosted applications.",
+      "platform": [
+        "all"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "releases": {
+        "0.7.1": {
+          "packages": {
+            "all": {
+              "download_url": "https://github.com/BeFortune/fnos-oidc-bridge/releases/download/v0.7.1/fnosoidcbridge-0.7.1.fpk",
+              "sha256": "4e530a666f342134d34654e6b8db405f1a186d39bfd7b40cd67e36cd912547a4",
+              "size": 6666117
+            }
+          },
+          "changelog": "0.7.1 redirect_uri 拒绝时服务端日志记录收到与已登记地址,错误页提示常见差异点(http/https、端口、尾斜杠);0.7.0 对齐官方 wizard:安装时可填 Issuer 与监听端口,卸载可选保留配置;manifest 补开发者链接,关闭固定端口检查;0.6.0 备份精简与自定义端口",
+          "os_min_version": "1.2.0"
+        }
+      },
+      "service_port": "4223",
+      "maintainer": "fnos-oidc-bridge",
+      "maintainer_url": "https://github.com/BeFortune/fnos-oidc-bridge"
+    },
+    "fnwifi": {
+      "display_name": "无线热点",
+      "desc": "在飞牛 fnOS 中利用无线网卡开启一个无线热点（AP）。",
+      "platform": [
+        "all"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "root",
+      "is_docker": false,
+      "releases": {
+        "1.1.2": {
+          "packages": {
+            "all": {
+              "download_url": "https://github.com/Zisbusy/fnwifi/releases/download/1.1.2/fnwifi-1.1.2.fpk",
+              "sha256": "e4925daedaec79c348613b50b4be5e0d8dbc955e80b298fb5cc8ea180e420e74",
+              "size": 4410378
+            }
+          }
+        }
+      },
+      "maintainer_url": "https://github.com/Zisbusy/fnwifi"
+    },
+    "obsidian": {
+      "display_name": "Obsidian",
+      "desc": "在浏览器中运行 Obsidian，无需远程桌面。基于 Ignis（Electron API 兼容层），让 Obsidian 官方网页资源运行在标准浏览器中，vault 数据完整保存在 NAS 上。首次安装时自动从官方源下载 Obsidian 资源（不含程序本体），vault 目录可在安装向导自定义，支持登录认证保护与多端实时同步。",
+      "platform": [
+        "all"
+      ],
+      "categories": [
+        "生活服务"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "releases": {
+        "1.4.5": {
+          "packages": {
+            "all": {
+              "download_url": "https://github.com/Hxido-RXM/Obsidian-fpk/releases/download/v1.4.5/obsidian-1.4.5.fpk",
+              "sha256": "93e37c8d67171d067ea5adf565f984fce6edcd6182e4a804e80b8fcb57f9368a",
+              "size": 6924736
+            }
+          }
+        }
+      },
+      "maintainer_url": "https://github.com/Hxido-RXM/Obsidian-fpk",
+      "service_port": "19527"
+    },
+    "opensync": {
+      "display_name": "OpenSync",
+      "desc": "OpenSync 是运行在飞牛 fnOS 上的文件同步与备份工具，可作为群晖 Cloud Sync 的替代方案。 应用依赖 OpenList / AList 作为存储引擎。添加本地存储、阿里云盘、百度网盘、OneDrive、S3、WebDAV 等存储后，即可在不同存储之间自动同步文件。 支持增量同步与全量同步，满足备份和镜像场景。 支持 Cron、固定间隔和手动触发。 支持文件名、文件后缀、文件目录、系统目录过滤和文件大小限制。 提供实时进度、执行历史、失败重试和任务超时控制。 支持 Webhook、Server酱、钉钉、企业微信、飞书通知。 开源地址： https://github.com/chenbin3625/OpenSync-fnOS",
+      "platform": [
+        "arm",
+        "x86"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "releases": {
+        "0.0.25": {
+          "packages": {
+            "arm": {
+              "download_url": "https://github.com/chenbin3625/OpenSync-fnOS/releases/download/v0.0.25/opensync-arm64.fpk",
+              "sha256": "f0f79a90b4de29e748a1eb0372446fa1374ad30cfd2ec4adf8ad559c7c2f4e06",
+              "size": 10202990
+            },
+            "x86": {
+              "download_url": "https://github.com/chenbin3625/OpenSync-fnOS/releases/download/v0.0.25/opensync-amd64.fpk",
+              "sha256": "ac66a9c799b55f3be5a766a57647c8ff16add88645300c96e32250d0a0e2abbf",
+              "size": 11060436
+            }
+          },
+          "changelog": "v0.0.25：统一暗色主题的页面与控件颜色，提高浅色模式辅助文字对比度；优化窄屏设置布局和任务标签滚动，修复顶部工具栏溢出；将模拟任务超时默认值统一为 48 小时。",
+          "os_min_version": "1.2.0401"
+        }
+      },
+      "maintainer": "chenbin3625",
+      "maintainer_url": "https://github.com/chenbin3625"
+    },
+    "m3u8_down": {
+      "display_name": "m3u8下载器",
+      "desc": "基于开源项目 N_m3u8DL-RE 封装的可视化 DASH/HLS/MSS 流媒体下载工具。支持点播与直播、多线程下载、音视频混流、字幕、解密、代理等完整命令行能力，全部参数均可可视化配置；内置 x86_64 / arm64 双架构官方二进制，通过 Web 界面实时查看下载进度与管理文件。",
+      "platform": [
+        "all"
+      ],
+      "categories": [
+        "影音娱乐"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "releases": {
+        "0.6.0-beta.25": {
+          "packages": {
+            "all": {
+              "download_url": "https://github.com/Youngxj/N_m3u8DL-RE-FN/releases/download/v0.6.0-beta.25/m3u8_down_0.6.0-beta.25_all.fpk",
+              "sha256": "8f3a1b7dfc5a9ce0195f0b5c127bd9a9b979c5658ab07dd8242ddb017af4e361",
+              "size": 16695600
+            }
+          }
+        }
+      },
+      "maintainer_url": "https://github.com/Youngxj/N_m3u8DL-RE-FN"
+    },
+    "cpu-tuner": {
+      "display_name": "CPU 性能控制台（CPU Tuner）",
+      "desc": "面向飞牛 fnOS NAS 的原生 FPK 应用。它读取 Linux CPUFreq 与 hwmon/thermal 接口，展示 CPU、policy、驱动报告频率和温度；在明确授权后事务式调整 scaling_max_freq，提供目标温度闭环、开机恢复，以及可停止、有温度保护的内置性能测试。",
+      "platform": [
+        "x86"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "releases": {
+        "0.1.13": {
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/787x/cpu-tuner-fnos/releases/download/v0.1.13/cpu-tuner-0.1.13-fnos-amd64.fpk",
+              "sha256": "5d43693e835130681c2db915448ef685c0d5bba4071ad23c914b5ff34e9f50e2",
+              "size": 5334076
+            }
+          }
+        }
+      },
+      "maintainer_url": "https://github.com/787x/cpu-tuner-fnos"
+    },
+    "fnos-terminal": {
+      "display_name": "终端",
+      "desc": "在飞牛 fnOS 桌面中打开仅限管理员使用的 Debian Web 终端。基于 ttyd，通过统一网关访问，不开放额外端口。",
+      "platform": [
+        "arm",
+        "x86"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/icons/fnapp.png",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "releases": {
+        "1.2.12": {
+          "packages": {
+            "arm": {
+              "download_url": "https://github.com/Eric0101/fnos-terminal/releases/download/v1.2.12/fnos-terminal_1.2.12_arm.fpk",
+              "sha256": "f8666c42ba12704c253f58c185a75b44e0f212c85d8b85cfd2f33003fb3ccebb",
+              "size": 1134783
+            },
+            "x86": {
+              "download_url": "https://github.com/Eric0101/fnos-terminal/releases/download/v1.2.12/fnos-terminal_1.2.12_x86.fpk",
+              "sha256": "5cc4aabd994345957248879edea2650e7e35fdbd4829a4439c711c24e1a21cda",
+              "size": 1123697
+            }
+          },
+          "changelog": "1.2.12：修复 session-shell 换行符导致的启动失败；粘贴改为普通文本样式，并优先使用系统剪贴板，支持粘贴终端外部复制的内容。",
+          "os_min_version": "1.1.3100"
+        }
+      },
+      "maintainer": "金木炎",
+      "maintainer_url": "https://github.com/Eric0101"
     }
   }
 }

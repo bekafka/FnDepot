@@ -29,10 +29,23 @@ https://github.com/bekafka/FnDepot
 | 飞牛音乐酷狗扩展 | `fnmusic-ext-kugou` | 2.1.0 | all | ai2ku | [ai2ku/fnos-music-ext-kugou-fpk](https://github.com/ai2ku/fnos-music-ext-kugou-fpk) |
 | Hosts 管理器 | `fnnas.hosts` | 1.0.61 | all | 豪子 / Contribuv | [Contribuv/fn-hosts](https://github.com/Contribuv/fn-hosts) |
 | Hermes Agent | `hermes-agent` | 0.21.3.1 | all | veenyi | [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web) |
+| 终端 | `fnos-terminal` | 1.2.12 | arm / x86 | 金木炎 | [Eric0101/fnos-terminal](https://github.com/Eric0101/fnos-terminal) |
+| 视频转码 | `fpkconverter` | 1.0.56 | x86 | yang | [yang1245789/fpk-converter](https://github.com/yang1245789/fpk-converter) |
+| OIDC SSO Bridge | `fnosoidcbridge` | 0.7.1 | all | BeFortune | [BeFortune/fnos-oidc-bridge](https://github.com/BeFortune/fnos-oidc-bridge) |
+| m3u8 下载器 | `m3u8_down` | 0.6.0-beta.25 | all | Youngxj | [Youngxj/N_m3u8DL-RE-FN](https://github.com/Youngxj/N_m3u8DL-RE-FN) |
+| 风扇控制服务 | `FanControlServer` | 1.3.7.1 | x86 | guan-ry | [guan-ry/FanControlServerApp](https://github.com/guan-ry/FanControlServerApp) |
+| OpenSync | `opensync` | 0.0.25 | arm / x86 | chenbin3625 | [chenbin3625/OpenSync-fnOS](https://github.com/chenbin3625/OpenSync-fnOS) |
+| CPU 性能控制台 | `cpu-tuner` | 0.1.13 | x86 | cpu-tuner contributors | [787x/cpu-tuner-fnos](https://github.com/787x/cpu-tuner-fnos) |
+| 无线热点 | `fnwifi` | 1.1.2 | all | 大哲 | [Zisbusy/fnwifi](https://github.com/Zisbusy/fnwifi) |
+| Obsidian | `ignis` | 1.4.5 | all | Hxido | [Hxido-RXM/Obsidian-fpk](https://github.com/Hxido-RXM/Obsidian-fpk) |
+
+> 「Obsidian」的应用键名是 `ignis`（包内 manifest 的 `appname`），不是 `obsidian`。
 
 各条目的可信度不一样，如实标注：
 
-- **读到作者 manifest 的**（`fnnas.hosts`、`hermes-agent`）：`appname` / `platform` / `service_port` / `run_as` 是作者自己声明的真值。
+- **读到作者 manifest 的**（`fnnas.hosts`、`hermes-agent`、`fnos-terminal`、`fpkconverter`、`fnosoidcbridge`、`m3u8_down`、
+  `FanControlServer`、`opensync`、`cpu-tuner`、`fnwifi`、`ignis`）：`appname` / `platform` / `service_port` / `run_as` 是作者自己声明的真值
+  （`run_as` 取自各仓库 `config/privilege` 的 `defaults.run-as`）。
   `hermes-agent` 用的是 [veenyi/fnos-hermes-agent-web](https://github.com/veenyi/fnos-hermes-agent-web)（FPK 发布在这里），
   其仓库内 manifest 版本号（0.21.0.1）落后于 tag（0.21.3.1），因此 `platform`/图标按仓库文件取，版本按 tag 取。
 - **按 README 填的**（`fnmusic-ext`、`fnmusic-ext-kugou`）：这两个仓库没提交 manifest，
@@ -43,6 +56,14 @@ https://github.com/bekafka/FnDepot
 - **`中转站监控`** 作者只发布了 **x86 包**，arm64 设备上不会显示也无法安装；其 README 写的最新版是 v2.0.5，
   但 GitHub 上实际只发布到 v2.0.0，本源只收录真实发布过的版本。
 - **`veenyi/fnos-hermes-agent` 未收录**：该仓库的 release 里没有任何 `.fpk` 资产，没有可安装的东西。
+- **`fpkconverter` 仓库里的 manifest 版本（1.0.57）超前于当前 tag（v1.0.56）**，因此 `display_name`/`desc`/`arch` 按仓库文件取、
+  版本与哈希按 release 取；作者下一个 tag 发出来后两项会对齐。
+- **`FanControlServer` 每个架构都发两个包**（`-iframe` 与 `-url`，桌面入口打开方式不同）；本源收录 **iframe 版**。
+  其 manifest 声明 `platform=x86`，arm64 包作者自述"缺少验证可能不可用"，故本源只收 x86。
+- **`opensync` / `fnos-terminal` 走双架构合并**：两者仓库里的 manifest 只写了单一 `platform`，
+  但构建脚本会在打包时按架构替换（`PLATFORM = { amd64: "x86", arm64: "arm" }`、`setManifestValue(..., "platform", requestedArch)`），
+  且 release 里两个架构的包都真实发布过，所以本源把 arm 与 x86 并进同一版本、`platform` 取并集。
+- **`fnwifi` 标 `install_type: root`**：作者 manifest 自己声明安装在系统空间。
 - **图标**：`fnnas.hosts`、`hermes-agent` 引用作者仓库内的真实 ICON；两个音乐扩展没有图标，统一引用本源通用图标 `assets/icons/fnapp.png`。
   **约定：应用没有图标时一律用 `assets/icons/fnapp.png`，不要删这个文件，也不要用外部占位图。**
 
