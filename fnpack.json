@@ -347,7 +347,7 @@
       }
     },
     "ignis": {
-      "display_name": "Obsidian",
+      "display_name": "ignis",
       "desc": "在浏览器中运行 Obsidian，无需远程桌面。基于 Ignis（Electron API 兼容层），让 Obsidian 官方网页资源运行在标准浏览器中，vault 数据完整保存在 NAS 上。 特性： • 登录认证保护：访问需用户名/密码（安装向导设置），凭据持久化，重启升级不掉配置 • 启动自愈：Obsidian 资源缺失时启动阶段自动从官方源重新下载，无需手动干预 • 退出登录：设置内一键清除会话（服务端令牌轮换，旧会话立即失效） • vault 数据目录可自定义（安装向导设置），支持在飞牛文件管理器中直接管理 • 实时文件监听，多端修改即时同步；WebSocket 实时通信，完整编辑体验 • 端口 19527，支持 HTTPS 反向代理 说明： 本应用为 Ignis 项目的第三方打包（AGPL-3.0）， 不含 Obsidian 程序本体 ——首次安装时自动多源下载（官方源+国内加速镜像自动回退）并解包（离线环境可配置 OBSIDIAN_PACKAGE 指向本地安装包，下载地址见 GitHub 仓库 README）。使用需遵守 Obsidian 的服务条款。",
       "platform": [
         "all"

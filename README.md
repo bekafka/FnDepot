@@ -37,10 +37,10 @@ https://github.com/bekafka/FnDepot
 | OpenSync | `opensync` | 0.0.25 | arm / x86 | chenbin3625 | [chenbin3625/OpenSync-fnOS](https://github.com/chenbin3625/OpenSync-fnOS) |
 | CPU 性能控制台 | `cpu-tuner` | 0.1.13 | x86 | 787x | [787x/cpu-tuner-fnos](https://github.com/787x/cpu-tuner-fnos) |
 | 无线热点 | `fnwifi` | 1.1.2 | all | Zisbusy | [Zisbusy/fnwifi](https://github.com/Zisbusy/fnwifi) |
-| Obsidian | `ignis` | 1.4.5 | all | Hxido-RXM | [Hxido-RXM/Obsidian-fpk](https://github.com/Hxido-RXM/Obsidian-fpk) |
+| ignis | `ignis` | 1.4.5 | all | Hxido-RXM | [Hxido-RXM/Obsidian-fpk](https://github.com/Hxido-RXM/Obsidian-fpk) |
 
 > 键名一律等于**包内 manifest 的 `appname`**，与仓库名/资产名不一定相同：
-> 「Obsidian」是 `ignis`，「飞牛音乐酷狗扩展」是 `fnmusic_ext_kugou`（下划线），m3u8 下载器是 `m3u8_down`。
+> 「Obsidian」这条显示名与键名都写 `ignis`，「飞牛音乐酷狗扩展」是 `fnmusic_ext_kugou`（下划线），m3u8 下载器是 `m3u8_down`。
 > 表里的「作者」= 索引里的 `maintainer`，统一取**仓库 owner**。
 
 
