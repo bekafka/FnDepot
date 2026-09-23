@@ -305,7 +305,7 @@
       },
       "maintainer_url": "https://github.com/Zisbusy/fnwifi"
     },
-    "obsidian": {
+    "ignis": {
       "display_name": "Obsidian",
       "desc": "在浏览器中运行 Obsidian，无需远程桌面。基于 Ignis（Electron API 兼容层），让 Obsidian 官方网页资源运行在标准浏览器中，vault 数据完整保存在 NAS 上。首次安装时自动从官方源下载 Obsidian 资源（不含程序本体），vault 目录可在安装向导自定义，支持登录认证保护与多端实时同步。",
       "platform": [
