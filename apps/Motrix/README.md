@@ -4,11 +4,13 @@
 `Motrix.fpk`，**以原生进程运行**（不用 Docker），内核是官方 aria2 fork `motrixapp/aria2`，Web 面板由 Node 提供。
 
 ```
-上游 agalwood/Motrix          本仓库 motrix-fpk                    打包厂 + 索引
-├── v2.0.0-beta.49            ├── packaging/Motrix/  (fpk 模板)     bekafka/fpk-factory
-├── 官方 server 镜像    ──▶   ├── packaging/build.sh (payload 生产线) │  _build-fpk.yml
-│   motrixapp/motrix-server    ├── packaging/patches/  (fnOS 补丁)   bekafka/FnDepot
-└── motrixapp/aria2            └── .github/workflows/release.yml  ──▶ 索引元数据
+上游 agalwood/Motrix                本应用目录（FnDepot/apps/Motrix）
+├── v2.0.0-beta.49                  ├── package/          fnOS 包模板（manifest/cmd/wizard/app）
+├── 官方 server 镜像          ──▶   ├── packaging/        payload 生产线（build.sh + tools + patches）
+│   motrixapp/motrix-server         └── tests/            验收阶梯
+└── motrixapp/aria2
+                                   构建：FnDepot 的 build-app.yml → FnFactory 的 _build-fpk.yml
+                                   产物：FnDepot Release（tag Motrix-v<version>）+ fnpack.json
 ```
 
 ## 包里放的是什么字节，从哪来
@@ -54,12 +56,12 @@ Failed to commit finalized file: open_root: Permission denied (os error 13)
 ## 目录结构
 
 ```
-packaging/Motrix/          fnOS 包模板（manifest / config / cmd / wizard / ui / 图标）
-packaging/build.sh         payload 生产线（fpk-factory 的 _build-fpk.yml 调用它）
+package/          fnOS 包模板（manifest / config / cmd / wizard / ui / 图标）
+packaging/build.sh         payload 生产线（FnFactory 的 _build-fpk.yml 调用它）
 packaging/tools/oci-extract.py  不依赖 docker 的镜像取件（Registry API + 按层解包 + whiteout）
 packaging/patches/         upstream 源码补丁
 build-local.sh             本地一键出包（等价于 CI）
-tests/motrix-accept.sh     设备上的验收阶梯（endpoints / auth / e2e / lifecycle）
+tests/motrix-accept.sh     设备上的验收阶梯（endpoints / auth / e2e / lifecycle / ops）
 ```
 
 ## 本地出包
@@ -144,7 +146,7 @@ bash tests/motrix-accept.sh all
 
 ## 已知限制
 
-- 只出 **arm64**（`release.yml` 的 matrix 单架构；x86 只需加一行）。
+- 双架构已产出（`arm` + `x86`），但 **x86 包只做过静态审计，未在真 x86 设备上装机验收**。
 - `wizard/config`（应用设置页）与桌面入口的点击体验需要人工过一遍（自动化已覆盖端口重写逻辑）。
 - 上游是 beta 版，release notes 自己要求先备份数据；本包不代替备份。
 - MDXP（16801）默认对局域网监听，用于浏览器扩展/CLI 配对；明文 HTTP 配对需在向导里显式打开
