@@ -1,0 +1,401 @@
+#!/bin/bash
+# ==============================================================================
+# Motrix · 生命周期入口（start / stop / status）
+#
+# 加固要点（都来自本机实测踩过的坑）：
+#   · pid 文件里的进程身份要校验（/proc/<pid>/exe 两边 readlink -f 再比），
+#     否则 TRIM_APPDEST 的软链/真实路径差异会把"正在跑"误判成"没在跑"。
+#   · stop 先按 pid 精确终止，再扫一遍孤儿（node / aria2c / motrix-finalize-fs），
+#     这样"应用中心显示 stopped"才等于真的停了。
+#   · 就绪判据是应用自己的 /healthz，端口现读配置（用户可能改过），不做常量假设。
+#   · 启动失败要收拾自己拉起的进程，不留半状态。
+# ==============================================================================
+set -u
+
+APPNAME="Motrix"
+PKGVAR="${TRIM_PKGVAR:-/var/apps/$APPNAME/var}"
+APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
+LOG_FILE="$PKGVAR/info.log"
+PID_FILE="$PKGVAR/app.pid"
+PERM_FIX_PID="$PKGVAR/perm-fix.pid"
+CONF="$PKGVAR/config.env"
+SERVER_DIR="$APPDEST/server"
+ENTRY="dist/server/index.mjs"
+NODE_BIN="/var/apps/nodejs_v24/target/bin/node"
+READY_TIMEOUT=45
+
+mkdir -p "$PKGVAR" 2>/dev/null || true
+
+log_msg() { printf '%s - %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$LOG_FILE"; }
+
+resolve_path() { readlink -f "$1" 2>/dev/null || printf '%s' "$1"; }
+
+check_process() {
+  [ -n "${1:-}" ] && kill -0 "$1" 2>/dev/null
+}
+
+# 身份校验：exe 归一化后等于我们的 node，cwd 是本应用的 payload 目录，
+# 且 cmdline 里出现我们的入口文件（三者任一不符都判为"不是我们"）
+check_identity() {
+  local pid="$1" exe want cmd cwd
+  [ -r "/proc/$pid/exe" ] || return 1
+  exe="$(resolve_path "$(readlink "/proc/$pid/exe" 2>/dev/null)")"
+  want="$(resolve_path "$NODE_BIN")"
+  [ -n "$exe" ] && [ "$exe" = "$want" ] || return 1
+  cwd="$(resolve_path "$(readlink "/proc/$pid/cwd" 2>/dev/null)")"
+  [ "$cwd" = "$(resolve_path "$SERVER_DIR")" ] || return 1
+  cmd="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)"
+  case "$cmd" in *"$ENTRY"*) return 0 ;; *) return 1 ;; esac
+}
+
+# 孤儿兜底：**不要用 pgrep -x node** —— 本机 node 的进程名（/proc/<pid>/comm）是
+# "MainThread"，pgrep -x node 一个都匹配不到。一律遍历 /proc 比对 exe：
+#   · node            → exe + cwd + 入口 三重判定（node 是共享运行时，必须收紧）
+#   · aria2c / finalize-fs → 只看 exe（这两个二进制是本应用独有的，旧数据目录下
+#     遗留的实例也要清掉，否则它会一直占着 16800 让应用再也起不来）
+find_orphans() {
+  local pid exe cmd cwd
+  local want_node want_aria2 want_finalize want_server
+  want_node="$(resolve_path "$NODE_BIN")"
+  want_server="$(resolve_path "$SERVER_DIR")"
+  want_aria2="$(resolve_path "$SERVER_DIR/bin/aria2c")"
+  want_finalize="$(resolve_path "$SERVER_DIR/bin/motrix-finalize-fs")"
+
+  for pid in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
+    [ "$pid" = "$$" ] && continue
+    [ -r "/proc/$pid/exe" ] || continue
+    exe="$(resolve_path "$(readlink "/proc/$pid/exe" 2>/dev/null)")"
+    [ -n "$exe" ] || continue
+    case "$exe" in
+      "$want_node")
+        cwd="$(resolve_path "$(readlink "/proc/$pid/cwd" 2>/dev/null)")"
+        [ "$cwd" = "$want_server" ] || continue
+        cmd="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)"
+        case "$cmd" in *"$ENTRY"*) printf '%s\n' "$pid" ;; esac ;;
+      "$want_aria2" | "$want_finalize")
+        printf '%s\n' "$pid" ;;
+    esac
+  done
+}
+
+port_in_use() {
+  ss -ltn 2>/dev/null | grep -qE "[:.]$1[[:space:]]"
+}
+
+load_config() {
+  MOTRIX_PORT=26800
+  MOTRIX_MDXP_PORT=16801
+  MOTRIX_ALLOW_EXTENSION=false
+  MOTRIX_DEFAULT_SAVE_DIR="$PKGVAR/data/downloads"
+  MOTRIX_ALLOWED_SAVE_DIRS="$MOTRIX_DEFAULT_SAVE_DIR"
+  MOTRIX_FIX_PERMISSIONS=1        # 1=把下载目录/文件修成 0755/0644（fnOS data-share 默认 0700）
+  MOTRIX_PERM_FIX_INTERVAL=30     # 权限修正轮询间隔（秒）
+  MOTRIX_NODE_MAX_OLD_SPACE=512   # node 堆上限（MB）
+  MOTRIX_LOG_MAX_BYTES=5242880    # info.log 超过这个大小就轮转
+  if [ -r "$CONF" ]; then
+    # shellcheck disable=SC1090
+    . "$CONF"
+  else
+    log_msg "缺少 $CONF（安装回调未跑？），使用内置默认值"
+  fi
+}
+
+build_env() {
+  load_config
+  export PATH="/var/apps/nodejs_v24/target/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  export MOTRIX_DATA_DIR="$PKGVAR/data"
+  export MOTRIX_TEMP_DIR="$PKGVAR/tmp"
+  export TMPDIR="$PKGVAR/tmp"
+  export MOTRIX_PLUGIN_DIR="$PKGVAR/data/plugins"
+  export HOME="$PKGVAR/home"
+  export MOTRIX_RENDERER_DIR="$SERVER_DIR/dist/renderer-web"
+  export MOTRIX_BUILTIN_PLUGIN_DIR="$SERVER_DIR/builtin-plugins"
+  export MOTRIX_EXTRA_DIR="$SERVER_DIR/extra"
+  export MOTRIX_ARIA2_BIN="$SERVER_DIR/bin/aria2c"
+  export MOTRIX_FINALIZE_FS_BIN="$SERVER_DIR/bin/motrix-finalize-fs"
+  export MOTRIX_DEFAULT_SAVE_DIR
+  export MOTRIX_ALLOWED_SAVE_DIRS
+  export MOTRIX_MDXP_HOST="0.0.0.0"
+  export MOTRIX_MDXP_PORT
+  export MOTRIX_PUBLIC_URL="http://$(detect_lan_ip):$MOTRIX_PORT"
+  export MOTRIX_ALLOW_INSECURE_OPERATOR_HTTP="$MOTRIX_ALLOW_EXTENSION"
+  export SSL_CERT_FILE="${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt}"
+  export NODE_ENV=production
+  export LOG_LEVEL="${LOG_LEVEL:-info}"
+  export PORT="$MOTRIX_PORT"
+}
+
+detect_lan_ip() {
+  local ip=""
+  ip="$(ip -4 route get 1.1.1.1 2>/dev/null | sed -n 's/.*src \([0-9.]*\).*/\1/p' | head -n 1)"
+  if [ -z "$ip" ]; then
+    ip="$(ip -4 -o addr show scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | grep -v '^172\.1[6-9]\.' | head -n 1)"
+  fi
+  printf '%s' "${ip:-127.0.0.1}"
+}
+
+mkdir_runtime_dirs() {
+  mkdir -p "$PKGVAR/data" "$PKGVAR/tmp" "$PKGVAR/home" "$PKGVAR/data/plugins" \
+           "$MOTRIX_DEFAULT_SAVE_DIR" 2>/dev/null || true
+}
+
+wait_ready() {
+  local pid="$1" waited=0
+  while [ "$waited" -lt "$READY_TIMEOUT" ]; do
+    if ! check_process "$pid"; then
+      log_msg "进程在启动窗口内退出（见 $LOG_FILE）"
+      return 1
+    fi
+    if command -v curl >/dev/null 2>&1 \
+       && curl -fsS -m 2 "http://127.0.0.1:$MOTRIX_PORT/healthz" >/dev/null 2>&1; then
+      log_msg "就绪（${waited}s）port=$MOTRIX_PORT"
+      return 0
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+  log_msg "等待 ${READY_TIMEOUT}s 仍未就绪"
+  return 1
+}
+
+# ── 日志轮转：info.log 只保留一份 .1，避免长期运行无限增长 ────────────────────
+rotate_logs() {
+  local max="${MOTRIX_LOG_MAX_BYTES:-5242880}" size
+  [ -f "$LOG_FILE" ] || return 0
+  size="$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)"
+  [ "${size:-0}" -le "$max" ] && return 0
+  mv -f "$LOG_FILE" "$LOG_FILE.1" 2>/dev/null || : > "$LOG_FILE"
+  : > "$LOG_FILE"
+  chmod 0644 "$LOG_FILE" 2>/dev/null || true
+  log_msg "日志已轮转（> ${max} 字节），上一份保留为 info.log.1"
+}
+
+# ── 下载目录权限修正 ──────────────────────────────────────────────────────────
+# 飞牛 data-share 的 fnOS 权限层（trimacl）会把应用新建的文件强制成 0700，
+# 连 touch/重定向都一样（实测 umask 0022 也无效），结果别的应用用户（Jellyfin 等）
+# 读不了刚下载的文件。chmod 是能生效的，所以这里做两件事：
+#   启动时整棵目录树修一遍；运行期起一个随服务存活的轮询（默认 30s）修新文件。
+fix_permissions_once() {
+  [ "${MOTRIX_FIX_PERMISSIONS:-1}" = "1" ] || return 0
+  local dirs="${MOTRIX_ALLOWED_SAVE_DIRS:-$MOTRIX_DEFAULT_SAVE_DIR}" d
+  local -a parts
+  IFS=':' read -r -a parts <<< "$dirs"
+  for d in "${parts[@]}"; do
+    [ -d "$d" ] || continue
+    find "$d" -xdev -type d ! -perm -o+rx -exec chmod 0755 {} + 2>/dev/null || true
+    find "$d" -xdev -type f ! -perm -o+r -exec chmod 0644 {} + 2>/dev/null || true
+  done
+}
+
+start_permission_fixer() {
+  local server_pid="$1" interval="${MOTRIX_PERM_FIX_INTERVAL:-30}"
+  [ "${MOTRIX_FIX_PERMISSIONS:-1}" = "1" ] || return 0
+  fix_permissions_once
+  # 跟随 node 进程存活：node 没了就退出；stop 也会显式收掉它
+  (
+    while kill -0 "$server_pid" 2>/dev/null; do
+      sleep "$interval"
+      kill -0 "$server_pid" 2>/dev/null || break
+      fix_permissions_once
+    done
+  ) >/dev/null 2>&1 &
+  printf '%s' "$!" > "$PERM_FIX_PID"
+  log_msg "下载目录权限修正已启动（每 ${interval}s，pid=$(cat "$PERM_FIX_PID")）"
+}
+
+stop_permission_fixer() {
+  [ -r "$PERM_FIX_PID" ] || return 0
+  local pid; pid="$(head -n 1 "$PERM_FIX_PID" | tr -d '[:space:]')"
+  if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    kill -TERM "$pid" 2>/dev/null || true
+  fi
+  rm -f "$PERM_FIX_PID"
+}
+
+# ── 引擎端口预检：16800(RPC) / 6881(BT) 被外来进程占住时自动换一个 ──────────────
+# 被占时上游会直接 fatal 退出（RPC port 16800 is already in use），而不会自己换端口。
+free_port() {
+  local p="$1" end=$(( $1 + 40 ))
+  while [ "$p" -le "$end" ]; do
+    # 别把 Web 端口或 MDXP 端口挑成引擎端口
+    if [ "$p" != "${MOTRIX_PORT:-}" ] && [ "$p" != "${MOTRIX_MDXP_PORT:-}" ] \
+       && ! port_in_use "$p"; then
+      printf '%s' "$p"; return 0
+    fi
+    p=$(( p + 1 ))
+  done
+  return 1
+}
+
+ensure_engine_ports() {
+  local settings="$PKGVAR/data/settings.json"
+  if [ ! -f "$settings" ]; then
+    log_msg "settings.json 尚未生成（首次启动），跳过引擎端口预检"
+    return 0
+  fi
+  [ -x "$NODE_BIN" ] || return 0
+  local rpc listen newrpc newlisten changed=0
+  read -r rpc listen <<< "$("$NODE_BIN" -e '
+const fs = require("fs");
+const s = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+const e = s.engine ?? {};
+process.stdout.write(`${e.rpcPort ?? 16800} ${e.listenPort ?? 6881}`);
+' "$settings" 2>/dev/null)"
+  [ -n "${rpc:-}" ] || return 0
+  if port_in_use "$rpc"; then
+    newrpc="$(free_port 16800 || true)"
+    if [ -n "$newrpc" ] && [ "$newrpc" != "$rpc" ]; then
+      log_msg "aria2 RPC 端口 $rpc 被外来进程占用，自动改用 $newrpc"
+      rpc="$newrpc"; changed=1
+    fi
+  fi
+  if [ -n "${listen:-}" ] && [ "$listen" != "0" ] && port_in_use "$listen"; then
+    newlisten="$(free_port 6881 || true)"
+    if [ -n "$newlisten" ] && [ "$newlisten" != "$listen" ]; then
+      log_msg "BT 监听端口 $listen 被占用，自动改用 $newlisten"
+      listen="$newlisten"; changed=1
+    fi
+  fi
+  [ "$changed" = "1" ] || return 0
+  RPC="$rpc" LISTEN="$listen" SETTINGS="$settings" "$NODE_BIN" -e '
+const fs = require("fs"), path = require("path");
+const file = process.env.SETTINGS;
+const mode = fs.statSync(file).mode & 0o777;
+const s = JSON.parse(fs.readFileSync(file, "utf8"));
+s.engine = s.engine ?? {};
+s.engine.rpcPort = Number(process.env.RPC);
+s.engine.listenPort = Number(process.env.LISTEN);
+const tmp = path.join(path.dirname(file), `.settings.json.tmp-${process.pid}`);
+fs.writeFileSync(tmp, JSON.stringify(s, null, 2));
+fs.chmodSync(tmp, mode);
+fs.renameSync(tmp, file);
+' && log_msg "已写回 settings.json：rpcPort=$rpc listenPort=$listen" \
+  || log_msg "写回 settings.json 失败，本次仍按原端口启动"
+}
+
+# 首次启动把 Web 面板语言设成中文（上游默认 en-US）。
+# 上游没有"默认语言"的环境变量（MOTRIX_HOST_LANGUAGE 只影响服务端/插件 locale），
+# 语言是存在应用设置里的；这里在服务就绪后调一次它自己的 RPC 写设置。
+# 用 marker 保证只做一次：用户之后自己改语言不会再被覆盖，卸载重装也保留。
+init_default_language() {
+  local marker="$PKGVAR/.language-init"
+  [ -f "$marker" ] && return 0
+  local code
+  code="$(curl -s -o /dev/null -w '%{http_code}' -m 10 -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{"args":[{"app":{"language":"zh-CN"}}]}' \
+    "http://127.0.0.1:$MOTRIX_PORT/rpc/command/command:updateSettings" 2>/dev/null)"
+  if [ "$code" = "200" ]; then
+    printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S')" > "$marker"
+    log_msg "首次启动：界面语言已设为 zh-CN"
+  else
+    log_msg "首次启动：设置中文失败（HTTP ${code:-000}），下次启动重试"
+  fi
+}
+
+start_process() {
+  if status; then
+    log_msg "已在运行，跳过启动"
+    return 0
+  fi
+
+  build_env
+  mkdir_runtime_dirs
+  rotate_logs
+  ensure_engine_ports
+
+  if [ ! -f "$SERVER_DIR/$ENTRY" ]; then
+    log_msg "找不到服务端入口：$SERVER_DIR/$ENTRY（payload 缺失？）"
+    return 1
+  fi
+  if [ ! -x "$NODE_BIN" ]; then
+    log_msg "找不到飞牛官方 Node 运行时：$NODE_BIN（install_dep_apps=nodejs_v24 是否装好？）"
+    return 1
+  fi
+  if port_in_use "$MOTRIX_PORT"; then
+    log_msg "端口 $MOTRIX_PORT 已被占用，拒绝启动"
+    return 1
+  fi
+  # aria2 RPC 端口由 Motrix 自己管理（默认 16800，可在应用设置里改），这里只做提示：
+  # 被外来进程占用时上游报的是 "RPC port 16800 is already in use"，日志里没有线索。
+  if port_in_use "${MOTRIX_ARIA2_RPC_PORT:-16800}"; then
+    log_msg "警告：aria2 RPC 端口 ${MOTRIX_ARIA2_RPC_PORT:-16800} 已被占用（所有者：$(ss -ltnp 2>/dev/null | grep -E "[:.]${MOTRIX_ARIA2_RPC_PORT:-16800}[[:space:]]" | sed -n 's/.*users:((\(.*\))).*/\1/p' | head -1)）。若不属于本应用，Motrix 引擎会启动失败。"
+  fi
+
+  log_msg "启动：node $ENTRY（port=$MOTRIX_PORT mdxp=$MOTRIX_MDXP_PORT save=$MOTRIX_DEFAULT_SAVE_DIR）"
+  (
+    cd "$SERVER_DIR" || exit 1
+    exec "$NODE_BIN" --max-old-space-size="${MOTRIX_NODE_MAX_OLD_SPACE:-512}" "$ENTRY"
+  ) >> "$LOG_FILE" 2>&1 &
+  local pid=$!
+  printf '%s' "$pid" > "$PID_FILE"
+
+  if wait_ready "$pid"; then
+    init_default_language
+    start_permission_fixer "$pid"
+    return 0
+  fi
+  log_msg "启动失败，回收进程"
+  stop_process >/dev/null 2>&1
+  return 1
+}
+
+stop_process() {
+  stop_permission_fixer
+  if [ -r "$PID_FILE" ]; then
+    local pid
+    pid="$(head -n 1 "$PID_FILE" | tr -d '[:space:]')"
+    if check_process "$pid" && check_identity "$pid"; then
+      log_msg "停止 pid=$pid"
+      kill -TERM "$pid" 2>/dev/null
+      local waited=0
+      while check_process "$pid" && [ "$waited" -lt 25 ]; do sleep 1; waited=$((waited + 1)); done
+      if check_process "$pid"; then
+        log_msg "SIGTERM 超时，SIGKILL pid=$pid"
+        kill -KILL "$pid" 2>/dev/null
+        sleep 1
+      fi
+    else
+      log_msg "pid 文件指向的进程不存在或身份不符（pid=${pid:-空}），跳过"
+    fi
+    rm -f "$PID_FILE"
+  fi
+
+  local orphan
+  for orphan in $(find_orphans); do
+    log_msg "清理孤儿进程 pid=$orphan"
+    kill -TERM "$orphan" 2>/dev/null
+  done
+  sleep 2
+  for orphan in $(find_orphans); do
+    log_msg "孤儿进程未退出，SIGKILL pid=$orphan"
+    kill -KILL "$orphan" 2>/dev/null
+  done
+  return 0
+}
+
+status() {
+  [ -r "$PID_FILE" ] || return 1
+  local pid
+  pid="$(head -n 1 "$PID_FILE" | tr -d '[:space:]')"
+  if [ -n "$pid" ] && check_process "$pid" && check_identity "$pid"; then
+    return 0
+  fi
+  rm -f "$PID_FILE"
+  return 1
+}
+
+case "${1:-}" in
+  start)
+    start_process || exit 1
+    ;;
+  stop)
+    stop_process || exit 1
+    ;;
+  status)
+    if status; then exit 0; else exit 3; fi
+    ;;
+  *)
+    exit 1
+    ;;
+esac

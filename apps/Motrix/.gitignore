@@ -1,0 +1,4 @@
+.build/
+build_workspace/
+dist/
+packaging/Motrix/app/server/

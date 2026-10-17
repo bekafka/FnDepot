@@ -1,0 +1,88 @@
+# ============================================================================
+# FnDepot · 应用构建与发布（调用 FnFactory 的可复用 workflow）
+#
+# 触发方式：
+#   1. 应用目录（apps/<App>/）或索引有改动时，手动或自动判定要构建的应用
+#   2. workflow_dispatch：填 app_key（apps/ 下的目录名）+ version + changelog
+#
+# 架构模型（2026-10-17 定案）：
+#   FnDepot（本仓库）      ← 所有 fpk 应用的源代码项目（apps/<App>/）+ 索引
+#   FnFactory              ← 构建机器人：可复用 workflow + 规范 + 工具
+#   产物 → 本仓库的 Release（tag 格式 <App>-v<version>，带应用名前缀防撞）
+# ============================================================================
+name: Build App
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_key:
+        description: '应用键名（apps/ 下的目录名，等于 manifest 的 appname）'
+        required: true
+        type: string
+      version:
+        description: '版本号（不带 v，需与上游 tag 一致）'
+        required: true
+        type: string
+      changelog:
+        description: '更新日志'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  meta:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.m.outputs.version }}
+      changelog: ${{ steps.m.outputs.changelog }}
+      app_key: ${{ steps.m.outputs.app_key }}
+      release_tag: ${{ steps.m.outputs.release_tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 解析版本与应用
+        id: m
+        env:
+          IN_APP: ${{ github.event.inputs.app_key }}
+          IN_VERSION: ${{ github.event.inputs.version }}
+          IN_CHANGELOG: ${{ github.event.inputs.changelog }}
+        run: |
+          set -euo pipefail
+          APP="${IN_APP:?必须填 app_key}"
+          VERSION="${IN_VERSION:?必须填 version}"
+          if [ -n "${IN_CHANGELOG}" ]; then
+            CHANGELOG="${IN_CHANGELOG}"
+          else
+            CHANGELOG="版本 ${VERSION} 发布"
+          fi
+          # 应用必须存在且模板完整
+          [ -d "apps/$APP/package" ] || { echo "::error::apps/$APP/package 不存在"; exit 1; }
+          [ -f "apps/$APP/package/manifest" ] || { echo "::error::apps/$APP/package/manifest 不存在"; exit 1; }
+          # app_key 必须逐字等于 manifest 的 appname（索引键、资产名都靠它）
+          DECLARED=$(grep -oP '^appname\s*=\s*\K.*' "apps/$APP/package/manifest" | head -1 | tr -d '\r')
+          [ "$DECLARED" = "$APP" ] || {
+            echo "::error::apps/$APP 的 manifest appname=$DECLARED，与目录名不一致（必须逐字相等）"; exit 1; }
+          {
+            echo "app_key=$APP"
+            echo "version=$VERSION"
+            echo "release_tag=${APP}-v${VERSION}"
+            echo "changelog<<__EOF__"
+            echo "$CHANGELOG"
+            echo "__EOF__"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: meta
+    uses: bekafka/FnFactory/.github/workflows/_build-fpk.yml@main
+    with:
+      app_key:      ${{ needs.meta.outputs.app_key }}
+      version:      ${{ needs.meta.outputs.version }}
+      changelog:    ${{ needs.meta.outputs.changelog }}
+      release_tag:  ${{ needs.meta.outputs.release_tag }}
+      publish:      true
+      template_dir: 'apps/${{ needs.meta.outputs.app_key }}/package'
+      build_script: 'apps/${{ needs.meta.outputs.app_key }}/packaging/build.sh'
+    secrets:
+      FNDEPOT_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,17 @@
+appname               = Motrix
+version               = ${VERSION}
+display_name          = Motrix
+desc                  = "<p>Motrix Server —— 全功能下载管理器（HTTP / FTP / BT / 磁力），带 Web 面板，内核为 aria2 (motrixapp/aria2 fork)。</p><p>下载默认保存到 /vol1/@appshare/Motrix/downloads，可在“文件”里直接看到。</p><p>已关闭登录口令：打开即用。注意这表示局域网内能访问该端口的人都能操作下载。</p>"
+platform              = ${PLATFORM}
+source                = thirdparty
+maintainer            = bekafka
+maintainer_url        = https://github.com/bekafka/motrix-fpk
+distributor           = bekafka
+distributor_url       = https://github.com/bekafka/motrix-fpk
+desktop_uidir         = ui
+desktop_applaunchname = Motrix.main
+ctl_stop              = true
+checkport             = false
+disable_authorization_path = false
+install_dep_apps      = nodejs_v24
+changelog             = ${CHANGELOG}

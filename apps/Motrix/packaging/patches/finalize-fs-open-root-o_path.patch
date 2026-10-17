@@ -1,0 +1,103 @@
+diff --git a/packages/finalize-fs/src/platform/unix/mod.rs b/packages/finalize-fs/src/platform/unix/mod.rs
+index 4d65b9b..245b2e9 100644
+--- a/packages/finalize-fs/src/platform/unix/mod.rs
++++ b/packages/finalize-fs/src/platform/unix/mod.rs
+@@ -23,7 +23,7 @@ mod reserved;
+ use remove::snapshot_directory;
+ #[cfg(target_os = "macos")]
+ pub(crate) use reserved::{exfat_volume_identity, rename_opened_reserved, reserve_exfat_target};
+-use std::ffi::CString;
++use std::ffi::{CStr, CString};
+ use std::io;
+ use std::os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd};
+ use std::path::{Component, Path};
+@@ -86,33 +86,22 @@ pub(crate) fn open_root(path: &str) -> io::Result<RootHandle> {
+     // from the filesystem root so every directory is resolved relative to an
+     // already-held descriptor.
+     let fd = unsafe {
+-        libc::open(
+-            c"/".as_ptr(),
+-            libc::O_RDONLY | libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_CLOEXEC,
+-        )
++        libc::open(c"/".as_ptr(), libc::O_RDONLY | DIR_FLAGS)
+     };
+     if fd < 0 {
+         return Err(io::Error::last_os_error());
+     }
+     let mut current = unsafe { OwnedFd::from_raw_fd(fd) };
+-    for component in requested.components() {
++    let components: Vec<Component> = requested.components().collect();
++    let total = components.len();
++    for (index, component) in components.into_iter().enumerate() {
+         match component {
+             Component::RootDir => {}
+             Component::Normal(part) => {
+                 let part = CString::new(part.as_bytes()).map_err(|_| {
+                     io::Error::new(io::ErrorKind::InvalidInput, "root contains NUL")
+                 })?;
+-                let next = unsafe {
+-                    libc::openat(
+-                        current.as_raw_fd(),
+-                        part.as_ptr(),
+-                        libc::O_RDONLY | libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_CLOEXEC,
+-                    )
+-                };
+-                if next < 0 {
+-                    return Err(io::Error::last_os_error());
+-                }
+-                current = unsafe { OwnedFd::from_raw_fd(next) };
++                current = open_dir_component(current.as_raw_fd(), &part, index + 1 == total)?;
+             }
+             _ => {
+                 return Err(io::Error::new(
+@@ -125,6 +114,50 @@ pub(crate) fn open_root(path: &str) -> io::Result<RootHandle> {
+     Ok(RootHandle(current))
+ }
+ 
++/// Directory flags shared by every component of the absolute root walk.
++const DIR_FLAGS: libc::c_int = libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_CLOEXEC;
++
++/// Open one directory while walking the absolute root path.
++///
++/// A readable handle (`O_RDONLY`) stays the preferred result, so behaviour on
++/// ordinary filesystems is unchanged. Some NAS kernels, however, let an
++/// application user *traverse* a data-volume root without letting it *read*
++/// that directory: fnOS ships a `trimacl` layer that does exactly this, and
++/// `O_RDONLY | O_DIRECTORY` then fails with `EACCES` even though the
++/// application owns the download directory further down the path. Retrying
++/// such a component with `O_PATH` keeps the walk working — `O_PATH`
++/// descriptors are accepted by `openat`, `renameat2`, `linkat`, `statx` and
++/// friends, which is all the publication path needs.
++///
++/// The final component is reopened read-only through the held descriptor when
++/// that is possible, because later steps (root identity checks, directory
++/// flushes) prefer a genuinely readable handle. An unreadable final directory
++/// degrades to the `O_PATH` handle instead of failing the whole operation.
++fn open_dir_component(parent: RawFd, name: &CStr, is_last: bool) -> io::Result<OwnedFd> {
++    let readable = unsafe { libc::openat(parent, name.as_ptr(), libc::O_RDONLY | DIR_FLAGS) };
++    if readable >= 0 {
++        return Ok(unsafe { OwnedFd::from_raw_fd(readable) });
++    }
++    let error = io::Error::last_os_error();
++    if !matches!(error.raw_os_error(), Some(libc::EACCES) | Some(libc::EPERM)) {
++        return Err(error);
++    }
++    let path_only = unsafe { libc::openat(parent, name.as_ptr(), libc::O_PATH | DIR_FLAGS) };
++    if path_only < 0 {
++        return Err(io::Error::last_os_error());
++    }
++    let handle = unsafe { OwnedFd::from_raw_fd(path_only) };
++    if !is_last {
++        return Ok(handle);
++    }
++    let reopened =
++        unsafe { libc::openat(handle.as_raw_fd(), c".".as_ptr(), libc::O_RDONLY | DIR_FLAGS) };
++    if reopened >= 0 {
++        return Ok(unsafe { OwnedFd::from_raw_fd(reopened) });
++    }
++    Ok(handle)
++}
++
+ fn open_parent(root: RawFd, parts: &[&str]) -> io::Result<OwnedFd> {
+     let duplicate = unsafe { libc::fcntl(root, libc::F_DUPFD_CLOEXEC, 0) };
+     if duplicate < 0 {

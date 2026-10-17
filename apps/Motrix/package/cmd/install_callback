@@ -1,0 +1,46 @@
+#!/bin/bash
+# 安装后：建运行目录、落配置、同步桌面入口端口。
+# 这个阶段可能是 root，落文件后要把属主还给应用用户。
+set -u
+APPNAME="Motrix"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+RUN_USER="${TRIM_USERNAME:-$APPNAME}"
+RUN_GROUP="${TRIM_GROUPNAME:-$APPNAME}"
+LOG="$PKGVAR/info.log"
+UI_CONFIG="$APPDEST/ui/config"
+NODE_BIN="/var/apps/nodejs_v24/target/bin/node"
+
+log() { printf '%s - [install] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG"; }
+
+mkdir -p "$PKGVAR/data/plugins" "$PKGVAR/tmp" "$PKGVAR/home" || exit 1
+chown -R "$RUN_USER:$RUN_GROUP" "$PKGVAR" 2>/dev/null || true
+
+if [ ! -x "$APPDEST/apply-config.sh" ]; then
+  log "缺少 $APPDEST/apply-config.sh，安装失败"
+  exit 1
+fi
+bash "$APPDEST/apply-config.sh" install || { log "apply-config 失败"; exit 1; }
+
+PORT="$(sed -n 's/^MOTRIX_PORT=//p' "$PKGVAR/config.env" | tail -n 1)"
+if [ -n "$PORT" ] && [ -f "$UI_CONFIG" ]; then
+  if sed -i -E "s/(\"port\"[[:space:]]*:[[:space:]]*\")[^\"]*(\")/\1$PORT\2/" "$UI_CONFIG" 2>/dev/null; then
+    if [ -x "$NODE_BIN" ]; then
+      "$NODE_BIN" -e "JSON.parse(require('fs').readFileSync('$UI_CONFIG','utf8'))" 2>/dev/null \
+        || log "警告：改写后的 $UI_CONFIG JSON 校验未通过"
+    fi
+    log "桌面入口端口已同步为 $PORT"
+  else
+    log "警告：未能同步桌面入口端口（$UI_CONFIG 不可写？）"
+  fi
+fi
+
+AUTH_MODE_FILE="$APPDEST/AUTH_MODE"
+AUTH_MODE="$(cat "$AUTH_MODE_FILE" 2>/dev/null || echo token)"
+if [ "$AUTH_MODE" = "open" ]; then
+  log "安装完成：已关闭登录口令，打开 Web 面板即用（局域网内能访问该端口的人都能操作下载）"
+else
+  log "安装完成。登录口令由 Motrix 首次启动自动生成（$PKGVAR/data/operator-token，0600）"
+  log "查看口令：sudo cat $PKGVAR/data/operator-token"
+fi
+exit 0

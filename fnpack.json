@@ -24,19 +24,19 @@
       "distributor": "bekafka",
       "distributor_url": "https://github.com/bekafka/FnDepot",
       "maintainer": "bekafka",
-      "maintainer_url": "https://github.com/bekafka/motrix-fpk",
+      "maintainer_url": "https://github.com/bekafka/FnDepot",
       "releases": {
         "2.0.0-beta.49": {
           "changelog": "Motrix Server 2.0.0-beta.49：飞牛 fpk 移植版首个公开发布（双架构 arm64+x86；默认端口 26800、免登录、中文界面、下载文件其他应用可读）",
           "updated_at": "2026-10-17T04:47:44Z",
           "packages": {
             "x86": {
-              "download_url": "https://github.com/bekafka/motrix-fpk/releases/download/v2.0.0-beta.49/Motrix-2.0.0-beta.49-x86.fpk",
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.0.0-beta.49/Motrix-2.0.0-beta.49-x86.fpk",
               "sha256": "05567d0d2cae6f16e3f45df9d642cbbd68b78ac4a8af6ccd9e219c47612a620d",
               "size": 15482956
             },
             "arm": {
-              "download_url": "https://github.com/bekafka/motrix-fpk/releases/download/v2.0.0-beta.49/Motrix-2.0.0-beta.49-arm.fpk",
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.0.0-beta.49/Motrix-2.0.0-beta.49-arm.fpk",
               "sha256": "222dc193eea0d69d0b050d52252689fbb23006a2dcbb9367de6dfb5528d967a1",
               "size": 15724179
             }

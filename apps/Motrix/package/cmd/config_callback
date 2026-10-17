@@ -1,0 +1,30 @@
+#!/bin/bash
+# 应用设置页提交后：重新落配置；只有在跑着的时候才重启（用户主动停掉的不许偷偷拉起）。
+set -u
+APPNAME="Motrix"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+MAIN="/var/apps/$APPNAME/cmd/main"
+LOG="$PKGVAR/info.log"
+
+log() { printf '%s - [config] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG"; }
+
+was_running=0
+if [ -x "$MAIN" ] && "$MAIN" status >/dev/null 2>&1; then
+  was_running=1
+fi
+
+bash "$APPDEST/apply-config.sh" config || { log "apply-config 失败，配置未生效"; exit 1; }
+
+PORT="$(sed -n 's/^MOTRIX_PORT=//p' "$PKGVAR/config.env" | tail -n 1)"
+UI_CONFIG="$APPDEST/ui/config"
+if [ -n "$PORT" ] && [ -f "$UI_CONFIG" ]; then
+  sed -i -E "s/(\"port\"[[:space:]]*:[[:space:]]*\")[^\"]*(\")/\1$PORT\2/" "$UI_CONFIG" 2>/dev/null || true
+fi
+
+if [ "$was_running" = "1" ]; then
+  log "重启服务以应用新配置"
+  "$MAIN" stop >/dev/null 2>&1 || true
+  "$MAIN" start >/dev/null 2>&1 || log "重启失败，请查看 $LOG"
+fi
+exit 0

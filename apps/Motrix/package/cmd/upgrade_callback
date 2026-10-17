@@ -1,0 +1,20 @@
+#!/bin/bash
+# 升级后：包内文件是新的，重新同步配置与桌面入口端口（数据目录不动）。
+set -u
+APPNAME="Motrix"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+LOG="$PKGVAR/info.log"
+
+log() { printf '%s - [upgrade] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG"; }
+
+if [ -x "$APPDEST/apply-config.sh" ]; then
+  bash "$APPDEST/apply-config.sh" config || log "apply-config 失败"
+fi
+PORT="$(sed -n 's/^MOTRIX_PORT=//p' "$PKGVAR/config.env" 2>/dev/null | tail -n 1)"
+UI_CONFIG="$APPDEST/ui/config"
+if [ -n "$PORT" ] && [ -f "$UI_CONFIG" ]; then
+  sed -i -E "s/(\"port\"[[:space:]]*:[[:space:]]*\")[^\"]*(\")/\1$PORT\2/" "$UI_CONFIG" 2>/dev/null || true
+fi
+log "升级完成"
+exit 0

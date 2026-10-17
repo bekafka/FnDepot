@@ -53,4 +53,4 @@
 - 重新 stage：上游 `scripts/stage-server-app.mjs --libc gnu`（better-sqlite3 换 glibc prebuild）
 - 验收：上游 `scripts/verify-server-package.mjs --libc gnu`
 - aria2c：`motrixapp/aria2` v1.37.0-motrix.17（lockfile 校验 sha256，AArch64 静态）
-- `motrix-finalize-fs`：上游源码 + [飞牛兼容补丁](https://github.com/bekafka/motrix-fpk/tree/main/packaging/patches)（`open_root` 的 `O_PATH` 回退），在 `rust:1.94.1-alpine` 内构建
+- `motrix-finalize-fs`：上游源码 + [飞牛兼容补丁](https://github.com/bekafka/FnDepot/tree/main/apps/Motrix/packaging/patches)（`open_root` 的 `O_PATH` 回退），在 `rust:1.94.1-alpine` 内构建

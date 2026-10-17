@@ -1,0 +1,37 @@
+#!/bin/bash
+# 卸载后：
+#   keep  （默认）→ 什么都不删：/vol1/@appdata/Motrix 与下载目录都保留，重装即沿用
+#   purge        → 删除应用数据（任务库、设置、插件、日志、口令、aria2 会话）
+#                  下载目录里的文件一律不动（那是用户数据）
+set -u
+
+PKGVAR="${TRIM_PKGVAR:-}"
+MODE="${wizard_uninstall_mode:-keep}"
+
+log() {
+  printf '%s - [uninstall] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "${TRIM_TEMP_LOGFILE:-/dev/null}" 2>/dev/null || true
+  echo "[uninstall] $1"
+}
+
+case "$MODE" in
+  purge)
+    case "$PKGVAR" in
+      /vol1/@appdata/*)
+        log "完全卸载：删除任务库 / 设置 / 插件 / 日志（下载文件保留）"
+        rm -rf "$PKGVAR/data" "$PKGVAR/home" "$PKGVAR/tmp" 2>/dev/null
+        rm -f "$PKGVAR/config.env" "$PKGVAR/operator-token.env" "$PKGVAR/AUTH_MODE" \
+              "$PKGVAR/.language-init" "$PKGVAR/app.pid" "$PKGVAR/perm-fix.pid" \
+              "$PKGVAR/info.log.1" 2>/dev/null
+        log "残留内容：$(ls -A "$PKGVAR" 2>/dev/null | tr '\n' ' ')"
+        rm -f "$PKGVAR/info.log" 2>/dev/null
+        ;;
+      *)
+        log "PKGVAR 不在预期路径（$PKGVAR），为安全起见跳过删除"
+        ;;
+    esac
+    ;;
+  *)
+    log "保留配置卸载：应用数据与下载目录都保留，重装后继续使用"
+    ;;
+esac
+exit 0

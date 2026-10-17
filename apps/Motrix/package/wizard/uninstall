@@ -1,0 +1,27 @@
+[
+  {
+    "stepTitle": "卸载 Motrix",
+    "items": [
+      {
+        "type": "radio",
+        "field": "wizard_uninstall_mode",
+        "label": "卸载方式",
+        "initValue": "keep",
+        "options": [
+          {
+            "label": "保留配置卸载（任务库、设置、插件都留着，重装后继续用）",
+            "value": "keep"
+          },
+          {
+            "label": "完全卸载（删除任务库、设置、插件、日志）",
+            "value": "purge"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "两种方式都不会删除下载目录 /vol1/@appshare/Motrix/downloads 里的文件，需要清理请自行在「文件」里操作。"
+      }
+    ]
+  }
+]
