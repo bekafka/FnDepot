@@ -269,3 +269,42 @@ secret：`FNDEPOT_TOKEN` 已配置到 motrix-fpk。
 git tag v2.0.0-beta.50 && git push origin v2.0.0-beta.50     # 跟上游新版本
 # 或手动：Actions → Release → Run workflow（填 version/changelog）
 ```
+
+---
+
+## 6.0 2026-10-17 迁移到集中式模型（FnDepot 应用源码 + FnFactory 构建）
+
+### 仓库拓扑变化
+
+| 之前（分散） | 现在（集中） |
+|---|---|
+| `bekafka/motrix-fpk` 应用仓库 | **删除用途**：README 已标注废弃 |
+| `bekafka/fpk-factory` 打包厂 | **改名 `bekafka/FnFactory`** |
+| `bekafka/FnDepot` 索引 | FnDepot = 索引 + **所有应用源码**（`apps/<App>/`） |
+
+Motrix 源码现在位于：<https://github.com/bekafka/FnDepot/tree/main/apps/Motrix>
+（`package/` 模板 + `packaging/` 生产线 + `tests/` + `docs/`）
+
+### 发布链路
+
+```
+FnDepot/.github/workflows/build-app.yml （Build App，手动填 app_key/version/changelog）
+  └─ uses: bekafka/FnFactory/.github/workflows/_build-fpk.yml@main
+        ├─ build（arm64 + amd64 矩阵）
+        ├─ release  → FnDepot 自己的 Release（tag: Motrix-v<version>）
+        └─ publish  → 写回 FnDepot 的 fnpack.json（用 GITHUB_TOKEN，无需 PAT）
+```
+
+### 迁移中踩的两个坑（已修，均沉淀到 FnFactory）
+
+| 症状 | 根因 | 修法 |
+|---|---|---|
+| 注入 manifest 报 `sed: unknown option to 's'` | changelog 里含 `/` 和 `&`，`sed "s/…/${CHANGELOG}/"` 的分隔符被撞 | 改用 python 做字符串替换（无分隔符问题）；heredoc 内代码需缩进到块标量内 |
+| 索引推送 `403 Permission denied to github-actions[bot]` | 两处都要 `contents: write`：**仓库级** Actions 默认权限 + **被调用 workflow** 的顶层 `permissions`（后者会把调用方给的权限收紧回 read） | `PUT /repos/{repo}/actions/permissions/workflow` 设 default=write；`_publish-index.yml` 顶层与 publish job 都写 `contents: write` |
+
+### 已验证
+
+- Run 39008523443 **全绿**：双架构 → Release `Motrix-v2.0.0-beta.49` → 索引回写 → verify.py 外链 2/2
+- 从 FnDepot Release 下载 arm 包，sha256 与索引一致（`332ea32a…`），`inspect` OK
+- 装上测试 NAS：验收 **22/22 PASS**
+- 本地 `tools/verify.py` 全量通过
