@@ -1,16 +1,24 @@
-# FnDepot · 索引与发布仓库
+# FnDepot · 第三方应用源（应用源码 + 索引）
 
-飞牛 fnOS 第三方应用源的 **V2 索引仓库**。客户端只读这个仓库。
+飞牛 fnOS 第三方应用源。客户端只读 `fnpack.json`，`.fpk` 资产发布在**本仓库自己的 Release** 里。
 
 ```
 客户端 App Center
       │  读 fnpack.json
       ▼
-  FnDepot（本仓库）  ──── download_url ────▶  各应用自己的 GitHub Release（.fpk 资产）
+  FnDepot（本仓库）  ──── download_url ────▶  本仓库 Release 的 .fpk 资产
+      ▲
+      │  源码（apps/<App>/）
+      │
+  FnFactory（构建机器人）  ── builds & publishes ──▶  本仓库 Release + fnpack.json
 ```
 
-**本源只存元数据**：`.fpk` 资产留在**各应用自己的 Release**里，本源不镜像、不重新打包、不改文件。
-（这是「分散」模型；好处是源仓库始终很小，且 `maintainer_url` 天然指向真实作者。）
+**集中式模型**（2026-10-17 起）：
+
+- `apps/<App>/` 存放每个 fpk 应用的**源代码项目**（包模板、payload 生产线、验收测试、说明）
+- 构建由 [bekafka/FnFactory](https://github.com/bekafka/FnFactory) 的 GitHub Actions 完成，
+  产物发布到本仓库的 Release（tag 形如 `<App>-v<version>`），并写回 `fnpack.json`
+- 本仓库不镜像、不重新打包、不改文件 —— 只提供源码与索引
 
 ---
 
@@ -20,7 +28,9 @@
 |---|---|
 | `fnpack.json` | 索引本体，客户端读的就是它 |
 | `categories.json` | 官方固定分类表（9 类）+ 客户端模糊匹配用的同义词 |
-| `assets/icons/` | 图标。默认用 `fnapp.png`，需自备 |
+| `assets/` | 图标与应用页素材（`<App>/ICON.PNG`、`<App>/Preview/*.png`、`<App>/README.md`） |
+| `apps/` | **每个 fpk 应用的源代码项目**（`package/` + `packaging/` + `tests/`） |
+| `.github/workflows/build-app.yml` | 构建入口：填 app_key / version / changelog，调 FnFactory |
 | `tools/add-app.py` | 上架一个新应用（只写应用级元数据） |
 | `tools/verify.py` | 校验器，**推送前必须跑** |
 
@@ -58,16 +68,17 @@ python3 tools/add-app.py \
     --desc "一句话描述" \
     --categories 系统工具 \
     --platform x86 arm \
-    --repo bekafka/myapp \
-    --run-as root \
-    --install-type "" \
+    --repo bekafka/FnDepot \
+    --run-as package \
+    --icon assets/MyApp/ICON.PNG \
     --write
 
-# 第二步：发版（打 tag，流水线自动追加版本节点）
-git tag v1.0.0 && git push origin v1.0.0     # 在应用仓库里操作
+# 第二步：把应用源码放进 apps/MyApp/（package/ + packaging/ + tests/），
+#         然后在 Actions 里跑 Build App（填 app_key=MyApp、version、changelog）
+gh workflow run build-app.yml -f app_key=MyApp -f version=1.0.0 -f changelog="首个版本"
 ```
 
-`fpk-factory` 的发布模块会替你**卡住第一步**：app 键不存在就直接失败并提示上面这条命令。
+`FnFactory` 的发布模块会替你**卡住第一步**：app 键不存在就直接失败并提示上面这条命令。
 
 ---
 
