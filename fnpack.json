@@ -11,8 +11,8 @@
       "display_name": "Motrix",
       "desc": "全功能下载管理器（HTTP/FTP/BT/磁力）的服务端 Web 面板，aria2 内核，默认端口 26800，免登录开箱即用。",
       "platform": [
-        "x86",
-        "arm"
+        "arm",
+        "x86"
       ],
       "categories": [
         "系统工具"
@@ -25,7 +25,24 @@
       "distributor_url": "https://github.com/bekafka/FnDepot",
       "maintainer": "bekafka",
       "maintainer_url": "https://github.com/bekafka/motrix-fpk",
-      "releases": {},
+      "releases": {
+        "2.0.0-beta.49": {
+          "changelog": "Motrix Server 2.0.0-beta.49：飞牛 fpk 移植版首个公开发布（双架构 arm64+x86；默认端口 26800、免登录、中文界面、下载文件其他应用可读）",
+          "updated_at": "2026-10-17T04:47:44Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/motrix-fpk/releases/download/v2.0.0-beta.49/Motrix-2.0.0-beta.49-x86.fpk",
+              "sha256": "05567d0d2cae6f16e3f45df9d642cbbd68b78ac4a8af6ccd9e219c47612a620d",
+              "size": 15482956
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/motrix-fpk/releases/download/v2.0.0-beta.49/Motrix-2.0.0-beta.49-arm.fpk",
+              "sha256": "222dc193eea0d69d0b050d52252689fbb23006a2dcbb9367de6dfb5528d967a1",
+              "size": 15724179
+            }
+          }
+        }
+      },
       "service_port": "26800",
       "preview_urls": [
         "assets/Motrix/Preview/1-dashboard.png",
