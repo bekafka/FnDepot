@@ -6,5 +6,33 @@
     "homepage": "https://github.com/bekafka/FnDepot",
     "description": "索引第三方开发者发布在 GitHub Releases 的 fnOS 应用。本源只做索引与元数据，不重新打包、不修改安装包；FPK 直接来自发布者的原始下载地址。"
   },
-  "apps": {}
+  "apps": {
+    "Motrix": {
+      "display_name": "Motrix",
+      "desc": "全功能下载管理器（HTTP/FTP/BT/磁力）的服务端 Web 面板，aria2 内核，默认端口 26800，免登录开箱即用。",
+      "platform": [
+        "x86",
+        "arm"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/Motrix/ICON.PNG",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "bekafka",
+      "maintainer_url": "https://github.com/bekafka/motrix-fpk",
+      "releases": {},
+      "service_port": "26800",
+      "preview_urls": [
+        "assets/Motrix/Preview/1-dashboard.png",
+        "assets/Motrix/Preview/2-downloads.png",
+        "assets/Motrix/Preview/3-settings.png"
+      ],
+      "readme_url": "assets/Motrix/README.md"
+    }
+  }
 }
