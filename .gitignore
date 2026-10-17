@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 *.bak
 fnpack.json.bak
+
+# 各应用的构建缓存与产物（不入库）
+apps/*/.build/
+apps/*/build_workspace/
+apps/*/dist/
+apps/*/node_modules/
