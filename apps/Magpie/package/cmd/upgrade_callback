@@ -1,0 +1,21 @@
+#!/bin/bash
+# 升级后：包内文件是新的（二进制可能换了），配置与桌面入口同步一遍，数据目录不动。
+set -u
+APPNAME="Magpie"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+LOG="$PKGVAR/info.log"
+
+log() { printf '%s - [upgrade] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true; }
+
+if [ -x "$APPDEST/apply-config.sh" ]; then
+  bash "$APPDEST/apply-config.sh" upgrade || log "apply-config 失败（配置保持原样）"
+else
+  log "缺少 $APPDEST/apply-config.sh，跳过配置同步"
+fi
+
+if [ -x "$APPDEST/bin/magpie" ]; then
+  log "二进制版本：$("$APPDEST/bin/magpie" version 2>/dev/null | head -n 1)"
+fi
+log "升级完成"
+exit 0

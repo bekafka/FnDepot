@@ -1,0 +1,40 @@
+#!/bin/bash
+# 安装后：建运行目录、落配置、生成面板/网关密钥、同步桌面入口。
+# 这个阶段可能是 root，落文件后要把属主还给应用用户（apply-config.sh 负责）。
+set -u
+APPNAME="Magpie"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+LOG="$PKGVAR/info.log"
+TMPLOG="${TRIM_TEMP_LOGFILE:-}"
+
+emit() {
+  printf '%s - [install] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true
+  [ -n "$TMPLOG" ] && printf '[install] %s\n' "$*" >> "$TMPLOG" 2>/dev/null || true
+  echo "[install] $*"
+}
+
+mkdir -p "$PKGVAR"/{home,config,cache,data,state,tmp} || { emit "创建数据目录失败"; exit 1; }
+
+if [ ! -x "$APPDEST/apply-config.sh" ]; then
+  emit "缺少 $APPDEST/apply-config.sh，安装失败"
+  exit 1
+fi
+
+if ! bash "$APPDEST/apply-config.sh" install; then
+  emit "apply-config.sh 执行失败，安装失败（详见 $LOG）"
+  exit 1
+fi
+
+WEB_PORT="$(sed -n 's/^MAGPIE_WEB_PORT=//p' "$PKGVAR/config.env" 2>/dev/null | tail -n 1)"
+GATEWAY_PORT="$(sed -n 's/^MAGPIE_GATEWAY_PORT=//p' "$PKGVAR/config.env" 2>/dev/null | tail -n 1)"
+LAN="$(sed -n 's/^MAGPIE_LAN=//p' "$PKGVAR/config.env" 2>/dev/null | tail -n 1)"
+
+emit "安装完成：Web 面板端口 ${WEB_PORT:-3430}，网关端口 ${GATEWAY_PORT:-3425}，局域网共享=$([ "${LAN:-1}" = 1 ] && echo 开启 || echo 关闭)"
+emit "面板密钥：sudo cat $PKGVAR/web-key（桌面入口已自动带上）"
+if [ -s "$PKGVAR/gateway-keys.txt" ]; then
+  emit "网关密钥：sudo cat $PKGVAR/gateway-keys.txt（远程客户端作为 Bearer token 使用）"
+else
+  emit "未生成网关密钥（局域网共享关闭）；需要时在面板「网关 → 网关密钥」里添加"
+fi
+exit 0

@@ -1,0 +1,42 @@
+#!/bin/bash
+# 卸载后：
+#   keep  （默认）→ 什么都不删：provider、密钥、用量记录、缓存都留着，重装即沿用
+#   purge        → 删除应用状态（provider、面板/网关密钥、用量、缓存、日志、pid）
+#
+# 注意：应用的数据全部在 ${TRIM_PKGVAR}（@appdata）下，没有共享目录要保护。
+# 路径护栏固定为 /vol1/@appdata/*，不在预期路径时一律不删。
+set -u
+
+PKGVAR="${TRIM_PKGVAR:-}"
+MODE="${wizard_uninstall_mode:-keep}"
+
+log() {
+  printf '%s - [uninstall] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" \
+    >> "${TRIM_TEMP_LOGFILE:-/dev/null}" 2>/dev/null || true
+  echo "[uninstall] $1"
+}
+
+case "$MODE" in
+  purge)
+    case "$PKGVAR" in
+      /vol1/@appdata/*)
+        log "完全卸载：删除 provider / 密钥 / 用量记录 / 缓存 / 日志"
+        for rel in config cache data state home tmp; do
+          rm -rf "${PKGVAR:?}/$rel" 2>/dev/null || true
+        done
+        rm -f "$PKGVAR/config.env" "$PKGVAR/web-key" "$PKGVAR/gateway-keys.txt" \
+              "$PKGVAR/app.pid" "$PKGVAR/.web-cookie" "$PKGVAR/info.log.1" 2>/dev/null
+        log "残留内容：$(ls -A "$PKGVAR" 2>/dev/null | tr '\n' ' ')"
+        # 日志放最后删，前面的记录都写 TRIM_TEMP_LOGFILE，不受影响
+        rm -f "$PKGVAR/info.log" 2>/dev/null
+        ;;
+      *)
+        log "PKGVAR 不在预期路径（$PKGVAR），为安全起见跳过删除"
+        ;;
+    esac
+    ;;
+  *)
+    log "保留配置卸载：provider、密钥与用量记录都保留，重装后继续使用"
+    ;;
+esac
+exit 0

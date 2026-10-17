@@ -13,6 +13,17 @@
                                    产物：FnDepot Release（tag Motrix-v<version>）+ fnpack.json
 ```
 
+## 作者与来源
+
+| 角色 | 是谁 | manifest / `fnpack.json` 字段 |
+| --- | --- | --- |
+| 开发者（飞牛适配与打包） | bekafka | `maintainer` / `maintainer_url` |
+| 发布者（发布到应用源） | bekafka（[FnDepot](https://github.com/bekafka/FnDepot)） | `distributor` / `distributor_url` |
+| 源作者（上游项目，权利源头） | [agalwood/Motrix](https://github.com/agalwood/Motrix) | `source_author` / `source_author_url` |
+
+口径见 FnFactory 的 [`specs/authorship.md`](https://github.com/bekafka/FnFactory/blob/main/specs/authorship.md)：
+开发者/发布者固定写 bekafka，源作者永远指上游项目最初的创造者与权利源头（不是打包者）。
+
 ## 包里放的是什么字节，从哪来
 
 | 内容 | 来源 | 说明 |

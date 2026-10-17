@@ -4,7 +4,7 @@
     "name": "bekafka",
     "author": "bekafka",
     "homepage": "https://github.com/bekafka/FnDepot",
-    "description": "索引第三方开发者发布在 GitHub Releases 的 fnOS 应用。本源只做索引与元数据，不重新打包、不修改安装包；FPK 直接来自发布者的原始下载地址。"
+    "description": "收录为飞牛 fnOS 适配的第三方应用：自建应用由本源用 FnFactory 流水线打包、发布在本仓库 Releases；第三方收录只做索引与元数据，安装包直接来自原作者发布地址。不改上游业务逻辑。"
   },
   "apps": {
     "Motrix": {
@@ -25,6 +25,8 @@
       "distributor_url": "https://github.com/bekafka/FnDepot",
       "maintainer": "bekafka",
       "maintainer_url": "https://github.com/bekafka/FnDepot",
+      "source_author": "agalwood",
+      "source_author_url": "https://github.com/agalwood/Motrix",
       "releases": {
         "2.0.0-beta.49": {
           "changelog": "Motrix Server 2.0.0-beta.49（集中式模型首发）：双架构 arm64+x86；默认端口 26800、免登录、中文界面、下载文件其他应用可读、卸载可选保留/完全",
@@ -50,6 +52,35 @@
         "assets/Motrix/Preview/3-settings.png"
       ],
       "readme_url": "assets/Motrix/README.md"
+    },
+    "Magpie": {
+      "display_name": "Magpie",
+      "desc": "AI 模型统一网关：OpenAI / Anthropic / Gemini 三种 API 互转，路由组在额度用完时自动切账号，Web 面板管理 provider、账号与用量。",
+      "platform": [
+        "x86",
+        "arm"
+      ],
+      "categories": [
+        "AI赋能",
+        "编程开发"
+      ],
+      "icon_url": "assets/Magpie/ICON.PNG",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "bekafka",
+      "maintainer_url": "https://github.com/bekafka/FnDepot",
+      "source_author": "yetone",
+      "source_author_url": "https://github.com/yetone/magpie",
+      "releases": {},
+      "service_port": "3430",
+      "readme_url": "assets/Magpie/README.md",
+      "preview_urls": [
+        "assets/Magpie/Preview/1-panel-agent.png",
+        "assets/Magpie/Preview/2-desktop-iframe.png"
+      ]
     }
   }
 }

@@ -1,0 +1,47 @@
+#!/bin/sh
+# ==============================================================================
+# magpie-cli · 以应用用户身份运行 magpie 命令行
+#
+#   sudo magpie-cli version
+#   sudo magpie-cli gateway-key add "remote-laptop"
+#   sudo magpie-cli accounts add codex           # 需要终端的登录流程
+#   sudo magpie-cli provider add deepseek sk-…
+#
+# 服务进程用的就是同一份 HOME/XDG 目录与 config.env，所以命令行改的东西
+# 面板立刻能看到；反过来面板改的，命令行也读得到。
+# ==============================================================================
+set -u
+
+APP=Magpie
+VAR="/var/apps/$APP/var"
+DEST="/var/apps/$APP/target"
+BIN="$DEST/bin/magpie"
+
+if [ ! -x "$BIN" ]; then
+  echo "magpie-cli: 找不到 $BIN（应用装好了吗？）" >&2
+  exit 1
+fi
+
+if [ ! -r "$VAR/config.env" ]; then
+  echo "magpie-cli: 读不到 $VAR/config.env，请用 sudo 运行" >&2
+  exit 1
+fi
+# shellcheck disable=SC1091
+. "$VAR/config.env"
+
+export HOME="$VAR/home"
+export XDG_CONFIG_HOME="$VAR/config"
+export XDG_CACHE_HOME="$VAR/cache"
+export XDG_DATA_HOME="$VAR/data"
+export XDG_STATE_HOME="$VAR/state"
+export TMPDIR="$VAR/tmp"
+export MAGPIE_NO_STATS=1
+if [ -s "$VAR/web-key" ]; then
+  MAGPIE_WEB_KEY="$(cat "$VAR/web-key")"
+  export MAGPIE_WEB_KEY
+fi
+
+if [ "$(id -u)" = "0" ]; then
+  exec setpriv --reuid="$APP" --regid="$APP" --init-groups -- "$BIN" "$@"
+fi
+exec "$BIN" "$@"

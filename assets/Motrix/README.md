@@ -3,8 +3,18 @@
 全功能下载管理器 **Motrix** 的 Server 版（Web 面板），以原生进程跑在飞牛 fnOS 上：支持 HTTP / FTP / BT / 磁力，
 内核是官方 aria2 fork（`motrixapp/aria2`，带 SQLite 持久化），任务与设置在重装后保留。
 
-> 第三方打包（bekafka），上游项目：[agalwood/Motrix](https://github.com/agalwood/Motrix)（MIT）。
-> 本包 = 上游 v2.0.0-beta.49 的服务端产物，未修改上游业务逻辑。
+> 本包 = 上游 v2.0.0-beta.49 的服务端产物 + 飞牛适配，未修改上游业务逻辑。
+
+## 作者与来源
+
+| 角色 | 是谁 |
+| --- | --- |
+| **源作者**（上游项目，权利源头） | [agalwood/Motrix](https://github.com/agalwood/Motrix)（MIT） |
+| **开发者**（飞牛适配与打包） | bekafka（[FnDepot](https://github.com/bekafka/FnDepot)） |
+| **发布者**（发布到应用源） | bekafka（同一仓库发布） |
+
+应用功能、上游缺陷请找上游项目；打包、安装、飞牛适配问题请到
+[FnDepot Issues](https://github.com/bekafka/FnDepot/issues)。
 
 ## 功能
 

@@ -1,13 +1,15 @@
 appname               = Motrix
 version               = ${VERSION}
 display_name          = Motrix
-desc                  = "<p>Motrix Server —— 全功能下载管理器（HTTP / FTP / BT / 磁力），带 Web 面板，内核为 aria2 (motrixapp/aria2 fork)。</p><p>下载默认保存到 /vol1/@appshare/Motrix/downloads，可在“文件”里直接看到。</p><p>已关闭登录口令：打开即用。注意这表示局域网内能访问该端口的人都能操作下载。</p>"
+desc                  = "<p>Motrix Server —— 全功能下载管理器（HTTP / FTP / BT / 磁力），带 Web 面板，内核为 aria2 (motrixapp/aria2 fork)。</p><p>下载默认保存到 /vol1/@appshare/Motrix/downloads，可在“文件”里直接看到。</p><p>已关闭登录口令：打开即用。注意这表示局域网内能访问该端口的人都能操作下载。</p><p>源作者：<a href='https://github.com/agalwood/Motrix'>agalwood/Motrix</a>（上游项目，最初的创造者与权利源头）；本包由 bekafka 打包适配。</p>"
 platform              = ${PLATFORM}
 source                = thirdparty
 maintainer            = bekafka
-maintainer_url        = https://github.com/bekafka/motrix-fpk
+maintainer_url        = https://github.com/bekafka/FnDepot
 distributor           = bekafka
-distributor_url       = https://github.com/bekafka/motrix-fpk
+distributor_url       = https://github.com/bekafka/FnDepot
+source_author         = agalwood
+source_author_url     = https://github.com/agalwood/Motrix
 desktop_uidir         = ui
 desktop_applaunchname = Motrix.main
 ctl_stop              = true

@@ -1,0 +1,40 @@
+[
+  {
+    "stepTitle": "Magpie 设置",
+    "items": [
+      {
+        "type": "text",
+        "field": "wizard_port",
+        "label": "Web 面板端口（留空保持不变）",
+        "initValue": "",
+        "rules": [
+          { "pattern": "^$|^[0-9]+$", "message": "端口必须是数字，留空表示不改" }
+        ]
+      },
+      {
+        "type": "text",
+        "field": "wizard_gateway_port",
+        "label": "AI 网关端口（留空保持不变）",
+        "initValue": "",
+        "rules": [
+          { "pattern": "^$|^[0-9]+$", "message": "端口必须是数字，留空表示不改" }
+        ]
+      },
+      {
+        "type": "radio",
+        "field": "wizard_lan",
+        "label": "局域网共享网关",
+        "initValue": "keep",
+        "options": [
+          { "label": "保持当前设置", "value": "keep" },
+          { "label": "开启（远程需要网关密钥）", "value": "true" },
+          { "label": "关闭（只监听 127.0.0.1）", "value": "false" }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "保存后如果端口或共享开关有变化，正在运行的 Magpie 会重启一次。网关密钥在「网关 → 网关密钥」里管理，也在应用数据目录的 gateway-keys.txt 里留了一份。"
+      }
+    ]
+  }
+]

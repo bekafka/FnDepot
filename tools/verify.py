@@ -37,8 +37,68 @@ DL_URL_RE = re.compile(
     r"^https://github\.com/[^/]+/[^/]+/releases/download/[^/]+/.+$")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
+# ── 作者口径（FnFactory/specs/authorship.md）──────────────────────────────
+AUTHOR_FIELDS = ("maintainer", "maintainer_url", "distributor", "distributor_url",
+                 "source_author", "source_author_url")
+FIXED_PUBLISHER = "bekafka"
+FIXED_PUBLISHER_URL = "https://github.com/bekafka/FnDepot"
+SOURCE_URL_RE = re.compile(
+    r"^https://github\.com/([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)/?$")
+MD_LINK_RE = re.compile(r"\[([^\]]*)\]\(([^)]+)\)")
+
 _stats = collections.Counter()
 _abort = False
+
+
+def parse_manifest(path):
+    """读 fnOS manifest 的键值（校验作者字段用；够用即可）。"""
+    fields = {}
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.rstrip("\n")
+            if not line.strip() or line.lstrip().startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            v = v.strip()
+            if len(v) >= 2 and v.startswith('"') and v.endswith('"'):
+                v = v[1:-1]
+            fields[k.strip()] = v
+    return fields
+
+
+def load_readme():
+    """解析 README 的「应用列表」表，返回 (列名→下标, 键名→行)。
+
+    只认第一张带「键名」表头的表；遇到表后的空行就停，避免把后面的
+    「兼容性」等表格误当应用行。
+    """
+    path = os.path.join(ROOT, "README.md")
+    if not os.path.isfile(path):
+        return {}, {}
+    with open(path, encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
+
+    header, rows = {}, {}
+    for lineno, line in enumerate(lines, 1):
+        s = line.strip()
+        if not s.startswith("|"):
+            if header:
+                break
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if not header:
+            if any(c.strip("`") == "键名" for c in cells):
+                header = {c.strip("`"): i for i, c in enumerate(cells)}
+            continue
+        if all(re.fullmatch(r":?-{3,}:?", c) for c in cells if c):
+            continue
+        idx = header.get("键名")
+        if idx is None or idx >= len(cells):
+            continue
+        key = cells[idx].strip("`")
+        if key:
+            rows[key] = {"cells": cells, "line_no": lineno, "line": s}
+    return header, rows
 
 
 def load_categories():
@@ -92,6 +152,13 @@ def main():
     apps = index.get("apps") or {}
     if not apps:
         print("ℹ️  apps 为空（新仓库尚未收录任何应用）")
+
+    # ── README 应用列表（原作者列）──────────────────────────────────────
+    readme_header, readme_rows = load_readme()
+    if "键名" not in readme_header:
+        problems.append("README 应用列表找不到「键名」列（README 结构被改了？）")
+    if "原作者" not in readme_header:
+        problems.append("README 应用列表缺少「原作者」列（FnFactory/specs/authorship.md）")
 
     # ── 应用级与版本级 ──────────────────────────────────────────────────
     tasks = []          # (label, size, url)；size=None 表示只查可达性
@@ -176,6 +243,102 @@ def main():
                     problems.append(f"{key} {ver}/{arch}：size 必须是正整数，现在是 {size!r}")
                 else:
                     tasks.append((f"{key}/{arch}", size, url))
+
+        # ── 作者口径（FnFactory/specs/authorship.md）────────────────────
+        dist = app.get("distributor")
+        dist_url = app.get("distributor_url")
+        if dist != FIXED_PUBLISHER:
+            problems.append(
+                f"{key}：distributor 应为 {FIXED_PUBLISHER}（发布者固定本源），现在是 {dist!r}")
+        if dist_url != FIXED_PUBLISHER_URL:
+            problems.append(
+                f"{key}：distributor_url 应为 {FIXED_PUBLISHER_URL}，现在是 {dist_url!r}")
+
+        src = (app.get("source_author") or "").strip()
+        src_url = (app.get("source_author_url") or "").strip()
+        if not src:
+            problems.append(f"{key}：缺 source_author（源作者＝上游项目最初的创造者/组织）")
+        m = SOURCE_URL_RE.match(src_url)
+        if not m:
+            problems.append(
+                f"{key}：source_author_url 必须是上游项目主页 "
+                f"https://github.com/<owner>/<repo>，现在是 {src_url!r}")
+        else:
+            url_owner, url_repo = m.group(1), m.group(2)
+            if src and src != url_owner:
+                problems.append(
+                    f"{key}：source_author（{src}）与项目页 owner（{url_owner}）不一致")
+            if src_url.rstrip("/") != f"https://github.com/{url_owner}/{url_repo}":
+                problems.append(f"{key}：source_author_url 不要带多余路径/斜杠：{src_url!r}")
+
+        pkg_manifest = os.path.join(ROOT, "apps", key, "package", "manifest")
+        row = readme_rows.get(key)
+        if os.path.isfile(pkg_manifest):
+            mf = parse_manifest(pkg_manifest)
+            for f in AUTHOR_FIELDS:
+                if mf.get(f) != app.get(f):
+                    problems.append(
+                        f"{key}：索引 {f}={app.get(f)!r} 与 "
+                        f"apps/{key}/package/manifest 的 {mf.get(f)!r} 不一致")
+            if src_url and src_url not in (mf.get("desc") or ""):
+                problems.append(
+                    f"{key}：apps/{key}/package/manifest 的 desc 里没有源作者链接 {src_url}")
+            if not row:
+                problems.append(
+                    f"{key}：README 应用列表少了这一行（自建应用必须列出并带「原作者」链接）")
+        elif not row:
+            print(f"ℹ️  {key}：README 应用列表未列出（第三方收录可选）")
+
+        if row:
+            cells = row["cells"]
+
+            app_idx = readme_header.get("应用", 1)
+            if app_idx < len(cells):
+                links = MD_LINK_RE.findall(cells[app_idx])
+                if links:
+                    href = links[0][1].strip()
+                    if not href.startswith(("http://", "https://")) \
+                            and not os.path.isfile(os.path.join(ROOT, href)):
+                        problems.append(f"{key}：README 里的应用链接指向不存在的文件：{href}")
+
+            author_idx = readme_header.get("原作者")
+            if author_idx is None:
+                pass  # 缺列已在表头统一报过
+            elif author_idx >= len(cells):
+                problems.append(f"{key}：README 这一行少了「原作者」单元格")
+            else:
+                alinks = MD_LINK_RE.findall(cells[author_idx])
+                if not alinks:
+                    problems.append(
+                        f"{key}：README「原作者」列必须是 Markdown 链接，现在是 {cells[author_idx]!r}")
+                else:
+                    got = alinks[0][1].strip().rstrip("/")
+                    if src_url and got != src_url.rstrip("/"):
+                        problems.append(
+                            f"{key}：README「原作者」链接 {got!r} 与索引 "
+                            f"source_author_url {src_url!r} 不一致")
+
+            ver_idx = readme_header.get("版本")
+            if ver_idx is not None and ver_idx < len(cells) and releases:
+                want = max(releases)
+                if cells[ver_idx].strip() != want:
+                    problems.append(
+                        f"{key}：README 版本 {cells[ver_idx].strip()!r} ≠ 索引最新版本 {want!r}"
+                        "（发版流水线会同步，别手改错）")
+
+            arch_idx = readme_header.get("架构")
+            if arch_idx is not None and arch_idx < len(cells) and plats \
+                    and all(p in VALID_PLATFORMS for p in plats):
+                want_arch = "all" if plats == ["all"] else " / ".join(sorted(plats))
+                if cells[arch_idx].strip() != want_arch:
+                    problems.append(
+                        f"{key}：README 架构 {cells[arch_idx].strip()!r} ≠ "
+                        f"索引 platform 显示 {want_arch!r}")
+
+    # ── README 里出现索引没有的键名 ─────────────────────────────────────
+    for key in readme_rows:
+        if key not in apps:
+            problems.append(f"README 应用列表里的 `{key}` 不在索引中（键名写错/已删？）")
 
     # ── 外链核对 ────────────────────────────────────────────────────────
     ok = 0

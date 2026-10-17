@@ -1,0 +1,256 @@
+#!/bin/bash
+# ==============================================================================
+# Magpie · 生命周期入口（start / stop / status）
+#
+# 加固要点（都是飞牛上实测踩过的坑）：
+#   · pid 文件里的进程身份要校验（/proc/<pid>/exe 两边 readlink -f 再比），
+#     否则 TRIM_APPDEST 的软链/真实路径差异会把"正在跑"误判成"没在跑"。
+#   · stop 先按 pid 精确终止，再扫一遍孤儿（一律遍历 /proc 比 exe，不用 pgrep）。
+#   · 就绪判据是两条：面板 /?k=<key> 返回 200/303，且 `magpie healthcheck` 通过。
+#     magpie 没有 /healthz 端点，healthcheck 子命令就是上游给容器用的健康检查。
+#   · 启动失败要收拾自己拉起的进程，不留半状态。
+#   · 网关的监听范围与端口只由 magpie 自己的 settings.json(lan/port) 决定：
+#     新版上游只要 MAGPIE_ADDR 里写了具体地址就不再理会 lan，所以这里不设它。
+#     面板绑定在 0.0.0.0（另有面板密钥保护），网关跟随 lan。
+# ==============================================================================
+set -u
+
+APPNAME="Magpie"
+PKGVAR="${TRIM_PKGVAR:-/var/apps/$APPNAME/var}"
+APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
+BIN="$APPDEST/bin/magpie"
+RUN_USER="${TRIM_USERNAME:-$APPNAME}"
+RUN_GROUP="${TRIM_GROUPNAME:-$APPNAME}"
+
+LOG_FILE="$PKGVAR/info.log"
+PID_FILE="$PKGVAR/app.pid"
+CONF="$PKGVAR/config.env"
+WEB_KEY_FILE="$PKGVAR/web-key"
+COOKIE_JAR="$PKGVAR/.web-cookie"
+UI_CONFIG="$APPDEST/ui/config"
+READY_TIMEOUT=60
+
+mkdir -p "$PKGVAR" 2>/dev/null || true
+
+log_msg() { printf '%s - %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$LOG_FILE" 2>/dev/null || true; }
+resolve_path() { readlink -f "$1" 2>/dev/null || printf '%s' "$1"; }
+check_process() { [ -n "${1:-}" ] && kill -0 "$1" 2>/dev/null; }
+is_root() { [ "$(id -u)" = "0" ]; }
+
+load_config() {
+  MAGPIE_WEB_PORT=3430
+  MAGPIE_GATEWAY_PORT=3425
+  MAGPIE_LAN=1
+  MAGPIE_LOG_MAX_BYTES=5242880
+  if [ -r "$CONF" ]; then
+    # shellcheck disable=SC1090
+    . "$CONF"
+  else
+    log_msg "缺少 $CONF（install_callback 没跑？），使用内置默认值"
+  fi
+  MAGPIE_WEB_PORT="${MAGPIE_WEB_PORT:-3430}"
+  MAGPIE_GATEWAY_PORT="${MAGPIE_GATEWAY_PORT:-3425}"
+}
+
+gen_hex32() { od -An -tx1 -N32 /dev/urandom 2>/dev/null | tr -d ' \n' | cut -c1-32; }
+
+ensure_web_key() {
+  [ -s "$WEB_KEY_FILE" ] && return 0
+  log_msg "面板密钥缺失，重新生成并同步桌面入口"
+  if [ -x "$APPDEST/apply-config.sh" ]; then
+    bash "$APPDEST/apply-config.sh" config >> "$LOG_FILE" 2>&1 || log_msg "apply-config.sh 执行失败"
+  fi
+  if [ ! -s "$WEB_KEY_FILE" ]; then
+    local key
+    key="$(gen_hex32)"
+    [ ${#key} -eq 32 ] || { log_msg "生成面板密钥失败"; return 1; }
+    ( umask 077; printf '%s\n' "$key" > "$WEB_KEY_FILE" ) || return 1
+    log_msg "已生成新的面板密钥：$WEB_KEY_FILE（桌面入口可能仍指向旧密钥，重装或手动打开 http://IP:$MAGPIE_WEB_PORT/?k=$key）"
+  fi
+}
+
+build_env() {
+  load_config
+  ensure_web_key || return 1
+  # 飞牛安装后的 ApplyPermission 会把 @appdata 里的文件统一改成 0700；
+  # 启动时把密钥/配置改回 0600（属主就是应用用户，chmod 一定生效）。
+  chmod 600 "$CONF" "$WEB_KEY_FILE" "$PKGVAR/gateway-keys.txt" 2>/dev/null || true
+  MAGPIE_WEB_KEY="$(tr -d '[:space:]' < "$WEB_KEY_FILE")"
+  [ ${#MAGPIE_WEB_KEY} -ge 16 ] || { log_msg "面板密钥长度异常，拒绝启动"; return 1; }
+
+  export HOME="$PKGVAR/home"
+  export XDG_CONFIG_HOME="$PKGVAR/config"
+  export XDG_CACHE_HOME="$PKGVAR/cache"
+  export XDG_DATA_HOME="$PKGVAR/data"
+  export XDG_STATE_HOME="$PKGVAR/state"
+  export TMPDIR="$PKGVAR/tmp"
+  export PATH="$APPDEST/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  # 不设 MAGPIE_ADDR：网关端口/监听范围由 settings.json 的 port/lan 决定，
+  # 设了具体地址反而会让 lan=true 也不监听局域网。
+  export MAGPIE_WEB_KEY
+  export MAGPIE_NO_STATS=1
+  export SSL_CERT_FILE="${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt}"
+}
+
+mkdir_runtime_dirs() {
+  mkdir -p "$PKGVAR/home" "$PKGVAR/config" "$PKGVAR/cache" \
+           "$PKGVAR/data" "$PKGVAR/state" "$PKGVAR/tmp" 2>/dev/null || true
+}
+
+# ── 身份校验：exe 归一化后等于包内二进制，且 cmdline 是 `web --addr` ──────────
+check_identity() {
+  local pid="$1" exe want cmd
+  [ -r "/proc/$pid/exe" ] || return 1
+  exe="$(resolve_path "$(readlink "/proc/$pid/exe" 2>/dev/null)")"
+  want="$(resolve_path "$BIN")"
+  [ -n "$exe" ] && [ "$exe" = "$want" ] || return 1
+  cmd="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)"
+  case "$cmd" in *" web "*) return 0 ;; *) return 1 ;; esac
+}
+
+# 孤儿兜底：遍历 /proc 按 exe 精确匹配（magpie 二进制是本应用独有的）
+find_orphans() {
+  local pid exe want
+  want="$(resolve_path "$BIN")"
+  for pid in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
+    [ "$pid" = "$$" ] && continue
+    [ -r "/proc/$pid/exe" ] || continue
+    exe="$(resolve_path "$(readlink "/proc/$pid/exe" 2>/dev/null)")"
+    [ "$exe" = "$want" ] && printf '%s\n' "$pid"
+  done
+}
+
+port_in_use() { ss -ltn 2>/dev/null | grep -qE "[:.]$1[[:space:]]"; }
+
+web_code() {
+  curl -s -o /dev/null -w '%{http_code}' -m 2 \
+    "http://127.0.0.1:$MAGPIE_WEB_PORT/?k=$MAGPIE_WEB_KEY" 2>/dev/null
+}
+
+gateway_ok() { "$BIN" healthcheck >/dev/null 2>&1; }
+
+wait_ready() {
+  local pid="$1" waited=0 code
+  while [ "$waited" -lt "$READY_TIMEOUT" ]; do
+    check_process "$pid" || { log_msg "进程在启动窗口内退出（见 $LOG_FILE）"; return 1; }
+    code="$(web_code)"
+    if { [ "$code" = "200" ] || [ "$code" = "303" ]; } && gateway_ok; then
+      log_msg "就绪（${waited}s）面板=:$MAGPIE_WEB_PORT 网关=:$MAGPIE_GATEWAY_PORT 局域网共享=$([ "${MAGPIE_LAN:-1}" = 1 ] && echo 开 || echo 关)"
+      return 0
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+  log_msg "等待 ${READY_TIMEOUT}s 仍未就绪（面板 HTTP ${code:-000}，网关 healthcheck 未通过）"
+  return 1
+}
+
+rotate_logs() {
+  local max="${MAGPIE_LOG_MAX_BYTES:-5242880}" size
+  [ -f "$LOG_FILE" ] || return 0
+  size="$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)"
+  [ "${size:-0}" -le "$max" ] && return 0
+  mv -f "$LOG_FILE" "$LOG_FILE.1" 2>/dev/null || : > "$LOG_FILE"
+  : > "$LOG_FILE"
+  chmod 0644 "$LOG_FILE" 2>/dev/null || true
+  log_msg "日志已轮转（> ${max} 字节），上一份保留为 info.log.1"
+}
+
+start_process() {
+  local pid
+  if [ -r "$PID_FILE" ]; then
+    pid="$(head -n 1 "$PID_FILE" | tr -d '[:space:]')"
+    if check_process "$pid" && check_identity "$pid"; then
+      log_msg "已在运行（pid=$pid），跳过启动"
+      return 0
+    fi
+    rm -f "$PID_FILE"
+  fi
+
+  build_env || return 1
+  mkdir_runtime_dirs
+  rotate_logs
+
+  [ -x "$BIN" ] || { log_msg "找不到可执行文件 $BIN（payload 缺失？）"; return 1; }
+
+  for p in "$MAGPIE_WEB_PORT" "$MAGPIE_GATEWAY_PORT"; do
+    if port_in_use "$p"; then
+      log_msg "警告：端口 $p 已被占用（$(ss -ltnp 2>/dev/null | grep -E "[:.]$p[[:space:]]" | sed -n 's/.*users:((\(.*\))).*/\1/p' | head -n 1)）"
+    fi
+  done
+
+  log_msg "启动：magpie web --addr 0.0.0.0:$MAGPIE_WEB_PORT（网关端口/监听范围见 settings.json，lan=$MAGPIE_LAN）"
+  (
+    cd "$APPDEST" || exit 1
+    if is_root && [ "$(id -un)" != "$RUN_USER" ]; then
+      exec setpriv --reuid="$RUN_USER" --regid="$RUN_GROUP" --init-groups -- \
+        "$BIN" web --addr "0.0.0.0:$MAGPIE_WEB_PORT" --no-open
+    else
+      exec "$BIN" web --addr "0.0.0.0:$MAGPIE_WEB_PORT" --no-open
+    fi
+  ) >> "$LOG_FILE" 2>&1 &
+  pid=$!
+  printf '%s' "$pid" > "$PID_FILE"
+
+  if wait_ready "$pid"; then
+    return 0
+  fi
+
+  log_msg "启动失败，回收本次拉起的进程"
+  kill -TERM "$pid" 2>/dev/null
+  sleep 2
+  check_process "$pid" && kill -KILL "$pid" 2>/dev/null
+  local opid
+  for opid in $(find_orphans); do kill -TERM "$opid" 2>/dev/null; done
+  rm -f "$PID_FILE"
+  return 1
+}
+
+stop_process() {
+  local pid waited=0 opid
+  if [ -r "$PID_FILE" ]; then
+    pid="$(head -n 1 "$PID_FILE" | tr -d '[:space:]')"
+    if check_process "$pid" && check_identity "$pid"; then
+      log_msg "停止 pid=$pid"
+      kill -TERM "$pid" 2>/dev/null
+      while [ "$waited" -lt 20 ] && check_process "$pid"; do sleep 1; waited=$((waited + 1)); done
+      if check_process "$pid"; then
+        log_msg "SIGTERM 超时，SIGKILL pid=$pid"
+        kill -KILL "$pid" 2>/dev/null
+        sleep 1
+      fi
+    else
+      log_msg "pid 文件指向的进程不存在或身份不符（pid=${pid:-空}），跳过"
+    fi
+    rm -f "$PID_FILE"
+  fi
+
+  for opid in $(find_orphans); do
+    log_msg "清理孤儿进程 pid=$opid"
+    kill -TERM "$opid" 2>/dev/null
+  done
+  sleep 1
+  for opid in $(find_orphans); do
+    log_msg "孤儿进程未退出，SIGKILL pid=$opid"
+    kill -KILL "$opid" 2>/dev/null
+  done
+  rm -f "$COOKIE_JAR" 2>/dev/null || true
+  return 0
+}
+
+status_process() {
+  local pid
+  if [ -r "$PID_FILE" ]; then
+    pid="$(head -n 1 "$PID_FILE" | tr -d '[:space:]')"
+    if check_process "$pid" && check_identity "$pid"; then return 0; fi
+  fi
+  for pid in $(find_orphans); do return 0; done
+  return 3
+}
+
+case "${1:-}" in
+  start)  start_process ;;
+  stop)   stop_process ;;
+  status) status_process ;;
+  *)      echo "usage: $0 {start|stop|status}"; exit 1 ;;
+esac

@@ -1,0 +1,9 @@
+#!/bin/bash
+# 卸载前：把用户选的卸载方式记一笔（真正动手在 uninstall_callback）。
+set -u
+MODE="${wizard_uninstall_mode:-keep}"
+LOG="${TRIM_TEMP_LOGFILE:-}"
+[ -n "$LOG" ] && printf '%s - [uninstall] 用户选择：%s\n' \
+  "$(date '+%Y-%m-%d %H:%M:%S')" "$MODE" >> "$LOG" 2>/dev/null
+echo "[uninstall] 卸载方式：$MODE"
+exit 0

@@ -1,0 +1,18 @@
+appname               = Magpie
+version               = ${VERSION}
+display_name          = Magpie
+desc                  = "<p>Magpie —— 把各家 AI 模型收进一个本地网关：OpenAI Chat / Responses、Anthropic Messages、Gemini 四种 API 互转，路由组在额度用完时自动切换账号。</p><p>Web 面板管理 provider、账号、路由与用量；网关默认端口 3425，局域网共享需要网关密钥（安装时自动生成，见应用日志）。</p><p>面板访问密钥在打包时就固定在桌面入口里：点图标直接进面板，不需要登录页。密钥同时存一份在 /vol1/@appdata/Magpie/web-key（0600）。</p><p>源作者：<a href='https://github.com/yetone/magpie'>yetone/magpie</a>（上游项目，最初的创造者与权利源头）；本包由 bekafka 打包适配。</p>"
+platform              = ${PLATFORM}
+source                = thirdparty
+maintainer            = bekafka
+maintainer_url        = https://github.com/bekafka/FnDepot
+distributor           = bekafka
+distributor_url       = https://github.com/bekafka/FnDepot
+source_author         = yetone
+source_author_url     = https://github.com/yetone/magpie
+desktop_uidir         = ui
+desktop_applaunchname = Magpie.main
+ctl_stop              = true
+checkport             = false
+disable_authorization_path = false
+changelog             = ${CHANGELOG}

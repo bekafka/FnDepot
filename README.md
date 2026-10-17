@@ -5,11 +5,12 @@ fnOS 应用中心统一管理，和官方应用一样操作。
 
 ## 应用列表
 
-| 应用 | 键名 | 版本 | 架构 | 说明 |
-| --- | --- | --- | --- | --- |
-| [Motrix](assets/Motrix/README.md) | `Motrix` | 2.0.0-beta.49 | arm / x86 | 全功能下载管理器（HTTP / FTP / BT / 磁力）的服务端 Web 面板，aria2 内核 |
+| 应用 | 键名 | 版本 | 架构 | 原作者 | 说明 |
+| --- | --- | --- | --- | --- | --- |
+| [Motrix](assets/Motrix/README.md) | `Motrix` | 2.0.0-beta.49 | arm / x86 | [agalwood/Motrix](https://github.com/agalwood/Motrix) | 全功能下载管理器（HTTP / FTP / BT / 磁力）的服务端 Web 面板，aria2 内核 |
+| [Magpie](assets/Magpie/README.md) | `Magpie` | 0.0.0 | arm / x86 | [yetone/magpie](https://github.com/yetone/magpie) | AI 模型统一网关：OpenAI / Anthropic / Gemini 三种 API 互转，路由组自动切账号，Web 面板管理 provider 与用量 |
 
-> 版本与架构两列会随发版自动更新。
+> 版本与架构两列会随发版自动更新；「原作者」指上游项目最初的创造者与权利源头，人工维护、不随版本变。
 
 ## 添加应用源
 
@@ -34,7 +35,12 @@ https://github.com/bekafka/FnDepot
 
 - 每个应用都来自其原作者的开源项目，本仓库只做**打包适配**（飞牛应用包格式、生命周期脚本、
   目录与权限），不改上游业务逻辑。
-- 单个应用的介绍、使用说明、端口与数据目录，见应用页（列表里的应用名可点）。
+- 每个应用都标明**三个作者**，不混写：
+  - **开发者**：做飞牛适配、写生命周期脚本、打包的人 —— bekafka（[FnDepot](https://github.com/bekafka/FnDepot)）；
+  - **发布者**：把 `.fpk` 发出来、维护本应用源的人 —— bekafka（同一仓库发布）；
+  - **源作者**：上游项目**最初的创造者与权利源头**，见列表「原作者」列（例：Motrix 是
+    [agalwood/Motrix](https://github.com/agalwood/Motrix)）。
+- 单个应用的介绍、作者与来源、使用说明、端口与数据目录，见应用页（列表里的应用名可点）。
 - 想自己打包、或把别的项目接进来：应用源码与打包脚本都在本仓库 `apps/` 下，
   构建流水线在 [bekafka/FnFactory](https://github.com/bekafka/FnFactory)。
 

@@ -1,0 +1,145 @@
+name: Auto Release · Magpie
+
+# 每 6 小时巡检上游 yetone/magpie 的最新 tag：
+#   有比索引更新的版本、且距上一次 Magpie 发布 ≥24 小时 → 自动构建（arm + x86）
+#   → 本仓库 Release（tag Magpie-v<version>）→ 回写 fnpack.json → verify 门禁。
+#
+# 只构建「最新」那个版本，中间版本直接跳过；上游一天发 2~4 个版本也不会被刷屏。
+# 打包修订（上游没升版、只改了包）用 -f version=0.1.1279-2，不走冷却检查。
+#
+# 手动触发：
+#   gh workflow run auto-release.yml
+#   gh workflow run auto-release.yml -f force=true
+#   gh workflow run auto-release.yml -f version=0.1.1279-2
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '忽略 24 小时冷却，立即构建上游最新版本'
+        type: boolean
+        default: false
+      version:
+        description: '指定版本，不带 v（如 0.1.1279 或 0.1.1279-2）；留空 = 上游最新 tag'
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-release-magpie
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: 检查上游
+    runs-on: ubuntu-24.04
+    outputs:
+      build: ${{ steps.decide.outputs.build }}
+      version: ${{ steps.decide.outputs.version }}
+      changelog: ${{ steps.decide.outputs.changelog }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 对比上游 tag 与索引，决定是否发版
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PLAN_VERSION: ${{ inputs.version }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+
+          base() { printf '%s' "$1" | sed -E 's/^v//; s/-[0-9]+$//'; }
+          newer() { # newer A B → A 严格新于 B
+            [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" = "$1" ]
+          }
+          emit() { # emit build version changelog
+            {
+              echo "build=$1"
+              echo "version=$2"
+              echo "changelog<<__EOF__"
+              echo "$3"
+              echo "__EOF__"
+            } >> "$GITHUB_OUTPUT"
+          }
+
+          # ① 决定这次构建哪个版本
+          if [ -n "${PLAN_VERSION}" ]; then
+            VERSION="${PLAN_VERSION}"
+            TAG="v$(base "$VERSION")"
+            if gh release view "Magpie-v${VERSION}" --repo "$REPO" >/dev/null 2>&1; then
+              echo "Magpie-v${VERSION} 已存在，跳过"
+              emit false "$VERSION" ""
+              exit 0
+            fi
+            echo "手动指定版本 ${VERSION}（不检查 24h 冷却）"
+          else
+            TAG="$(git ls-remote --tags --refs https://github.com/yetone/magpie \
+              | sed 's#.*refs/tags/##' \
+              | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+              | sort -V | tail -1)"
+            [ -n "$TAG" ] || { echo "::error::取不到上游 tag（网络问题？）"; exit 1; }
+            UP="$(base "$TAG")"
+
+            PUB="$(jq -r '.apps.Magpie.releases // {} | keys[]' fnpack.json 2>/dev/null \
+              | sed -E 's/-[0-9]+$//' | sort -V | tail -1 || true)"
+            if [ -n "$PUB" ] && ! newer "$UP" "$PUB"; then
+              echo "上游 ${UP} 不新于索引里的 ${PUB}，跳过"
+              emit false "$UP" ""
+              exit 0
+            fi
+
+            # ② 每天最多自动发一版：距上一次 Magpie 发布不足 24 小时就等下一轮
+            if [ "${FORCE}" != "true" ]; then
+              LAST="$(gh release list --repo "$REPO" --limit 100 --json tagName,publishedAt \
+                --jq '[.[] | select(.tagName | startswith("Magpie-v"))] | sort_by(.publishedAt) | last | .publishedAt // empty')"
+              if [ -n "$LAST" ]; then
+                AGE=$(( $(date -u +%s) - $(date -u -d "$LAST" +%s) ))
+                if [ "$AGE" -lt 86400 ]; then
+                  echo "距上次发布 $((AGE/3600)) 小时（< 24h），跳过；上游 ${UP} 留到下一轮再判断"
+                  emit false "$UP" ""
+                  exit 0
+                fi
+              fi
+            fi
+
+            VERSION="$UP"
+          fi
+
+          # ③ 变更说明：优先用上游 release notes 的第一条 bullet
+          BODY="$(gh api "repos/yetone/magpie-releases/releases/tags/${TAG}" --jq '.body // ""' 2>/dev/null || true)"
+          FIRST="$(printf '%s' "$BODY" | awk '/^[[:space:]]*[-*][[:space:]]+/ { sub(/^[[:space:]]*[-*][[:space:]]+/, ""); print; exit }' | cut -c1-180)"
+          if [ -z "$FIRST" ]; then
+            FIRST="$(printf '%s' "$BODY" | awk 'NF && $0 !~ /^#/ { sub(/^[#>* -]+/, ""); print; exit }' | cut -c1-180)"
+          fi
+          if [ -n "$FIRST" ]; then
+            CHANGELOG="跟随上游 ${TAG}：${FIRST}"
+          else
+            CHANGELOG="跟随上游 ${TAG} 自动构建"
+          fi
+
+          echo "✓ 将构建 ${VERSION}（上游 ${TAG}）"
+          emit true "$VERSION" "$CHANGELOG"
+
+  build:
+    name: 构建并发布
+    needs: check
+    if: needs.check.outputs.build == 'true'
+    permissions:
+      contents: write
+    uses: bekafka/FnFactory/.github/workflows/_build-fpk.yml@main
+    with:
+      app_key: Magpie
+      version: ${{ needs.check.outputs.version }}
+      changelog: ${{ needs.check.outputs.changelog }}
+      release_tag: Magpie-v${{ needs.check.outputs.version }}
+      publish: true
+      template_dir: apps/Magpie/package
+      build_script: apps/Magpie/packaging/build.sh
+    secrets:
+      FNDEPOT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
