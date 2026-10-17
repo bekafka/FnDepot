@@ -57,8 +57,8 @@
       "display_name": "Magpie",
       "desc": "AI 模型统一网关：OpenAI / Anthropic / Gemini 三种 API 互转，路由组在额度用完时自动切账号，Web 面板管理 provider、账号与用量。",
       "platform": [
-        "x86",
-        "arm"
+        "arm",
+        "x86"
       ],
       "categories": [
         "AI赋能",
@@ -74,7 +74,24 @@
       "maintainer_url": "https://github.com/bekafka/FnDepot",
       "source_author": "yetone",
       "source_author_url": "https://github.com/yetone/magpie",
-      "releases": {},
+      "releases": {
+        "0.1.1279": {
+          "changelog": "Magpie 0.1.1279 首发（arm64 + x86）：AI 模型统一网关，OpenAI / Anthropic / Gemini 互转；面板免登录密钥，网关 3425 / 面板 3430",
+          "updated_at": "2026-10-17T10:47:05Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1279/Magpie-0.1.1279-x86.fpk",
+              "sha256": "10f3ffe11c06717fd17ffe30fa6fd5f43a1ad5711f60d4a6d2f60370f978ea2e",
+              "size": 19666537
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1279/Magpie-0.1.1279-arm.fpk",
+              "sha256": "5cb03112add4e550cfae9159aef21127f04bfec6729db8204978e12b007990ce",
+              "size": 18138327
+            }
+          }
+        }
+      },
       "service_port": "3430",
       "readme_url": "assets/Magpie/README.md",
       "preview_urls": [
