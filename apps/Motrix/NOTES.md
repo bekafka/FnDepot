@@ -56,7 +56,7 @@ POSIX ACL（`setfacl`）、文件能力（`setcap`）、加入 `Users` 组**全�
 | 5 | stop → 端口释放、无残留 node/aria2c/finalize-fs；start → 1 秒重新就绪；口令不重新生成 | ✅ |
 | 6 | 卸载 → 重装：`/vol1/@appdata/Motrix`（含 SQLite、口令、插件）与 `/vol1/@appshare/Motrix/downloads` 原样保留 | ✅ 口令 sha 未变、marker 文件仍在、下载文件仍在 |
 
-补充证据（浏览器实测，截图在 `docs/screenshots/`；该图后来更新为关闭口令后的中文面板）：
+补充证据（浏览器实测，截图曾放在 `docs/screenshots/`，现已并入 `assets/Motrix/Preview/`）：
 
 - 局域网 `http://192.168.2.22:8080/` 首屏是 **Unlock Motrix** 解锁页（提示从 `<dataDir>/operator-token` 取口令）。
 - 粘贴口令 → 进入完整面板：ENGINE **Ready**（`aria2 v1.37.0`）、侧栏 Dashboard/Downloads/Trackers/Plugins/Settings、
@@ -106,7 +106,7 @@ App Center → Motrix → 启动 → 打开
 
 | 项 | 说明 |
 |---|---|
-| 桌面入口点击体验 | 入口配置（`app/ui/config`，`${wizard_port}` + 回调兜底重写）已就位并在日志里确认端口同步；浏览器侧已实测解锁 + 面板渲染（见 `docs/screenshots/`），但“从飞牛桌面点一下”仍建议人工过一眼 |
+| 桌面入口点击体验 | 入口配置（`app/ui/config`，`${wizard_port}` + 回调兜底重写）已就位并在日志里确认端口同步；浏览器侧已实测解锁 + 面板渲染（见 `assets/Motrix/Preview/`），但“从飞牛桌面点一下”仍建议人工过一眼 |
 | 应用设置页改端口 | `config_callback` 逻辑已实现（含“改前是否在跑”判断），未在 UI 上实测；口令已不再由本包提供 |
 | `--env` 之外的交互式安装 | 本次用 `appcenter-cli install-fpk --env` 静默装；UI 上填向导未实测 |
 | x86 包 | 生产线已参数化（`ARCH=amd64` + linux/amd64 镜像 + x64 aria2c + x86_64 sidecar），未实打 |
@@ -154,7 +154,7 @@ $ curl -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/diagnostics
 MDXP（16801）本身仍有自己的 token，不受影响。
 
 **回退**：`AUTH_MODE=token` 重新出包即可（其余字节完全不变）。当时的解锁页截图
-（口令模式下的解锁页截图已删除；`docs/screenshots/02-dashboard.png` 现在是关闭口令后的中文面板实拍。）
+（口令模式下的解锁页截图已删除；`assets/Motrix/Preview/1-dashboard.png` 是关闭口令后的中文面板实拍。）
 
 **产物**：本轮的 fpk 为 `dist/Motrix-2.0.0-beta.49-arm.fpk`
 （15,716,748 B，sha256 `91824cfb60aa2b0f770b3469765a6eddba13b3a6659de04a07c6f95bd7e4e62b`）。
@@ -200,7 +200,7 @@ MDXP（16801）本身仍有自己的 token，不受影响。
 |---|---|
 | `fpk.py inspect` 把目录 `core` 当崩溃转储 | 已改本机 skill：`_sensitive_issue(path, is_dir)`，只有**文件** `core`/`*.core` 才算；两处调用点传 `path.is_dir()`/`member.isdir()`；补回归测试 `test_core_directory_is_allowed_but_core_file_is_rejected`（`test_archive` 25 passed）。改动记在 skill 的 `LOCAL-PATCHES.md`。当前 fpk `inspect` → **OK**。（skill 另有 2 个既有失败在 `test_bundled_toolchain`，与本改动无关，已核实还原后同样失败） |
 | node 内存 | 见上（512MB 上限） |
-| FnDepot 素材 | 新增 `docs/fndepot/Motrix/`：`ICON.PNG`(256)、`Preview/1-dashboard.png`、`2-downloads.png`、`3-settings.png`（1600x1000，简体中文、无登录、引擎就绪，headless Chromium 实拍）与 `README.md`；`docs/fndepot/README.md` 写了 `add-app.py` + `jq` 补 `preview_urls`/`readme_url` + `verify.py` 的完整上架步骤 |
+| FnDepot 素材 | 新增 `assets/Motrix/`：`ICON.PNG`(256)、`Preview/{1-dashboard,2-downloads,3-settings}.png`（1600x1000，简体中文、无登录、引擎就绪，headless Chromium 实拍）与 `README.md`；`fnpack.json` 补 `preview_urls` / `readme_url` 指向它们 |
 
 ### 产物
 

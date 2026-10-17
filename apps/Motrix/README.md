@@ -130,8 +130,7 @@ bash tests/motrix-accept.sh all
 
 ## FnDepot 上架素材
 
-`docs/fndepot/` 里是索引仓库要用的整套素材（图标、三张 1600x1000 实机截图、应用页 README）以及上架命令，
-见 [docs/fndepot/README.md](docs/fndepot/README.md)。
+索引仓库（本仓库根目录）用的整套素材在 `assets/Motrix/`：图标、三张 1600×1000 实机截图、应用页 README。
 
 ## 卸载
 
