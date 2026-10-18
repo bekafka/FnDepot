@@ -90,6 +90,22 @@
               "size": 18138327
             }
           }
+        },
+        "0.1.1285": {
+          "changelog": "跟随上游 v0.1.1285：Plugin pages can now add actions to the row menus for providers and agents.",
+          "updated_at": "2026-10-18T11:10:24Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1285/Magpie-0.1.1285-x86.fpk",
+              "sha256": "707a0d7180625ab07ec8c95eb92aa65482f39a86b49e146807dd1b6b3086ab1a",
+              "size": 19200672
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1285/Magpie-0.1.1285-arm.fpk",
+              "sha256": "37846edb55adbcaff3f4f6864b79367bc42c71fc438969ce0b239aff48c9ea15",
+              "size": 17707888
+            }
+          }
         }
       },
       "service_port": "3430",
