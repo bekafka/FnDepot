@@ -106,6 +106,22 @@
               "size": 17707888
             }
           }
+        },
+        "0.1.1293": {
+          "changelog": "跟随上游 v0.1.1293：Skills can now be installed from any Git repository, including GitLab and self-hosted company repositories.",
+          "updated_at": "2026-10-19T13:22:08Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1293/Magpie-0.1.1293-x86.fpk",
+              "sha256": "4ff7f065fd5502f8bcbcb44dd68322ce2fd88a34d2361d241034e4df6047b411",
+              "size": 19312868
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1293/Magpie-0.1.1293-arm.fpk",
+              "sha256": "f2be5a6fd2a283e0bb78fd94bd1a3787473a5aaca146dba59b0c6a5649d47f57",
+              "size": 17813068
+            }
+          }
         }
       },
       "service_port": "3430",
