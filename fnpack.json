@@ -122,6 +122,22 @@
               "size": 17813068
             }
           }
+        },
+        "0.1.1299": {
+          "changelog": "跟随上游 v0.1.1299：Fixed incorrect accounting of image decoding when image metadata is located in different places.",
+          "updated_at": "2026-10-20T17:11:39Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1299/Magpie-0.1.1299-x86.fpk",
+              "sha256": "31f52a2a63ef83f8d3c124189f2a3b842bebc2e9a822a2dfe9e199a2c2f35d62",
+              "size": 19491533
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1299/Magpie-0.1.1299-arm.fpk",
+              "sha256": "128e9356bf0df49b7b85f1dbf5314279bf1da09edcc390e8667d1481c736480b",
+              "size": 17971025
+            }
+          }
         }
       },
       "service_port": "3430",

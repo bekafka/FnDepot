@@ -8,7 +8,7 @@ fnOS 应用中心统一管理，和官方应用一样操作。
 | 应用 | 键名 | 版本 | 架构 | 原作者 | 说明 |
 | --- | --- | --- | --- | --- | --- |
 | [Motrix](assets/Motrix/README.md) | `Motrix` | 2.0.0-beta.49 | arm / x86 | [agalwood/Motrix](https://github.com/agalwood/Motrix) | 全功能下载管理器（HTTP / FTP / BT / 磁力）的服务端 Web 面板，aria2 内核 |
-| [Magpie](assets/Magpie/README.md) | `Magpie` | 0.1.1293 | arm / x86 | [yetone/magpie](https://github.com/yetone/magpie) | AI 模型统一网关：OpenAI / Anthropic / Gemini 三种 API 互转，路由组自动切账号，Web 面板管理 provider 与用量 |
+| [Magpie](assets/Magpie/README.md) | `Magpie` | 0.1.1299 | arm / x86 | [yetone/magpie](https://github.com/yetone/magpie) | AI 模型统一网关：OpenAI / Anthropic / Gemini 三种 API 互转，路由组自动切账号，Web 面板管理 provider 与用量 |
 
 > 版本与架构两列会随发版自动更新；「原作者」指上游项目最初的创造者与权利源头，人工维护、不随版本变。
 
