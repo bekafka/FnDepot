@@ -132,7 +132,7 @@ jobs:
     if: needs.check.outputs.build == 'true'
     permissions:
       contents: write
-    uses: bekafka/FnFactory/.github/workflows/_build-fpk.yml@main
+    uses: bekafka/FnFactory/.github/workflows/_build-fpk.yml@v1
     with:
       app_key: Magpie
       version: ${{ needs.check.outputs.version }}

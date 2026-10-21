@@ -75,7 +75,7 @@ jobs:
 
   build:
     needs: meta
-    uses: bekafka/FnFactory/.github/workflows/_build-fpk.yml@main
+    uses: bekafka/FnFactory/.github/workflows/_build-fpk.yml@v1
     with:
       app_key:      ${{ needs.meta.outputs.app_key }}
       version:      ${{ needs.meta.outputs.version }}
