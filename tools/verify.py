@@ -108,6 +108,19 @@ def load_categories():
     return set(data.get("categories") or [])
 
 
+def version_key(value):
+    """版本排序键：数字段按数值比较，稳定版排在 prerelease 之后。
+
+    不能用 max(releases) 直接比字符串：0.9.9 会排在 0.10.0 后面，
+    2.0.0-beta.9 会排在 2.0.0-beta.10 后面。
+    """
+    parts = re.split(r"[.+-]", value)
+    key = [(0, int(p)) if p.isdigit() else (1, p) for p in parts]
+    if "-" not in value:
+        key.append((2, ""))
+    return key
+
+
 def head_size(url, timeout=12):
     """只取响应头，返回 (content-length 或 None, 错误说明)。"""
     global _abort
@@ -320,7 +333,7 @@ def main():
 
             ver_idx = readme_header.get("版本")
             if ver_idx is not None and ver_idx < len(cells) and releases:
-                want = max(releases)
+                want = max(releases, key=version_key)
                 if cells[ver_idx].strip() != want:
                     problems.append(
                         f"{key}：README 版本 {cells[ver_idx].strip()!r} ≠ 索引最新版本 {want!r}"
