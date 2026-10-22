@@ -138,6 +138,22 @@
               "size": 17971025
             }
           }
+        },
+        "0.1.1315": {
+          "changelog": "安全更新（2026-10-21 Go 标准库 / x/* 漏洞响应）：Go 工具链升至 1.27.3（含 crypto/x509 中间证书黑名单 GO-2026-6809）、x/net v0.60.0（修 HTTP/2 一系列 DoS）、x/text v0.42.0、klauspost/compress v1.18.7；govulncheck 符号级门禁 0 命中。功能与上游 v0.1.1315 一致。",
+          "updated_at": "2026-10-22T07:20:00Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1315/Magpie-0.1.1315-x86.fpk",
+              "sha256": "f8e5db78e5e70a11ea10657be37c2467cb4f6ee402643e8149c832e7cb5f8584",
+              "size": 19669449
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1315/Magpie-0.1.1315-arm.fpk",
+              "sha256": "9d9a40cab3e63be6717c22f6ad548ad3305a1f4e9293d3dff1a8bb955fe56bdd",
+              "size": 18143326
+            }
+          }
         }
       },
       "service_port": "3430",

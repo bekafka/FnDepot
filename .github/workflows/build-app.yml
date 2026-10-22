@@ -84,5 +84,9 @@ jobs:
       publish:      true
       template_dir: 'apps/${{ needs.meta.outputs.app_key }}/package'
       build_script: 'apps/${{ needs.meta.outputs.app_key }}/packaging/build.sh'
+      # 标准库漏洞只能靠修好的 Go 重编：go1.27.3 / go1.26.10 起修掉
+      # crypto/x509 中间证书黑名单（GO-2026-6809 / CVE-2026-111943）。
+      # 默认 'stable' 会随 runner 漂移，这里显式钉死（只有声明 needs-go 的应用才装 Go）。
+      go_version:   '1.27.3'
     secrets:
       FNDEPOT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
