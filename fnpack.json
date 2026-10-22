@@ -43,6 +43,22 @@
               "size": 15724805
             }
           }
+        },
+        "2.0.0-beta.49.1": {
+          "changelog": "安全更新（2026-10-21/22 漏洞响应）：undici 8.11.2 → 8.12.3，修 CVE-2026-87018 / GHSA-qrxm-fqhp-jwvm（TLS 1.2 重协商时主机名不匹配的合法证书会让 undici 断言崩溃、远程可打崩 Node 进程）。功能与上游 2.0.0-beta.49 一致。",
+          "updated_at": "2026-10-22T07:57:00Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.0.0-beta.49.1/Motrix-2.0.0-beta.49.1-x86.fpk",
+              "sha256": "55d9625ee79e05bebad5f21dec40a9907d3c1f5948c8c8e7196c1a0901b859ff",
+              "size": 15554220
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.0.0-beta.49.1/Motrix-2.0.0-beta.49.1-arm.fpk",
+              "sha256": "2c2a7f32c5254a0c4313bef5186d61ea051a28e93e8fb4ea43e302d47d27c064",
+              "size": 15794333
+            }
+          }
         }
       },
       "service_port": "26800",

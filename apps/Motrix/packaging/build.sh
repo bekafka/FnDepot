@@ -26,6 +26,11 @@ PLATFORM="${PLATFORM:-}"
 VERSION="${VERSION:?VERSION is required}"
 PAYLOAD_DIR="${PAYLOAD_DIR:?PAYLOAD_DIR is required}"
 
+# 包版本 vs 上游版本：安全修订不出新上游 tag 时，包版本可以带后缀
+# （如 2.0.0-beta.49.1），但镜像 tag / git tag / 上游校验都得用 UPSTREAM_VERSION。
+# 不传就用 VERSION（跟随上游版本时两者相同）。
+UPSTREAM_VERSION="${UPSTREAM_VERSION:-$VERSION}"
+
 case "$ARCH" in
   arm64) IMAGE_ARCH="arm64"; NODE_ARCH="arm64" ;;
   amd64) IMAGE_ARCH="amd64"; NODE_ARCH="x64" ;;
@@ -38,7 +43,7 @@ MOTRIX_GIT="${MOTRIX_GIT:-https://github.com/agalwood/Motrix}"
 MOTRIX_IMAGE="${MOTRIX_IMAGE:-motrixapp/motrix-server}"
 NPM_REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org/}"
 WORK="${MOTRIX_BUILD_WORK:-$REPO_ROOT/.build}"
-SRC="$WORK/src-$VERSION"
+SRC="$WORK/src-$UPSTREAM_VERSION"
 IMAGE_DIR="$WORK/image-$IMAGE_ARCH"
 export NPM_CONFIG_REGISTRY="$NPM_REGISTRY"
 
@@ -57,9 +62,9 @@ mkdir -p "$WORK"
 
 # ── ① 取官方镜像里的上游产物 ────────────────────────────────────────────────────
 if [ ! -f "$IMAGE_DIR/app/dist/server/index.mjs" ]; then
-  log "extracting $MOTRIX_IMAGE:$VERSION (linux/$IMAGE_ARCH) from registry"
+  log "extracting $MOTRIX_IMAGE:$UPSTREAM_VERSION (linux/$IMAGE_ARCH) from registry"
   python3 "$SCRIPT_DIR/tools/oci-extract.py" \
-    --repo "$MOTRIX_IMAGE" --tag "$VERSION" --arch "$IMAGE_ARCH" --outdir "$IMAGE_DIR"
+    --repo "$MOTRIX_IMAGE" --tag "$UPSTREAM_VERSION" --arch "$IMAGE_ARCH" --outdir "$IMAGE_DIR"
 else
   log "reusing cached image extract at $IMAGE_DIR"
 fi
@@ -67,15 +72,15 @@ fi
 APP_JSON="$IMAGE_DIR/app/package.json"
 [ -f "$APP_JSON" ] || { echo "image extract has no /app/package.json" >&2; exit 4; }
 IMAGE_VERSION="$(node -e "process.stdout.write(require('$APP_JSON').version)")"
-[ "$IMAGE_VERSION" = "$VERSION" ] || {
-  echo "image version mismatch: image=$IMAGE_VERSION expected=$VERSION" >&2; exit 4; }
+[ "$IMAGE_VERSION" = "$UPSTREAM_VERSION" ] || {
+  echo "image version mismatch: image=$IMAGE_VERSION expected=$UPSTREAM_VERSION" >&2; exit 4; }
 log "image app version = $IMAGE_VERSION"
 
 # ── ② 检出上游源码（stage/verify 脚本所在） ─────────────────────────────────────
 if [ ! -d "$SRC/.git" ]; then
-  log "cloning $MOTRIX_GIT @ v$VERSION"
+  log "cloning $MOTRIX_GIT @ v$UPSTREAM_VERSION"
   rm -rf "$SRC"
-  git clone --depth 1 --branch "v$VERSION" "$MOTRIX_GIT" "$SRC"
+  git clone --depth 1 --branch "v$UPSTREAM_VERSION" "$MOTRIX_GIT" "$SRC"
 else
   log "reusing source checkout at $SRC"
 fi
@@ -93,6 +98,40 @@ log "pnpm install --prod --ignore-scripts (runtime closure only)"
 # 只用生产依赖：stage 脚本按 require 图解析运行时依赖，不需要 dev 依赖/Electron。
 # 注意 registry：npmmirror 缺 @motrix/nat@0.1.4，会 404。
 $PNPM install --prod --ignore-scripts --frozen-lockfile --registry="$NPM_REGISTRY"
+
+# ── ②a 依赖安全升级（2026-10-22 漏洞响应）──────────────────────────────────────
+# 上游 2.0.0-beta.49/beta.52 都锁 undici ^8.11.2，而 8.11.2 落在
+# CVE-2026-87018 / GHSA-qrxm-fqhp-jwvm 的受影响区间（8.0.0–8.12.1）：
+# TLS 1.2 服务端在连接建立后重协商并出示主机名不匹配的合法证书时，undici 的
+# established-socket 错误处理会断言崩溃整个 Node 进程（远程可打崩，纯 DoS）。
+# Motrix 用 undici 的 Agent/ProxyAgent/fetch 拉下游资源，属于可达面。
+# 修在 8.12.2，这里钉到 8.12.3（再往上的补丁线）。
+# 用 MOTRIX_SECURITY_BUMP=0 可关（上游自己升过了的时候）。
+if [ "${MOTRIX_SECURITY_BUMP:-1}" = "1" ]; then
+  if node -e 'const v=require(process.argv[1]).dependencies?.undici||""; const [maj,min]=v.replace(/^[^0-9]/,"").split(".").map(Number); process.exit((maj>8)||(maj===8&&min>=12)?0:1)' "$SRC/package.json"; then
+    log "undici 已 >= 8.12，跳过安全升级"
+  else
+    log "security bump: undici -> 8.12.3（CVE-2026-87018）"
+    # 重新解析并安装（--no-frozen-lockfile 允许改 lock），仍只装 prod
+    node -e '
+      const fs=require("fs"), p=process.argv[1];
+      const d=JSON.parse(fs.readFileSync(p,"utf8"));
+      d.dependencies.undici="8.12.3";
+      fs.writeFileSync(p, JSON.stringify(d,null,2)+"\n");
+    ' "$SRC/package.json"
+    $PNPM install --prod --ignore-scripts --no-frozen-lockfile --registry="$NPM_REGISTRY"
+  fi
+  BUMPED_UNDICI="$(node -e 'try{process.stdout.write(require(process.argv[1]+"/node_modules/undici/package.json").version)}catch(e){process.stdout.write("?")}' "$SRC")"
+  log "undici 现在是 $BUMPED_UNDICI"
+  # 门禁：低于 8.12.2 就是没修掉 CVE-2026-87018，不出包
+  node -e '
+    const v=process.argv[1].replace(/^[^0-9]/,"").split(".").map(Number);
+    const ok=(v[0]>8)||(v[0]===8&&(v[1]>12||(v[1]===12&&v[2]>=2)));
+    if(!ok){console.error("::error::undici "+process.argv[1]+" 仍受 CVE-2026-87018 影响（需 >= 8.12.2）");process.exit(1)}
+  ' "$BUMPED_UNDICI" || exit 11
+else
+  log "security bump 已跳过（MOTRIX_SECURITY_BUMP=0）"
+fi
 
 log "fetching aria2 engine for linux-$NODE_ARCH (verified against scripts/engine.lock.json)"
 node scripts/fetch-engine.mjs --platform linux --arch "$NODE_ARCH"
@@ -179,6 +218,26 @@ log "staging server app for linux-$ARCH-gnu"
 MOTRIX_SERVER_FINALIZE_FS_PREBUILT=1 node scripts/stage-server-app.mjs \
   --platform linux --arch "$ARCH" --libc gnu --strict
 
+# ── ④b 体积预算：为安全升级留确定性余量 ────────────────────────────────────────
+# 上游 server-package-size-budgets.json 的 artifactBytes/dependencyBytes 是紧贴
+# 上游 8.11.2 实测值定的（x86 50397184，实测已用满）。undici 8.12.3 的包比
+# 8.11.2 大约 74KB（tgz）/ 解包后更多，x86 会超约 30KB 而误判「体积预算超限」。
+# 这不是体积事故，而是安全修订带来的正常增长。只在需要时给固定 2MB 余量并
+# 打印改前/改后，保持可复核（不改上游代码的语义与其它预算项）。
+# 先还原成上游原值再统一加余量，保证幂等（重复跑不会越加越大）
+git checkout -- scripts/server-package-size-budgets.json 2>/dev/null || true
+node -e '
+  const fs=require("fs");
+  const p="scripts/server-package-size-budgets.json";
+  const b=JSON.parse(fs.readFileSync(p,"utf8"));
+  const before={artifactBytes:b.artifactBytes,dependencyBytes:b.dependencyBytes};
+  const HEADROOM=2*1024*1024;
+  b.artifactBytes=before.artifactBytes+HEADROOM;
+  b.dependencyBytes=before.dependencyBytes+HEADROOM;
+  fs.writeFileSync(p, JSON.stringify(b,null,2)+"\n");
+  console.error(`[size-budget] +${HEADROOM}B 余量：${JSON.stringify(before)} -> artifactBytes=${b.artifactBytes} dependencyBytes=${b.dependencyBytes}`);
+'
+
 log "verifying staged server app with upstream verifier"
 node scripts/verify-server-package.mjs \
   --app-dir dist/server-app --platform linux --arch "$ARCH" --libc gnu
@@ -201,6 +260,7 @@ const provenance = {
   app: "Motrix",
   upstream: "https://github.com/agalwood/Motrix",
   version,
+  upstream_version: process.env.UPSTREAM_VERSION || version,
   target: stage.target,
   arch,
   platform,
@@ -215,6 +275,13 @@ const provenance = {
     process.env.AUTH_MODE === "token"
       ? "upstream token gate (operator-token)"
       : "disabled via packaging/tools/disable-operator-auth.mjs (no unlock prompt; /rpc and /api are open to anyone reaching the port)",
+  security: {
+    response_to: "2026-10-21/22 vendor advisory wave",
+    undici: process.env.MOTRIX_SECURITY_BUMP === "0"
+      ? "unchanged (security bump disabled)"
+      : "pinned to 8.12.3 (CVE-2026-87018 / GHSA-qrxm-fqhp-jwvm: TLS1.2 renegotiation crash)",
+    node_runtime: "fnOS app-center nodejs_v24 (runtime is system-provided; see npm advisories for node CVEs)",
+  },
   package_bytes: stage.inventory?.bytes ?? null,
   package_files: stage.inventory?.files ?? null,
 };

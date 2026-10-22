@@ -32,6 +32,7 @@ log() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 # ── 1. payload ────────────────────────────────────────────────────────────────
 log "producing payload (ARCH=$ARCH VERSION=$VERSION)"
 ARCH="$ARCH" PLATFORM="$PLATFORM" VERSION="$VERSION" PAYLOAD_DIR="$PAYLOAD_CACHE" \
+  UPSTREAM_VERSION="${UPSTREAM_VERSION:-}" \
   bash "$REPO_ROOT/packaging/build.sh"
 
 # ── 2. 组装工作区（模板 + payload） ───────────────────────────────────────────
