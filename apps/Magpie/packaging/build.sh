@@ -101,10 +101,23 @@ fi
 # 需要联网拉漏洞库；离线或临时排障时用 MAGPIE_SKIP_VULNCHECK=1 跳过。
 if [ "${MAGPIE_SKIP_VULNCHECK:-0}" != "1" ] && [ -z "${SKIP_VULNCHECK:-}" ]; then
   log "govulncheck（符号级可达漏洞门禁）"
+  # 关键：必须用与真实构建一致的构建上下文（-tags nogui + CGO_ENABLED=0）。
+  # 否则 govulncheck 的 ./... 会把 GTK/Wails 的 cgo 包也一起 type-check，
+  # 在无 gtk4/webkitgtk-6.0 的 CI runner 上直接报
+  # “could not import C (no metadata for C)” / “cannot convert … windowPointer” 并以 1 退出。
+  # 用 | tee 时管道退出码是末尾 tail 的，会掩盖 govulncheck 自身的失败——
+  # 所以借 pipefail 让门禁崩溃直接拦住构建，而不是留给后面的 go build 报错。
+  GVC_RC=0
   (
     cd "$SRC"
-    go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./... 2>&1 | tee /tmp/magpie-govulncheck.log | tail -20
-  )
+    set -o pipefail
+    CGO_ENABLED=0 go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 -tags nogui ./... 2>&1 \
+      | tee /tmp/magpie-govulncheck.log | tail -20
+  ) || GVC_RC=$?
+  if [ "$GVC_RC" -ne 0 ] && ! grep -qE 'Your code is affected by [0-9]+ vulnerabilit' /tmp/magpie-govulncheck.log; then
+    echo "::error::govulncheck 运行失败（rc=$GVC_RC），见上；修好或用 MAGPIE_SKIP_VULNCHECK=1 临时跳过"
+    exit 9
+  fi
   if grep -qE 'Your code is affected by [1-9][0-9]* vulnerabilit' /tmp/magpie-govulncheck.log; then
     echo "::error::govulncheck 发现可被调用到的漏洞，构建中止（见上）"
     exit 9
