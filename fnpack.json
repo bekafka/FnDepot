@@ -170,6 +170,22 @@
               "size": 18143326
             }
           }
+        },
+        "0.1.1328": {
+          "changelog": "跟随上游 v0.1.1328：{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-a-release-by-tag-name\",\"status\":\"404\"}",
+          "updated_at": "2026-10-23T02:19:01Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1328/Magpie-0.1.1328-x86.fpk",
+              "sha256": "7359c54ccbd35d9d10580e671318d41b4e1ae543bf200a0be4b6b66cb2589678",
+              "size": 19761932
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1328/Magpie-0.1.1328-arm.fpk",
+              "sha256": "6852c0f9105d836a893525dd35db5b37a952e56bf9cbb6dd23ba30be5a2419d8",
+              "size": 18223867
+            }
+          }
         }
       },
       "service_port": "3430",
