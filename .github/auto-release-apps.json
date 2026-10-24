@@ -1,0 +1,38 @@
+{
+  "$comment": [
+    "自动跟版应用清单（FnDepot/.github/workflows/auto-release.yml 读取）。",
+    "",
+    "每个条目描述「这个应用怎么跟上游版本」。新增应用只改本文件，不改 workflow。",
+    "",
+    "字段：",
+    "  enabled             true|false。false = 暂停跟版（保留条目与历史）。",
+    "  upstream_repo       上游 owner/repo，用其 GitHub Releases 判定版本。",
+    "  include_prerelease  true = 正式版和 beta/rc 都跟；false = 只跟正式版。",
+    "  tag_pattern         从上游 tag 提取版本号的正则（POSIX ERE，整串匹配，不用捕获组；",
+    "                      提取结果去掉前导 v。注意 POSIX ERE 不支持 (?:...) 非捕获组）。",
+    "  cooldown_hours      距本应用上一次发布至少间隔多少小时（防刷屏）。0 = 不限制。",
+    "  changelog_from      变更说明取值：release_body（上游 release 正文首条要点）。",
+    "  note                人读备注。"
+  ],
+  "apps": {
+    "Magpie": {
+      "enabled": true,
+      "upstream_repo": "yetone/magpie",
+      "upstream_release_repo": "yetone/magpie-releases",
+      "include_prerelease": false,
+      "tag_pattern": "^v?[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "cooldown_hours": 24,
+      "changelog_from": "release_body",
+      "note": "上游 tag 形如 v0.1.1364。发布资产在 magpie-releases 仓库，故 release 正文单独指定 upstream_release_repo。"
+    },
+    "Motrix": {
+      "enabled": true,
+      "upstream_repo": "agalwood/Motrix",
+      "include_prerelease": true,
+      "tag_pattern": "^v?[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.]+)?$",
+      "cooldown_hours": 12,
+      "changelog_from": "release_body",
+      "note": "正式版与 beta 都跟（2026-10-24 定）。上游迭代快，冷却 12h。包版本必须等于上游版本：CI 把 VERSION 同时当镜像 tag 与 git tag 用，做安全修订（如 .1 后缀）须走本地 build-local.sh + UPSTREAM_VERSION。"
+    }
+  }
+}

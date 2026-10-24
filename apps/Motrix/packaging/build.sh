@@ -31,6 +31,21 @@ PAYLOAD_DIR="${PAYLOAD_DIR:?PAYLOAD_DIR is required}"
 # 不传就用 VERSION（跟随上游版本时两者相同）。
 UPSTREAM_VERSION="${UPSTREAM_VERSION:-$VERSION}"
 
+# CI 守卫：FnFactory 的 _build-fpk.yml 只传 VERSION，不传 UPSTREAM_VERSION，
+# 而 VERSION 同时被当作 motrix-server 镜像 tag 与上游 git tag。所以「包版本 ≠ 上游版本」
+# （如安全修订 2.0.0.1 基于上游 2.0.0）在 CI 里做不到：会去拉不存在的镜像 tag，
+# 最后报一个难懂的 version mismatch。这里提前拦下，并指向真正能做这件事的入口。
+# 四段式版本号 x.y.z.w（纯数字段）一定不是上游 tag（上游只发 x.y.z 与 x.y.z-beta.N）。
+# 注意不能用 *.*.*.* 这种 glob：它会把 2.0.0-beta.52 里的 beta.52 也当成一段而误拦。
+if [ -n "${GITHUB_ACTIONS:-}" ] && [ "$UPSTREAM_VERSION" = "$VERSION" ]; then
+  if printf '%s' "$VERSION" | grep -Eqx '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+'; then
+    echo "::error::包版本 $VERSION 是四段式安全修订，上游没有对应的 motrix-server 镜像 tag。" >&2
+    echo "  CI 只支持「包版本 == 上游版本」。做安全修订请用本地 build-local.sh：" >&2
+    echo "    VERSION=${VERSION} UPSTREAM_VERSION=<上游版本> bash apps/Motrix/build-local.sh" >&2
+    exit 5
+  fi
+fi
+
 case "$ARCH" in
   arm64) IMAGE_ARCH="arm64"; NODE_ARCH="arm64" ;;
   amd64) IMAGE_ARCH="amd64"; NODE_ARCH="x64" ;;

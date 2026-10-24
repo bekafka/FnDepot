@@ -1,145 +1,259 @@
-name: Auto Release · Magpie
+name: Auto Release
 
-# 每 6 小时巡检上游 yetone/magpie 的最新 tag：
-#   有比索引更新的版本、且距上一次 Magpie 发布 ≥24 小时 → 自动构建（arm + x86）
-#   → 本仓库 Release（tag Magpie-v<version>）→ 回写 fnpack.json → verify 门禁。
+# 自动跟版（应用清单驱动）。
 #
-# 只构建「最新」那个版本，中间版本直接跳过；上游一天发 2~4 个版本也不会被刷屏。
-# 打包修订（上游没升版、只改了包）用 -f version=0.1.1279-2，不走冷却检查。
+# 每 6 小时巡检 .github/auto-release-apps.json 里所有 enabled 的应用：
+#   上游有比索引更新的版本 → 检查冷却 → 触发构建 → 本仓库 Release
+#   （tag <App>-v<version>）→ 回写 fnpack.json → verify 门禁。
+#
+# 设计要点：
+#   · 新增/暂停应用只改 auto-release-apps.json，不改本文件。
+#   · 每个应用只构建「最新」那个版本；中间版本跳过（上游一天多发几版也不刷屏）。
+#   · 版本比较用严格 semver：正式版 > 同版本 prerelease（2.0.0 > 2.0.0-beta.52）。
+#     不能用 sort -V —— 它认为 2.0.0-beta.52 > 2.0.0，会把已发的正式版「降级」回 beta。
+#   · include_prerelease=false 的应用自动忽略上游 prerelease。
 #
 # 手动触发：
-#   gh workflow run auto-release.yml
-#   gh workflow run auto-release.yml -f force=true
-#   gh workflow run auto-release.yml -f version=0.1.1279-2
+#   gh workflow run auto-release.yml                        # 全部应用，按清单规则
+#   gh workflow run auto-release.yml -f app=Motrix          # 只处理一个应用
+#   gh workflow run auto-release.yml -f app=Motrix -f version=2.0.0   # 指定版本（跳过冷却）
+#   gh workflow run auto-release.yml -f app=Motrix -f force=true      # 忽略冷却
 
 on:
   schedule:
     - cron: '17 */6 * * *'
   workflow_dispatch:
     inputs:
-      force:
-        description: '忽略 24 小时冷却，立即构建上游最新版本'
-        type: boolean
-        default: false
-      version:
-        description: '指定版本，不带 v（如 0.1.1279 或 0.1.1279-2）；留空 = 上游最新 tag'
+      app:
+        description: '只处理这个应用（留空 = 清单里全部 enabled 的应用）'
         type: string
         default: ''
+      version:
+        description: '指定版本，不带 v（留空 = 上游最新）。指定后跳过冷却检查'
+        type: string
+        default: ''
+      force:
+        description: '忽略冷却，立即构建上游最新版本'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
 concurrency:
-  group: auto-release-magpie
+  group: auto-release
   cancel-in-progress: false
 
 jobs:
-  check:
-    name: 检查上游
+  plan:
+    name: 规划要构建的版本
     runs-on: ubuntu-24.04
     outputs:
-      build: ${{ steps.decide.outputs.build }}
-      version: ${{ steps.decide.outputs.version }}
-      changelog: ${{ steps.decide.outputs.changelog }}
+      matrix: ${{ steps.decide.outputs.matrix }}
+      count: ${{ steps.decide.outputs.count }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: 对比上游 tag 与索引，决定是否发版
+      - name: 逐个应用判定
         id: decide
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          ONLY_APP: ${{ inputs.app }}
           PLAN_VERSION: ${{ inputs.version }}
           FORCE: ${{ inputs.force }}
         run: |
           set -euo pipefail
 
-          base() { printf '%s' "$1" | sed -E 's/^v//; s/-[0-9]+$//'; }
-          newer() { # newer A B → A 严格新于 B
-            [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" = "$1" ]
+          MANIFEST=.github/auto-release-apps.json
+          [ -f "$MANIFEST" ] || { echo "::error::清单不存在：$MANIFEST"; exit 1; }
+
+          # ── 严格 semver 比较 ────────────────────────────────────────────
+          # vergt A B → A 严格大于 B 时返回 0（真）
+          # 规则：数字核心逐段比；核心相同则「有 prerelease 的 < 无 prerelease」；
+          #       都带 prerelease 则逐段比，纯数字段按数值、其余按字典。
+          vergt() {
+            local a="${1#v}" b="${2#v}"
+            [ "$a" = "$b" ] && return 1
+            local a_core="${a%%-*}" b_core="${b%%-*}" a_pre="" b_pre=""
+            [[ "$a" == *-* ]] && a_pre="${a#*-}"
+            [[ "$b" == *-* ]] && b_pre="${b#*-}"
+            local -a ac bc
+            IFS=. read -ra ac <<< "$a_core"
+            IFS=. read -ra bc <<< "$b_core"
+            local i x y
+            for i in 0 1 2; do
+              x="${ac[i]:-0}"; y="${bc[i]:-0}"
+              if ((x != y)); then ((x > y)); return; fi
+            done
+            [ -z "$a_pre" ] && [ -n "$b_pre" ] && return 0
+            [ -n "$a_pre" ] && [ -z "$b_pre" ] && return 1
+            [ -z "$a_pre" ] && [ -z "$b_pre" ] && return 1
+            local -a ap bp
+            IFS=. read -ra ap <<< "$a_pre"
+            IFS=. read -ra bp <<< "$b_pre"
+            local n=${#ap[@]}; ((${#bp[@]} > n)) && n=${#bp[@]}
+            local s t
+            for ((i=0; i<n; i++)); do
+              s="${ap[i]:-}"; t="${bp[i]:-}"
+              [ -z "$s" ] && [ -z "$t" ] && return 1
+              [ -z "$s" ] && return 1
+              [ -z "$t" ] && return 0
+              if [[ "$s" =~ ^[0-9]+$ && "$t" =~ ^[0-9]+$ ]]; then
+                if ((10#$s != 10#$t)); then ((10#$s > 10#$t)); return; fi
+              else
+                if [[ "$s" != "$t" ]]; then [[ "$s" > "$t" ]]; return; fi
+              fi
+            done
+            return 1
           }
-          emit() { # emit build version changelog
-            {
-              echo "build=$1"
-              echo "version=$2"
-              echo "changelog<<__EOF__"
-              echo "$3"
-              echo "__EOF__"
-            } >> "$GITHUB_OUTPUT"
+
+          # 索引里已发布的最大版本（无则空）。逐个比较，不依赖 sort。
+          indexed_max() {
+            local app="$1" max="" v
+            while read -r v; do
+              [ -z "$v" ] && continue
+              if [ -z "$max" ] || vergt "$v" "$max"; then max="$v"; fi
+            done < <(jq -r --arg a "$app" '.apps[$a].releases // {} | keys[]' fnpack.json 2>/dev/null)
+            printf '%s' "$max"
           }
 
-          # ① 决定这次构建哪个版本
-          if [ -n "${PLAN_VERSION}" ]; then
-            VERSION="${PLAN_VERSION}"
-            TAG="v$(base "$VERSION")"
-            if gh release view "Magpie-v${VERSION}" --repo "$REPO" >/dev/null 2>&1; then
-              echo "Magpie-v${VERSION} 已存在，跳过"
-              emit false "$VERSION" ""
-              exit 0
-            fi
-            echo "手动指定版本 ${VERSION}（不检查 24h 冷却）"
-          else
-            TAG="$(git ls-remote --tags --refs https://github.com/yetone/magpie \
-              | sed 's#.*refs/tags/##' \
-              | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
-              | sort -V | tail -1)"
-            [ -n "$TAG" ] || { echo "::error::取不到上游 tag（网络问题？）"; exit 1; }
-            UP="$(base "$TAG")"
+          ITEMS='[]'
+          COUNT=0
 
-            PUB="$(jq -r '.apps.Magpie.releases // {} | keys[]' fnpack.json 2>/dev/null \
-              | sed -E 's/-[0-9]+$//' | sort -V | tail -1 || true)"
-            if [ -n "$PUB" ] && ! newer "$UP" "$PUB"; then
-              echo "上游 ${UP} 不新于索引里的 ${PUB}，跳过"
-              emit false "$UP" ""
-              exit 0
-            fi
+          APPS=$(jq -r '.apps | to_entries[] | select(.value.enabled == true) | .key' "$MANIFEST")
+          if [ -z "$APPS" ]; then
+            echo "::warning::清单里没有 enabled 的应用"
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+            echo "count=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-            # ② 每天最多自动发一版：距上一次 Magpie 发布不足 24 小时就等下一轮
-            if [ "${FORCE}" != "true" ]; then
-              LAST="$(gh release list --repo "$REPO" --limit 100 --json tagName,publishedAt \
-                --jq '[.[] | select(.tagName | startswith("Magpie-v"))] | sort_by(.publishedAt) | last | .publishedAt // empty')"
-              if [ -n "$LAST" ]; then
-                AGE=$(( $(date -u +%s) - $(date -u -d "$LAST" +%s) ))
-                if [ "$AGE" -lt 86400 ]; then
-                  echo "距上次发布 $((AGE/3600)) 小时（< 24h），跳过；上游 ${UP} 留到下一轮再判断"
-                  emit false "$UP" ""
-                  exit 0
+          for APP in $APPS; do
+            if [ -n "$ONLY_APP" ] && [ "$APP" != "$ONLY_APP" ]; then continue; fi
+
+            echo ""
+            echo "━━━━━━━━━━ $APP ━━━━━━━━━━"
+            UP_REPO=$(jq -r --arg a "$APP" '.apps[$a].upstream_repo' "$MANIFEST")
+            REL_REPO=$(jq -r --arg a "$APP" '.apps[$a].upstream_release_repo // .apps[$a].upstream_repo' "$MANIFEST")
+            INCLUDE_PRE=$(jq -r --arg a "$APP" '.apps[$a].include_prerelease // false' "$MANIFEST")
+            TAG_RE=$(jq -r --arg a "$APP" '.apps[$a].tag_pattern' "$MANIFEST")
+            COOLDOWN=$(jq -r --arg a "$APP" '.apps[$a].cooldown_hours // 0' "$MANIFEST")
+
+            if [ -n "$PLAN_VERSION" ]; then
+              VERSION="$PLAN_VERSION"
+              TAG="v${VERSION}"
+              if gh release view "${APP}-v${VERSION}" --repo "$REPO" >/dev/null 2>&1; then
+                echo "  ${APP}-v${VERSION} 已存在，跳过"
+                continue
+              fi
+              echo "  手动指定版本 ${VERSION}（跳过冷却）"
+            else
+              # ① 取上游 releases（排除 draft），按 include_prerelease 过滤
+              if ! JSON=$(gh api "repos/${UP_REPO}/releases?per_page=100" 2>/dev/null); then
+                echo "::warning::取不到 ${UP_REPO} 的 releases，跳过 $APP"
+                continue
+              fi
+              FILTER='select(.draft == false)'
+              if [ "$INCLUDE_PRE" != "true" ]; then
+                FILTER="$FILTER | select(.prerelease == false)"
+              fi
+
+              # ② 用 tag_pattern 提版本号，挑 semver 最大的
+              #    用 grep -Eo（整串匹配、不用捕获组）而不是 sed：POSIX ERE 不支持 (?:...)，
+              #    且正则来自 JSON、经变量展开后喂 sed 有转义与注入风险。
+              VERSION=""; TAG=""
+              while read -r t; do
+                [ -z "$t" ] && continue
+                v=$(printf '%s' "$t" | grep -Eo "$TAG_RE" 2>/dev/null | head -1 | sed -E 's/^v//')
+                [ -z "$v" ] && continue
+                if [ -z "$VERSION" ] || vergt "$v" "$VERSION"; then VERSION="$v"; TAG="$t"; fi
+              done < <(echo "$JSON" | jq -r "[.[] | $FILTER] | .[].tag_name")
+
+              if [ -z "$VERSION" ]; then
+                echo "  ${UP_REPO} 没有匹配 ${TAG_RE} 的 release，跳过"
+                continue
+              fi
+              echo "  上游最新：${TAG}（${VERSION}，prerelease 跟随=${INCLUDE_PRE}）"
+
+              # ③ 与索引比较
+              INDEXED=$(indexed_max "$APP")
+              if [ -n "$INDEXED" ]; then
+                if ! vergt "$VERSION" "$INDEXED"; then
+                  echo "  上游 ${VERSION} 不新于索引里的 ${INDEXED}，跳过"
+                  continue
+                fi
+                echo "  索引最新：${INDEXED} → 可升级到 ${VERSION}"
+              else
+                echo "  索引里还没有 ${APP} 的版本记录"
+              fi
+
+              # ④ 冷却（用 jq 在本地挑选，而不是把 --jq 塞给 gh，便于容错）
+              if [ "${FORCE}" != "true" ] && [ "${COOLDOWN:-0}" -gt 0 ]; then
+                RELS=$(gh release list --repo "$REPO" --limit 100 --json tagName,publishedAt 2>/dev/null || echo '[]')
+                LAST=$(printf '%s' "$RELS" | jq -r --arg p "${APP}-v" '
+                  [.[] | select(.tagName | startswith($p))]
+                  | sort_by(.publishedAt) | last | .publishedAt // empty' 2>/dev/null || true)
+                if [ -n "$LAST" ] && TS=$(date -u -d "$LAST" +%s 2>/dev/null); then
+                  AGE=$(( $(date -u +%s) - TS ))
+                  if [ "$AGE" -lt $((COOLDOWN * 3600)) ]; then
+                    echo "  距上次发布 $((AGE/3600))h（< ${COOLDOWN}h 冷却），跳过；留到下一轮"
+                    continue
+                  fi
                 fi
               fi
             fi
 
-            VERSION="$UP"
-          fi
+            # ⑤ 已发过的 Release 不重建
+            if gh release view "${APP}-v${VERSION}" --repo "$REPO" >/dev/null 2>&1; then
+              echo "  ${APP}-v${VERSION} 已存在，跳过"
+              continue
+            fi
 
-          # ③ 变更说明：优先用上游 release notes 的第一条 bullet
-          BODY="$(gh api "repos/yetone/magpie-releases/releases/tags/${TAG}" --jq '.body // ""' 2>/dev/null || true)"
-          FIRST="$(printf '%s' "$BODY" | awk '/^[[:space:]]*[-*][[:space:]]+/ { sub(/^[[:space:]]*[-*][[:space:]]+/, ""); print; exit }' | cut -c1-180)"
-          if [ -z "$FIRST" ]; then
-            FIRST="$(printf '%s' "$BODY" | awk 'NF && $0 !~ /^#/ { sub(/^[#>* -]+/, ""); print; exit }' | cut -c1-180)"
-          fi
-          if [ -n "$FIRST" ]; then
-            CHANGELOG="跟随上游 ${TAG}：${FIRST}"
-          else
-            CHANGELOG="跟随上游 ${TAG} 自动构建"
-          fi
+            # ⑥ 变更说明：上游 release 正文首条要点
+            BODY="$(gh api "repos/${REL_REPO}/releases/tags/${TAG}" --jq '.body // ""' 2>/dev/null || true)"
+            FIRST="$(printf '%s' "$BODY" | awk '/^[[:space:]]*[-*][[:space:]]+/ { sub(/^[[:space:]]*[-*][[:space:]]+/, ""); print; exit }' | cut -c1-180)"
+            if [ -z "$FIRST" ]; then
+              FIRST="$(printf '%s' "$BODY" | awk 'NF && $0 !~ /^#/ { sub(/^[#>* -]+/, ""); print; exit }' | cut -c1-180)"
+            fi
+            if [ -n "$FIRST" ]; then
+              CHANGELOG="跟随上游 ${TAG}：${FIRST}"
+            else
+              CHANGELOG="跟随上游 ${TAG} 自动构建"
+            fi
 
-          echo "✓ 将构建 ${VERSION}（上游 ${TAG}）"
-          emit true "$VERSION" "$CHANGELOG"
+            echo "  ✓ 将构建 ${VERSION}"
+            ITEMS=$(jq -c --arg app "$APP" --arg version "$VERSION" \
+              --arg changelog "$CHANGELOG" \
+              '. + [{app: $app, version: $version, changelog: $changelog}]' <<< "$ITEMS")
+            COUNT=$((COUNT + 1))
+          done
+
+          echo ""
+          echo "━━━━━━━━━━ 规划结果：${COUNT} 个应用待构建 ━━━━━━━━━━"
+          echo "$ITEMS" | jq -r '.[] | "  \(.app) → \(.version)"'
+
+          echo "matrix=$(echo "$ITEMS" | jq -c '{include: .}')" >> "$GITHUB_OUTPUT"
+          echo "count=${COUNT}" >> "$GITHUB_OUTPUT"
 
   build:
-    name: 构建并发布
-    needs: check
-    if: needs.check.outputs.build == 'true'
+    name: 构建 ${{ matrix.app }} ${{ matrix.version }}
+    needs: plan
+    if: needs.plan.outputs.count != '0' && needs.plan.outputs.count != ''
     permissions:
       contents: write
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     uses: bekafka/FnFactory/.github/workflows/_build-fpk.yml@v1
     with:
-      app_key: Magpie
-      version: ${{ needs.check.outputs.version }}
-      changelog: ${{ needs.check.outputs.changelog }}
-      release_tag: Magpie-v${{ needs.check.outputs.version }}
-      publish: true
-      template_dir: apps/Magpie/package
-      build_script: apps/Magpie/packaging/build.sh
+      app_key:      ${{ matrix.app }}
+      version:      ${{ matrix.version }}
+      changelog:    ${{ matrix.changelog }}
+      release_tag:  ${{ matrix.app }}-v${{ matrix.version }}
+      publish:      true
+      template_dir: apps/${{ matrix.app }}/package
+      build_script: apps/${{ matrix.app }}/packaging/build.sh
     secrets:
       FNDEPOT_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,7 +1,14 @@
 # motrix-fpk · Motrix Server 的飞牛 fnOS 应用包
 
-把上游 [agalwood/Motrix](https://github.com/agalwood/Motrix) 的 **Server 版**（最新 beta）做成飞牛 fnOS 可安装的
+把上游 [agalwood/Motrix](https://github.com/agalwood/Motrix) 的 **Server 版**做成飞牛 fnOS 可安装的
 `Motrix.fpk`，**以原生进程运行**（不用 Docker），内核是官方 aria2 fork `motrixapp/aria2`，Web 面板由 Node 提供。
+
+> **跟版方式**：本应用已纳入 FnDepot 的自动跟版（`.github/auto-release-apps.json`），
+> 正式版与 beta 都跟，每 6 小时巡检一次上游 release。手动发版仍用
+> `gh workflow run auto-release.yml -f app=Motrix`。
+> ⚠️ 包版本必须等于上游 tag：CI 把 `VERSION` 同时当作镜像 tag 与 git tag。
+> 做安全修订（如 `2.0.0.1` 基于上游 `2.0.0`）必须走本地 `build-local.sh`，
+> 它支持 `VERSION` 与 `UPSTREAM_VERSION` 两个参数解耦。
 
 ```
 上游 agalwood/Motrix                本应用目录（FnDepot/apps/Motrix）
