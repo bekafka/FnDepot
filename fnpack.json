@@ -62,17 +62,17 @@
         },
         "2.0.0": {
           "changelog": "跟随上游 v2.0.0：HTTP, FTP, BitTorrent, and magnet downloads with file selection, persistent",
-          "updated_at": "2026-10-24T15:11:13Z",
+          "updated_at": "2026-10-24T15:56:41Z",
           "packages": {
             "x86": {
               "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.0.0/Motrix-2.0.0-x86.fpk",
-              "sha256": "0a875c600bc940d80e80c5ccd32ead297dba1ffd51e28e094e0075c8ae661de9",
-              "size": 14453495
+              "sha256": "cbac96928e82c67e85501e677ace8e92bbf1659635540c1d297ada1c0d1706b1",
+              "size": 14460135
             },
             "arm": {
               "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.0.0/Motrix-2.0.0-arm.fpk",
-              "sha256": "63036dc4363c94182ddff707615db4ad607f2b42346c2a943751cb4349cff01d",
-              "size": 14701545
+              "sha256": "ea38124627dbc8dba1b630edeb35822d9be7e0d492cec78a0a1231c6ec840831",
+              "size": 14702925
             }
           }
         }
