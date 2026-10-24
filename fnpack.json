@@ -186,6 +186,22 @@
               "size": 18223867
             }
           }
+        },
+        "0.1.1364": {
+          "changelog": "跟随上游 v0.1.1364：Updated ZCode integration to install zcode-auth 0.1.24, allowing Claude Code subagents on ZCode to use Bash, Read, and Write tools.",
+          "updated_at": "2026-10-24T04:41:32Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1364/Magpie-0.1.1364-x86.fpk",
+              "sha256": "fff81b5954bb1f9d66af28143d19379f7966548707710dd9b8c3e7f748165381",
+              "size": 19965882
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1364/Magpie-0.1.1364-arm.fpk",
+              "sha256": "6e785eabf5b8ae0ae4b990039b625f26bf8cfcba94dca625d0d56df29f85134d",
+              "size": 18415716
+            }
+          }
         }
       },
       "service_port": "3430",
