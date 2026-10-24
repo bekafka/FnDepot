@@ -271,6 +271,27 @@ const path = require("path");
 const [payloadDir, digestFile, version, arch, platform] = process.argv.slice(1);
 const digest = fs.existsSync(digestFile) ? JSON.parse(fs.readFileSync(digestFile, "utf8")) : {};
 const stage = JSON.parse(fs.readFileSync(path.join(payloadDir, "server", ".motrix-server-stage.json"), "utf8"));
+
+// 从实际产物读，不硬编码：硬编码会在跟版后变成错误的出处记录（审计价值归零）。
+// aria2：二进制里带 "aria2/1.37.0-motrix.19" 这样的版本串。
+function detectAria2Version() {
+  const bin = path.join(payloadDir, "server", "bin", "aria2c");
+  try {
+    const buf = fs.readFileSync(bin);
+    const m = buf.toString("latin1").match(/aria2\/(\d+\.\d+\.\d+-motrix\.\d+)/);
+    if (m) return m[1];
+    const m2 = buf.toString("latin1").match(/(\d+\.\d+\.\d+-motrix\.\d+)/);
+    if (m2) return m2[1];
+  } catch (_) {}
+  return null;
+}
+// undici：读实际安装的包版本。
+function detectUndici() {
+  const p = path.join(payloadDir, "server", "node_modules", "undici", "package.json");
+  try { return JSON.parse(fs.readFileSync(p, "utf8")).version || null; } catch (_) { return null; }
+}
+const aria2Version = detectAria2Version();
+const undiciVersion = detectUndici();
 const provenance = {
   app: "Motrix",
   upstream: "https://github.com/agalwood/Motrix",
@@ -283,7 +304,9 @@ const provenance = {
   source_image_manifest_digest: digest.manifest_digest ?? null,
   staged_with: "scripts/stage-server-app.mjs --libc gnu (upstream)",
   verified_with: "scripts/verify-server-package.mjs --libc gnu (upstream)",
-  aria2: "motrixapp/aria2 v1.37.0-motrix.17 (sha256 pinned in scripts/engine.lock.json)",
+  aria2: aria2Version
+    ? `motrixapp/aria2 v${aria2Version} (version read from the bundled binary; sha256 pinned in scripts/engine.lock.json)`
+    : "motrixapp/aria2 (version not detectable from bundled binary; sha256 pinned in scripts/engine.lock.json)",
   finalize_fs:
     "built from upstream source + packaging/patches/finalize-fs-open-root-o_path.patch (O_PATH fallback for fnOS trimacl)",
   operator_auth:
@@ -292,9 +315,9 @@ const provenance = {
       : "disabled via packaging/tools/disable-operator-auth.mjs (no unlock prompt; /rpc and /api are open to anyone reaching the port)",
   security: {
     response_to: "2026-10-21/22 vendor advisory wave",
-    undici: process.env.MOTRIX_SECURITY_BUMP === "0"
-      ? "unchanged (security bump disabled)"
-      : "pinned to 8.12.3 (CVE-2026-87018 / GHSA-qrxm-fqhp-jwvm: TLS1.2 renegotiation crash)",
+    undici: undiciVersion
+      ? `bundled undici ${undiciVersion} (read from node_modules; advisory of record: CVE-2026-87018 / GHSA-qrxm-fqhp-jwvm)`
+      : "undici not found in node_modules",
     node_runtime: "fnOS app-center nodejs_v24 (runtime is system-provided; see npm advisories for node CVEs)",
   },
   package_bytes: stage.inventory?.bytes ?? null,
