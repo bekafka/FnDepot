@@ -255,5 +255,11 @@ jobs:
       publish:      true
       template_dir: apps/${{ matrix.app }}/package
       build_script: apps/${{ matrix.app }}/packaging/build.sh
+      # 必须与 build-app.yml（手动发版）保持一致，否则同一个应用走自动跟版
+      # 会用回带漏洞的 Go 重编。go1.27.3 / go1.26.10 起修掉 crypto/x509
+      # 中间证书黑名单（GO-2026-6809 / CVE-2026-111943）。
+      # 只有声明 apps/<App>/packaging/needs-go 的应用才会真正 setup-go，
+      # 因此对 Motrix 这类不编译 Go 的应用传了也无副作用。
+      go_version: '1.27.3'
     secrets:
       FNDEPOT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
