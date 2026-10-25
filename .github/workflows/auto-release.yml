@@ -246,7 +246,7 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
-    uses: bekafka/FnFactory/.github/workflows/_build-fpk.yml@v1
+    uses: bekafka/FnFactory/.github/workflows/_build-fpk.yml@v2
     with:
       app_key:      ${{ matrix.app }}
       version:      ${{ matrix.version }}
