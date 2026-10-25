@@ -75,6 +75,22 @@
               "size": 14702925
             }
           }
+        },
+        "2.0.1": {
+          "changelog": "跟随上游 v2.0.1：Improves HTTP resume metadata checks and preserves resource identity across",
+          "updated_at": "2026-10-25T08:51:04Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.0.1/Motrix-2.0.1-x86.fpk",
+              "sha256": "1be20c5a9c012421ade14ea2ea196914f07d24e1e5f618e525cdd93f8bc90a23",
+              "size": 14564366
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.0.1/Motrix-2.0.1-arm.fpk",
+              "sha256": "56b8f4efc3c4660298fe99899391ce05831e5c53ddca8ddeeadfb7e0b2c6811d",
+              "size": 14803333
+            }
+          }
         }
       },
       "service_port": "26800",
