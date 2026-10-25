@@ -28,11 +28,11 @@
     "Motrix": {
       "enabled": true,
       "upstream_repo": "agalwood/Motrix",
-      "include_prerelease": true,
+      "include_prerelease": false,
       "tag_pattern": "^v?[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.]+)?$",
       "cooldown_hours": 12,
       "changelog_from": "release_body",
-      "note": "正式版与 beta 都跟（2026-10-24 定）。上游迭代快，冷却 12h。包版本必须等于上游版本：CI 把 VERSION 同时当镜像 tag 与 git tag 用，做安全修订（如 .1 后缀）须走本地 build-local.sh + UPSTREAM_VERSION。"
+      "note": "只跟正式版（2026-10-25 起，此前 2026-10-24 曾同时跟 beta）。上游已进稳定期：2.0.0 / 2.0.1 均为正式版，beta 线停在 beta.52（2026-10-21）不再推进。本应用跑在 NAS 当生产服务，不宜自动跟进 beta。tag_pattern 仍保留 -suffix 分支，便于手动 -f version=... 指定某个 beta。包版本必须等于上游版本：CI 把 VERSION 同时当镜像 tag 与 git tag 用，做安全修订（如 .1 后缀）须走本地 build-local.sh + UPSTREAM_VERSION。"
     }
   }
 }
