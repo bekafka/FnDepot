@@ -218,6 +218,22 @@
               "size": 18415716
             }
           }
+        },
+        "0.1.1482": {
+          "changelog": "跟随上游 v0.1.1482：You can now continue a Claude Code session in Codex, and a Codex session in Claude Code.",
+          "updated_at": "2026-10-25T04:46:15Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1482/Magpie-0.1.1482-x86.fpk",
+              "sha256": "dd4b24a1a6cca666d27440109f5d4f46c75ab544f84440fbce25ebe499ebb979",
+              "size": 20606712
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1482/Magpie-0.1.1482-arm.fpk",
+              "sha256": "7a8f9fc10fccc4fc4949aba666255fb0f6e79f64dbfb33ee7392666495f074c7",
+              "size": 19027818
+            }
+          }
         }
       },
       "service_port": "3430",
