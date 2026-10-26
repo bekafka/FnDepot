@@ -250,6 +250,22 @@
               "size": 19027818
             }
           }
+        },
+        "0.1.1564": {
+          "changelog": "跟随上游 v0.1.1564：**Awake:** Turning off the setting now takes effect immediately instead of being checked every 5 seconds.",
+          "updated_at": "2026-10-26T04:52:30Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1564/Magpie-0.1.1564-x86.fpk",
+              "sha256": "4ebc06d8cec4aeedc815b9a527789d4b83a4d154d19b47791e1cf1114c418c24",
+              "size": 20755349
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1564/Magpie-0.1.1564-arm.fpk",
+              "sha256": "cd9d8a1fb0c311f4826467b74389819241da2ce1b053029f89847c1ed1e53bef",
+              "size": 19168769
+            }
+          }
         }
       },
       "service_port": "3430",
