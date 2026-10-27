@@ -266,6 +266,22 @@
               "size": 19168769
             }
           }
+        },
+        "0.1.1734": {
+          "changelog": "跟随上游 v0.1.1734：**浏览器访问：** 应用现在可以把页面提供给浏览器，并用自身密钥保护（设置 › 浏览器访问）。依赖安全升级补 `golang.org/x/image` v0.46.0（修 VP8L 解码过量内存分配 GO-2026-6222）。",
+          "updated_at": "2026-10-27T12:42:38Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1734/Magpie-0.1.1734-x86.fpk",
+              "sha256": "3653a6531e015f16978221bfeeb6b78d6b3ca7dc3400d07dfb70c837b7ad045b",
+              "size": 21458801
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.1734/Magpie-0.1.1734-arm.fpk",
+              "sha256": "f774c0c83b71785d475e00ad35707e6b3f15aa25e86f367a6362ad70d029b267",
+              "size": 19833702
+            }
+          }
         }
       },
       "service_port": "3430",
