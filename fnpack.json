@@ -91,6 +91,22 @@
               "size": 14803333
             }
           }
+        },
+        "2.1.0": {
+          "changelog": "跟随上游 v2.1.0：Move, locate, and check existing BitTorrent files from the desktop or Web UI.",
+          "updated_at": "2026-10-28T13:01:21Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.1.0/Motrix-2.1.0-x86.fpk",
+              "sha256": "8dd7b6bb687fb348e25ba46efc29662e6fcf23d39277591ca45961368822f74f",
+              "size": 14610098
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.1.0/Motrix-2.1.0-arm.fpk",
+              "sha256": "297342001383c4d41afb5564531329b2760f8d94fde041996c842cc15f46e61c",
+              "size": 14852955
+            }
+          }
         }
       },
       "service_port": "26800",
