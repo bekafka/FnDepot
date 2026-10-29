@@ -107,6 +107,22 @@
               "size": 14852955
             }
           }
+        },
+        "2.1.1": {
+          "changelog": "跟随上游 v2.1.1：Raise the simultaneous-download setting from 1–100 to **1–200**, keeping",
+          "updated_at": "2026-10-29T22:49:50Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.1.1/Motrix-2.1.1-x86.fpk",
+              "sha256": "fc137695bf3f205aaaf81598633f0cd916cf38c28728927f703410dac20e3899",
+              "size": 14625480
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.1.1/Motrix-2.1.1-arm.fpk",
+              "sha256": "6c96c1e2c097ce00026493a32803c5203111c069b2d191f40bd07d604514a46d",
+              "size": 14862896
+            }
+          }
         }
       },
       "service_port": "26800",
