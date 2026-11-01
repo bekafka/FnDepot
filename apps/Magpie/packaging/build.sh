@@ -74,24 +74,28 @@ ACTUAL_TAG="$(git -C "$SRC" describe --tags --exact-match 2>/dev/null || true)"
 [ "$ACTUAL_TAG" = "$TAG" ] || { echo "源码 tag 不符：期望 $TAG，实际 ${ACTUAL_TAG:-?}" >&2; exit 4; }
 log "commit $COMMIT"
 
-# ── 1.5 依赖安全升级（2026-10-22 首轮 / 2026-10-27 追加）───────────────────────
-# 上游 0.1.1315 与 0.1.1734 的 go.mod 都还锁着几个已公告的漏洞版本，单纯换工具链不够：
-#   golang.org/x/net      v0.56.0 → v0.60.0   HTTP/2 一堆 DoS（GO-2026-6617/6612/6611/6610/6603）
-#   golang.org/x/text     v0.39.0 → v0.42.0   secure/precis 解析崩溃（GO-2026-6629）
+# ── 1.5 依赖安全升级（2026-10-22 首轮 / 2026-10-27 / 2026-11-01 追加）──────────
+# 上游 0.1.1315 / 0.1.1734 / 0.1.25xx 的 go.mod 都还锁着几个已公告的漏洞版本，单纯换工具链不够：
+#   golang.org/x/net      v0.56.0 → v0.62.0   HTTP/2 一堆 DoS（GO-2026-6617/6612/6611/6610/6603）
+#                                            2026-11-01 追加：html 文本节点合并 O(n²) 分配（GO-2026-6860，修复于 v0.62.0）
+#                                            magpie 网关抓取走 gateway.fetchText → html.Parse，属符号级可达；
+#                                            只钉到 v0.60.0 会被 govulncheck 直接拦构建（v0.62.0 即本轮 Fixed in，也是当前最新）
+#   golang.org/x/text     v0.39.0 → v0.43.0   secure/precis 解析崩溃（GO-2026-6629）
+#                                            v0.43.0 由 x/net v0.62.0 的 go.mod 强制要求，非无谓漂移
 #   klauspost/compress    v1.18.3 → v1.18.7   s2 OOB 读（GO-2026-5841）
 #   golang.org/x/image    v0.43.0 → v0.46.0   VP8L 解码过量内存分配（GO-2026-6222，修复于 v0.45.0）
 #                                            magpie 的图标缩放会走 image.Decode → vp8l.Decode，
 #                                            属「符号级可达」，govulncheck 会直接拦构建。
-# 只升这几个，其余不动，避免把上游行为带偏。x/net v0.60.0 自己要求 x/text ≥ v0.42.0；
-# x/image 锁 v0.46.0 而不是最新的 v0.47.0 —— 后者会把 x/text 一起抬到 v0.43.0（无必要的额外漂移）。
+# 只升这几个，其余不动，避免把上游行为带偏。x/net v0.62.0 自己要求 x/text ≥ v0.43.0；
+# x/image 仍锁 v0.46.0 而不是 v0.47.0 —— 后者会把 x/text 再抬一级（无必要的额外漂移）。
 # 用 MAGPIE_SECURITY_BUMP=0 可关掉（上游自己升过了的时候）。
 if [ "${MAGPIE_SECURITY_BUMP:-1}" = "1" ]; then
-  log "security bump: x/net v0.60.0 · x/text v0.42.0 · klauspost/compress v1.18.7 · x/image v0.46.0"
+  log "security bump: x/net v0.62.0 · x/text v0.43.0 · klauspost/compress v1.18.7 · x/image v0.46.0"
   (
     cd "$SRC"
     GOFLAGS=-mod=mod go get \
-      golang.org/x/net@v0.60.0 \
-      golang.org/x/text@v0.42.0 \
+      golang.org/x/net@v0.62.0 \
+      golang.org/x/text@v0.43.0 \
       github.com/klauspost/compress@v1.18.7 \
       golang.org/x/image@v0.46.0
   )
@@ -103,8 +107,8 @@ if [ "${MAGPIE_SECURITY_BUMP:-1}" = "1" ]; then
     awk -v m="$1" -v v="$2" '$1==m && $2==v {ok=1} END{exit(ok?0:1)}' "$SRC/go.mod" \
       || { echo "::error::依赖升级未生效：$1 期望 $2" >&2; exit 11; }
   }
-  check_pin golang.org/x/net v0.60.0
-  check_pin golang.org/x/text v0.42.0
+  check_pin golang.org/x/net v0.62.0
+  check_pin golang.org/x/text v0.43.0
   check_pin github.com/klauspost/compress v1.18.7
   check_pin golang.org/x/image v0.46.0
 else
@@ -220,11 +224,11 @@ cat > "$PAYLOAD_DIR/PROVENANCE.json" <<EOF
     "builder": "$(hostname 2>/dev/null || echo unknown)"
   },
   "security": {
-    "response_to": "2026-10-21/22 Go stdlib + x/* advisory wave；2026-10-27 追加 GO-2026-6222（x/image VP8L 解码）",
+    "response_to": "2026-10-21/22 Go stdlib + x/* advisory wave；2026-10-27 追加 GO-2026-6222（x/image VP8L 解码）；2026-11-01 追加 GO-2026-6860（x/net html 文本节点合并 O(n²)）",
     "go_stdlib_fix": "GOTOOLCHAIN=$GOTOOLCHAIN（crypto/x509 中间证书黑名单 GO-2026-6809/CVE-2026-111943 等）",
     "dependency_bumps": {
-      "golang.org/x/net": "v0.56.0 -> v0.60.0",
-      "golang.org/x/text": "v0.39.0 -> v0.42.0",
+      "golang.org/x/net": "v0.56.0 -> v0.62.0",
+      "golang.org/x/text": "v0.39.0 -> v0.43.0",
       "github.com/klauspost/compress": "v1.18.3 -> v1.18.7",
       "golang.org/x/image": "v0.43.0 -> v0.46.0"
     },
