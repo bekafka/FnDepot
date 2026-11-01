@@ -330,6 +330,22 @@
               "size": 25721203
             }
           }
+        },
+        "0.1.2542": {
+          "changelog": "跟随上游 v0.1.2542：Plugin options now display wording in the window's language, and filtered model lists indicate when they are filtered.",
+          "updated_at": "2026-11-01T05:36:21Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2542/Magpie-0.1.2542-x86.fpk",
+              "sha256": "dd30b0a37385199e6d8fd5fa5555c17f2ff63bd0d213f8dc6f1847ebd68e1153",
+              "size": 27549103
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2542/Magpie-0.1.2542-arm.fpk",
+              "sha256": "aad78eb1c68f112052b5473ea69b01de14c22cf2bf02306d1413a14649f7f3db",
+              "size": 25725461
+            }
+          }
         }
       },
       "service_port": "3430",
