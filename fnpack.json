@@ -123,6 +123,22 @@
               "size": 14862896
             }
           }
+        },
+        "2.2.0": {
+          "changelog": "跟随上游 v2.2.0：Add an optional download-progress indicator for the macOS Dock and Windows",
+          "updated_at": "2026-11-01T06:10:53Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.2.0/Motrix-2.2.0-x86.fpk",
+              "sha256": "65b59b775e2343bbd912ef14a09aa504cedb7c6e4eb53192cf7903e1b9458e08",
+              "size": 14101240
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.2.0/Motrix-2.2.0-arm.fpk",
+              "sha256": "4c27d72057228a7a456a44f9621a6acb15cd29cd4a991420c3ada62857adcfd0",
+              "size": 14341884
+            }
+          }
         }
       },
       "service_port": "26800",
