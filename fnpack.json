@@ -314,6 +314,22 @@
               "size": 19833702
             }
           }
+        },
+        "0.1.2535": {
+          "changelog": "跟随上游 v0.1.2535：Fixed an issue where a held Codex socket reply kept the wrong frame data instead of its original input.",
+          "updated_at": "2026-11-01T04:32:50Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2535/Magpie-0.1.2535-x86.fpk",
+              "sha256": "7b2ffcc2d2b9e413b86c9d99c8be86509d6733d33a9ce9fe1a25b748174878b3",
+              "size": 27545299
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2535/Magpie-0.1.2535-arm.fpk",
+              "sha256": "5e7d9a0d2b86d62ff1ef38fdef3a4505c770ecbcca3534f15835a32e98559cd7",
+              "size": 25721203
+            }
+          }
         }
       },
       "service_port": "3430",
