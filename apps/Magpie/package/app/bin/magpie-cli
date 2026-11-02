@@ -16,6 +16,8 @@ APP=Magpie
 VAR="/var/apps/$APP/var"
 DEST="/var/apps/$APP/target"
 BIN="$DEST/bin/magpie"
+BUN_HOME="/var/apps/bunjs/target/bin"
+BUN_BIN="$BUN_HOME/bun"
 
 if [ ! -x "$BIN" ]; then
   echo "magpie-cli: 找不到 $BIN（应用装好了吗？）" >&2
@@ -35,6 +37,8 @@ export XDG_CACHE_HOME="$VAR/cache"
 export XDG_DATA_HOME="$VAR/data"
 export XDG_STATE_HOME="$VAR/state"
 export TMPDIR="$VAR/tmp"
+export PATH="$BUN_HOME:$PATH"
+export MAGPIE_BUN="$BUN_BIN"
 export MAGPIE_NO_STATS=1
 if [ -s "$VAR/web-key" ]; then
   MAGPIE_WEB_KEY="$(cat "$VAR/web-key")"

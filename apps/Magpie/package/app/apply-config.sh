@@ -121,6 +121,9 @@ case "$MODE" in
   install)
     WEB_PORT="$(resolve_port wizard_port MAGPIE_WEB_PORT "$DEFAULT_WEB_PORT")"
     GATEWAY_PORT="${wizard_gateway_port:-$DEFAULT_GATEWAY_PORT}"
+    # 安装向导不再提供局域网共享开关（2026-11-02 起），默认开启共享。
+    # 已装的旧包若 config.env 里已有开关值，则沿用，避免重装/升级把用户的关闭选择改回开启。
+    [ -n "$LAN" ] || LAN="$(read_conf MAGPIE_LAN || true)"
     [ -n "$LAN" ] || LAN=1
     ;;
   *)

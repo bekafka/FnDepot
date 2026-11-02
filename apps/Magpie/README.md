@@ -115,7 +115,7 @@ cache/               models.dev 目录、Bun 与插件缓存
 - **没有桌面壳**：`nogui` 构建，只有 Web 面板 / CLI / 网关；不需要图形环境。
 - **不跟上游自更新**：`settings.json` 预置 `noAutoUpdate=true`，升级走应用中心（二进制与生命周期脚本必须成套）。
 - **不打点**：服务进程带 `MAGPIE_NO_STATS=1`；想支持上游可以去掉（`cmd/main` 的 build_env）。
-- **插件（Bun）**：插件页首次使用会下载 Bun；国内网络可在「插件 → 国内镜像」打开镜像开关。
+- **插件（系统 Bun）**：`manifest` 通过 `install_dep_apps=bunjs` 声明飞牛 Bun 运行时依赖；服务与 CLI 把 `/var/apps/bunjs/target/bin` 加入 `PATH`，并用 `MAGPIE_BUN=/var/apps/bunjs/target/bin/bun` 固定调用系统 Bun，不再下载或自动升级缓存 Bun。系统 Bun 的版本与兼容性由 `bunjs` 应用负责；它缺失或不可执行时 Magpie 会拒绝启动，不会静默回退到缓存 Bun。
 - **账号登录**：`magpie-cli accounts add codex` 这类交互式登录需要终端（如用终端应用 SSH 上去），`sudo` 运行。
 - **卸载向导**：应用中心的卸载按钮要在弹窗里选「保留/完全卸载」，所以 `appcenter-cli uninstall` 会拒绝并提示去 Web UI。
 - **桌面入口是安装时登记的**：`app/ui/config` 在安装那一刻被飞牛写进数据库（`app_service.url`，变量占位符运行时替换），

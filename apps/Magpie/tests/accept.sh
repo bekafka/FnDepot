@@ -3,7 +3,7 @@
 # Magpie 验收阶梯（在飞牛设备上跑）
 #
 #   安装后：sudo bash tests/accept.sh all
-#   单级：  sudo bash tests/accept.sh status|endpoints|auth|e2e|lifecycle|ops
+#   单级：  sudo bash tests/accept.sh status|endpoints|auth|e2e|lifecycle|ops|bun
 #
 # 判定：任何一条 FAIL 都不算通过（PASS=n FAIL=0 才算）。
 # 设计口径（FnFactory specs/acceptance.md）：
@@ -320,16 +320,59 @@ level_ops() {
   fi
 }
 
+# ── 7. 外部 Bun ──────────────────────────────────────────────────────────────
+level_bun() {
+  echo "-- 7. 外部 Bun"
+  local bun="/var/apps/bunjs/target/bin/bun" pid env_bun env_path version
+  grep -Eq '^install_dep_apps[[:space:]]*=[[:space:]]*bunjs[[:space:]]*$' "$APP_DIR/manifest" \
+    && ok "manifest 已声明 bunjs 运行时依赖" || bad "manifest 未声明 bunjs 运行时依赖"
+  if [ -x "$bun" ]; then
+    version="$(setpriv --reuid="$RUN_USER" --regid="$RUN_GROUP" --init-groups -- "$bun" --version 2>/dev/null)"
+    [ -n "$version" ] && ok "Magpie 用户可执行系统 Bun（$version）" || bad "Magpie 用户无法执行系统 Bun"
+  else
+    bad "系统 Bun 不存在或不可执行：$bun"
+  fi
+
+  pid="$(app_pids | head -n 1)"
+  if [ -n "$pid" ]; then
+    env_bun="$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | sed -n 's/^MAGPIE_BUN=//p')"
+    [ "$env_bun" = "$bun" ] && ok "服务进程 MAGPIE_BUN 指向系统 Bun" || bad "服务进程 MAGPIE_BUN=$env_bun（期望 $bun）"
+    env_path="$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | sed -n 's/^PATH=//p')"
+    case ":$env_path:" in
+      *:/var/apps/bunjs/target/bin:*) ok "服务进程 PATH 包含 bunjs/bin" ;;
+      *) bad "服务进程 PATH 未包含 bunjs/bin" ;;
+    esac
+  else
+    bad "找不到 Magpie 主进程，无法核对 Bun 环境"
+  fi
+
+  local p exe cmd external=0 cached=0
+  for p in /proc/[0-9]*; do
+    exe="$(readlink "$p/exe" 2>/dev/null || true)"
+    case "$exe" in
+      "$bun")
+        cmd="$(tr '\0' ' ' < "$p/cmdline" 2>/dev/null)"
+        case "$cmd" in *"$PKGVAR/cache/magpie/plugin-host/"*) external=$((external+1)) ;; esac
+        ;;
+      *"/cache/magpie/bun/"*) cached=$((cached+1)) ;;
+    esac
+  done
+  [ "$cached" -eq 0 ] && ok "没有缓存 magpie-bun 进程" || bad "仍有 $cached 个缓存 magpie-bun 进程"
+  [ "$external" -ge 1 ] && ok "插件宿主实际使用系统 Bun（进程数=$external）" \
+    || skip "当前没有插件宿主进程，未能实测系统 Bun 子进程"
+}
+
 case "${1:-all}" in
   all)
-    level_status; level_endpoints; level_auth; level_e2e; level_lifecycle; level_ops ;;
+    level_status; level_endpoints; level_auth; level_e2e; level_lifecycle; level_ops; level_bun ;;
   status)    level_status ;;
   endpoints) level_endpoints ;;
   auth)      level_auth ;;
   e2e)       level_e2e ;;
   lifecycle) level_lifecycle ;;
   ops)       level_ops ;;
-  *) echo "usage: $0 all|status|endpoints|auth|e2e|lifecycle|ops"; exit 2 ;;
+  bun)       level_bun ;;
+  *) echo "usage: $0 all|status|endpoints|auth|e2e|lifecycle|ops|bun"; exit 2 ;;
 esac
 
 echo

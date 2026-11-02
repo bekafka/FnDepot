@@ -21,6 +21,8 @@ APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
 BIN="$APPDEST/bin/magpie"
 RUN_USER="${TRIM_USERNAME:-$APPNAME}"
 RUN_GROUP="${TRIM_GROUPNAME:-$APPNAME}"
+BUN_HOME="/var/apps/bunjs/target/bin"
+BUN_BIN="$BUN_HOME/bun"
 
 LOG_FILE="$PKGVAR/info.log"
 PID_FILE="$PKGVAR/app.pid"
@@ -84,7 +86,9 @@ build_env() {
   export XDG_DATA_HOME="$PKGVAR/data"
   export XDG_STATE_HOME="$PKGVAR/state"
   export TMPDIR="$PKGVAR/tmp"
-  export PATH="$APPDEST/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  export PATH="$BUN_HOME:$APPDEST/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  export MAGPIE_BUN="$BUN_BIN"
+  [ -x "$MAGPIE_BUN" ] || { log_msg "系统 Bun 不可执行：$MAGPIE_BUN（请安装并启用 bunjs）"; return 1; }
   # 不设 MAGPIE_ADDR：网关端口/监听范围由 settings.json 的 port/lan 决定，
   # 设了具体地址反而会让 lan=true 也不监听局域网。
   export MAGPIE_WEB_KEY

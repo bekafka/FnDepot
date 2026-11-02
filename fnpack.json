@@ -151,7 +151,7 @@
     },
     "Magpie": {
       "display_name": "Magpie",
-      "desc": "AI 模型统一网关：OpenAI / Anthropic / Gemini 三种 API 互转，路由组在额度用完时自动切账号，Web 面板管理 provider、账号与用量。",
+      "desc": "Magpie 是一个跑在本机的多模型 API 反代网关 + 编程 Agent 模型切换器（MIT 开源，Go 编写）。它解决一个具体痛点：Codex 只会说 OpenAI Responses 协议，Claude Code 只会说 Anthropic Messages，Gemini CLI 说 Google 格式——magpie 在本地起一个网关，同时接受这三种协议并双向互译（含 streaming、tool calls 与 reasoning），让任意 Agent 调用任意厂商的模型。\n\n更多功能：支持不同模型的路由组合搭配，随意编写转发规则；Skills、MCP 管理；会话信息安全脱敏；额度统计；自动签到等功能。",
       "platform": [
         "arm",
         "x86"
