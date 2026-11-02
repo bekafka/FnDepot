@@ -394,6 +394,22 @@
               "size": 26735685
             }
           }
+        },
+        "0.1.2738-1": {
+          "changelog": "修复应用设置页仍显示旧向导：统一为「端口设置」，端口标签改为 Web UI 面板端口 / BaseURL API 网关端口，移除局域网共享开关（未设置时沿用现有开关）。功能与 0.1.2738 一致。",
+          "updated_at": "2026-11-02T16:58:30Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2738-1/Magpie-0.1.2738-1-x86.fpk",
+              "sha256": "178d6d08c670266560a1820f50b7601a0580675b26435ebaba62b9f071115f6e",
+              "size": 28655634
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2738-1/Magpie-0.1.2738-1-arm.fpk",
+              "sha256": "fc7b0390b1667648888b1a774112aa3d0e70332e83cfa7001279985f53c1fd5c",
+              "size": 26735498
+            }
+          }
         }
       },
       "service_port": "3430",
