@@ -109,16 +109,21 @@ def load_categories():
 
 
 def version_key(value):
-    """版本排序键：数字段按数值比较，稳定版排在 prerelease 之后。
+    """版本排序键：数字段按数值比较；-N 是打包修订号，排在同 base 稳定版之后；
+    非数字后缀（alpha/beta/rc）是真 prerelease，排在稳定版之前。
 
     不能用 max(releases) 直接比字符串：0.9.9 会排在 0.10.0 后面，
     2.0.0-beta.9 会排在 2.0.0-beta.10 后面。
+    也要区分「1.2.3-2 是 1.2.3 的打包修订（更新）」与「1.2.3-beta 是预发布（更旧）」。
     """
-    parts = re.split(r"[.+-]", value)
-    key = [(0, int(p)) if p.isdigit() else (1, p) for p in parts]
-    if "-" not in value:
-        key.append((2, ""))
-    return key
+    base, sep, suf = value.partition("-")
+    bkey = [(0, int(p)) if p.isdigit() else (1, p) for p in base.split(".")]
+    if not sep:
+        return (bkey, 2, ())
+    if suf.isdigit():
+        return (bkey, 2, (int(suf),))
+    skey = [(0, int(p)) if p.isdigit() else (1, p) for p in suf.split(".")]
+    return (bkey, 1, skey)
 
 
 def head_size(url, timeout=12):
