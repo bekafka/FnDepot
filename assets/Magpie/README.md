@@ -1,8 +1,8 @@
-# Magpie · AI 模型统一网关
+# Magpie · 多模型 API 反代网关 + 编程 Agent 模型切换器
 
-[Magpie](https://github.com/yetone/magpie) 把各家 AI 模型收进一个网关：Claude Code 跑 Kimi、Codex 跑 DeepSeek、
-Gemini CLI 跑 GLM，都指向 NAS 上的同一个地址；OpenAI Chat / Responses、Anthropic Messages、Gemini 四种 API
-互相转换，流式输出与工具调用照常。Web 面板管理 provider、账号、路由组与用量。
+Magpie 是一个跑在本机的多模型 API 反代网关 + 编程 Agent 模型切换器（MIT 开源，Go 编写）。它解决一个具体痛点：Codex 只会说 OpenAI Responses 协议，Claude Code 只会说 Anthropic Messages，Gemini CLI 说 Google 格式——magpie 在本地起一个网关，同时接受这三种协议并双向互译（含 streaming、tool calls 与 reasoning），让任意 Agent 调用任意厂商的模型。
+
+更多功能：支持不同模型的路由组合搭配，随意编写转发规则；Skills、MCP 管理；会话信息安全脱敏；额度统计；自动签到等功能。
 
 - **面板**：应用中心点 Magpie 图标直接进（入口 URL 自带打包时固定的访问密钥）。
 - **网关**：`http://<NAS>:3425/v1`（OpenAI 兼容）、`http://<NAS>:3425`（Anthropic / Gemini）。
