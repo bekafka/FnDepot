@@ -378,6 +378,22 @@
               "size": 26612492
             }
           }
+        },
+        "0.1.2738": {
+          "changelog": "跟随上游 v0.1.2738：改用系统 Bun（install_dep_apps=bunjs，MAGPIE_BUN 指向 bunjs 运行时，不再下载缓存）；安装向导简化为 Web UI 面板端口与 BaseURL API 网关端口；桌面图标放大；简介更新为产品定位文案。",
+          "updated_at": "2026-11-02T16:34:26Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2738/Magpie-0.1.2738-x86.fpk",
+              "sha256": "63678e21d832d2560c80c079a425b71fd094c17f234f35008c3e37bf84b9d26c",
+              "size": 28655714
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2738/Magpie-0.1.2738-arm.fpk",
+              "sha256": "be336c98c5e6fb31d372dc6a1c1e107f081ce361940b7657c5c8132fa9ab7845",
+              "size": 26735685
+            }
+          }
         }
       },
       "service_port": "3430",
