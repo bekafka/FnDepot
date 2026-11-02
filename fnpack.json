@@ -362,6 +362,22 @@
               "size": 25725461
             }
           }
+        },
+        "0.1.2682": {
+          "changelog": "跟随上游 v0.1.2682：redact: a user name's and an address's stand-ins come back in any case (yapechan on Discord)",
+          "updated_at": "2026-11-02T06:11:01Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2682/Magpie-0.1.2682-x86.fpk",
+              "sha256": "a028b9a207f814177f9def46d7411c4832efe015e1000a090daeeabe20f39c3f",
+              "size": 28530774
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2682/Magpie-0.1.2682-arm.fpk",
+              "sha256": "17870acefdea42197bc8489448ac43612397443628407a919824a4d36d6c83d2",
+              "size": 26612492
+            }
+          }
         }
       },
       "service_port": "3430",
