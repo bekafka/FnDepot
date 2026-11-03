@@ -595,6 +595,46 @@
         }
       },
       "readme_url": "assets/gh-cli/README.md"
+    },
+    "PhotoCraft": {
+      "display_name": "PhotoCraft",
+      "desc": "浏览器里运行的图像编辑器（WebAssembly）：图层、蒙版、调整图层、图层样式、文字、矢量与真实 PSD 读写。NAS 只做静态托管，编辑与文件读写都在访客设备上完成。",
+      "platform": [
+        "arm",
+        "x86"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/PhotoCraft/ICON.PNG",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "bekafka",
+      "maintainer_url": "https://github.com/bekafka/FnDepot",
+      "source_author": "storytold",
+      "source_author_url": "https://github.com/storytold/photocraft",
+      "releases": {
+        "0.20.1": {
+          "changelog": "首版：PhotoCraft 浏览器运行版（官方 WebAssembly 静态包 + Go 静态度量宿主，arm64/x86）；修上游自托管 snippets 路径缺陷(#10491)；随包带 Noto Sans CJK SC 中文字体；默认端口 28200。飞牛 arm64 实机安装验证通过。",
+          "updated_at": "2026-11-03T18:31:03Z",
+          "packages": {
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/PhotoCraft-v0.20.1/PhotoCraft-0.20.1-arm.fpk",
+              "sha256": "2dcec0500d15f747685708eb7986c9f2ba8fd89c476bb625f35db61ed12d7fb0",
+              "size": 30000823
+            },
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/PhotoCraft-v0.20.1/PhotoCraft-0.20.1-x86.fpk",
+              "sha256": "b93061e20bbf64b62a2e831d38e0203087fa8974ee5de641c128d5e7c40ad4e0",
+              "size": 30242210
+            }
+          }
+        }
+      },
+      "readme_url": "assets/PhotoCraft/README.md"
     }
   }
 }
