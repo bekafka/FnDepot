@@ -1,0 +1,27 @@
+[
+  {
+    "stepTitle": "卸载 GitHub CLI",
+    "items": [
+      {
+        "type": "radio",
+        "field": "wizard_uninstall_mode",
+        "label": "卸载方式",
+        "initValue": "keep",
+        "options": [
+          {
+            "label": "保留记录卸载（保留已填的 GitHub Token 与接管记录，重装后可直接沿用）",
+            "value": "keep"
+          },
+          {
+            "label": "完全卸载（同时删除应用目录里的 GitHub Token 与日志）",
+            "value": "purge"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "两种方式都不动你自己的工作目录，也不动各账号家目录下的 ~/.config/gh（那是个人的 gh 登录态）。卸载时 /usr/local/bin/gh 会被移除；如果安装时接管了别人原有的同名命令，会按记录还原。"
+      }
+    ]
+  }
+]

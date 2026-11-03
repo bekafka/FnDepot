@@ -1,0 +1,4 @@
+#!/bin/bash
+# 本应用没有「设置页」配置项：token 在安装向导里填，改 token 请重装，
+# 或直接覆盖应用目录里的 token 文件（见 README）。
+exit 0

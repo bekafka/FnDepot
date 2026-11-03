@@ -1,0 +1,108 @@
+#!/bin/bash
+# ==============================================================================
+# 安装后：建立 gh 命令入口、自证二进制能跑、处理向导里的 GitHub Token。
+#
+# Token 的两份落点（有意为之）：
+#   · $PKGVAR/github-token          0600，规范来源，重装/升级后仍在
+#   · $APPDEST/etc/github-token     0644，供终端里任何用户通过 bin/gh 包装层
+#                                   自动注入 GH_TOKEN（应用数据目录通常只有
+#                                   应用账号可进，命令行用户读不到那份 0600）
+# 所以这是「一次配置、全员可用」与「令牌对本机账号可见」之间的取舍：
+# 想收紧就把 0644 那份 chmod 600（届时其它用户需自行 gh auth login）。
+# ==============================================================================
+set -u
+
+APPNAME="gh"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+LOG="$PKGVAR/info.log"
+TMPLOG="${TRIM_TEMP_LOGFILE:-}"
+WRAPPER="$APPDEST/bin/gh"
+REAL="$APPDEST/bin/gh.real"
+HELPER="$APPDEST/gh-link.sh"
+TOKEN_FILE="$PKGVAR/github-token"
+TOKEN_MIRROR_DIR="$APPDEST/etc"
+TOKEN_MIRROR="$TOKEN_MIRROR_DIR/github-token"
+
+emit() {
+  printf '%s - [install] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true
+  [ -n "$TMPLOG" ] && printf '[install] %s\n' "$*" >> "$TMPLOG" 2>/dev/null || true
+  echo "[install] $*"
+}
+
+mkdir -p "$PKGVAR" 2>/dev/null || true
+
+# ── 1. 可执行文件自检 ───────────────────────────────────────────────────────
+if [ ! -f "$REAL" ] || [ ! -f "$WRAPPER" ]; then
+  emit "payload 不完整（缺 bin/gh 或 bin/gh.real），安装失败"
+  [ -n "$TMPLOG" ] && echo "安装包不完整：缺少 gh 可执行文件" >> "$TMPLOG"
+  exit 1
+fi
+chmod 0755 "$REAL" "$WRAPPER" 2>/dev/null || true
+[ -f "$HELPER" ] && chmod 0755 "$HELPER" 2>/dev/null || true
+
+if ! VER="$(timeout 30 "$REAL" --version 2>>"$LOG" | head -n 1)"; then
+  emit "gh 无法运行（架构或运行时库不匹配），安装失败"
+  [ -n "$TMPLOG" ] && echo "gh 无法在本机运行，请确认安装包架构与设备一致（arm 包 vs x86 包）" >> "$TMPLOG"
+  exit 1
+fi
+emit "gh 二进制自检通过：$VER"
+
+# ── 2. GitHub Token（可选）──────────────────────────────────────────────────
+TOKEN="$(printf '%s' "${wizard_github_token:-}" | tr -d '\r' | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+
+if [ -z "$TOKEN" ]; then
+  emit "未填写 GitHub Token（可选）：gh 命令照常可用，需要认证时请各自执行 gh auth login，或设置 GH_TOKEN"
+else
+  case "$TOKEN" in
+    *[[:space:]]*)
+      emit "Token 含空白字符，已忽略（未写入）。如需认证请重装并填写正确的 token"
+      TOKEN=""
+      ;;
+  esac
+  if [ -n "$TOKEN" ] && [ "${#TOKEN}" -lt 20 ]; then
+    emit "Token 长度异常（${#TOKEN} 位），已忽略（未写入）。请确认复制完整"
+    TOKEN=""
+  fi
+fi
+
+if [ -n "$TOKEN" ]; then
+  # 规范来源：仅应用账号可读
+  ( umask 077; printf '%s\n' "$TOKEN" > "$TOKEN_FILE" ) 2>>"$LOG" || emit "写入 $TOKEN_FILE 失败（继续）"
+  chmod 600 "$TOKEN_FILE" 2>/dev/null || true
+
+  # 终端可读副本：让 bin/gh 包装层能为任意用户注入 GH_TOKEN
+  if mkdir -p "$TOKEN_MIRROR_DIR" 2>>"$LOG" \
+     && ( umask 022; printf '%s\n' "$TOKEN" > "$TOKEN_MIRROR" ) 2>>"$LOG"; then
+    chmod 644 "$TOKEN_MIRROR" 2>/dev/null || true
+    emit "已写入终端可读的 token 副本：$TOKEN_MIRROR（0644，同机有 shell 权限的账号都能读到）"
+  else
+    emit "写入终端可读副本失败（$TOKEN_MIRROR）：命令行用户将拿不到自动注入的 GH_TOKEN"
+  fi
+
+  # 验证（网络不通或 token 权限不足都只告警，不阻断安装）
+  WHO="$(GH_TOKEN="$TOKEN" timeout 25 "$REAL" api user --jq .login 2>>"$LOG" | tr -d '\r\n')"
+  if [ -n "$WHO" ]; then
+    emit "GitHub Token 验证通过：已认证为 @$WHO"
+  else
+    LASTERR="$(tail -n 1 "$LOG" 2>/dev/null | cut -c1-160)"
+    emit "GitHub Token 未能验证（不阻断安装）：可能是外网不通或 token 无 user 读取权限；错误摘要：${LASTERR:-无}"
+  fi
+fi
+
+# ── 3. 命令入口 ─────────────────────────────────────────────────────────────
+if [ -f "$HELPER" ]; then
+  bash "$HELPER" ensure >> "$LOG" 2>&1 || true
+  if [ -L /usr/local/bin/gh ] && \
+     [ "$(readlink -f /usr/local/bin/gh)" = "$(readlink -f "$WRAPPER")" ]; then
+    emit "命令入口就绪：/usr/local/bin/gh → $WRAPPER（内含 token 注入包装）"
+  else
+    emit "命令入口尚未出现（当前身份 $(id -un) 无 /usr/local/bin 写权限）；manifest 已声明 usr-local-linker，平台会在安装收尾/启动时建立"
+  fi
+else
+  emit "缺少 $HELPER，跳过命令入口（可执行文件在 $WRAPPER）"
+fi
+
+emit "用法：gh --version / gh auth status / gh repo list / gh pr list / gh api user"
+emit "提示：本包只提供 gh 命令；仓库操作仍受 GitHub 侧权限约束，建议使用最小权限 token"
+exit 0

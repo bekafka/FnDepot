@@ -1,0 +1,44 @@
+#!/bin/bash
+# ==============================================================================
+# gh · 生命周期入口（start / stop / status）
+#
+# 装的是一个 CLI 可执行文件，没有常驻进程，所以语义如实：
+#   start  ：幂等确保 /usr/local/bin/gh 可用（平台若调用，这里补齐链接）
+#   stop   ：什么都不做（命令式应用「停止」不该让已装的命令消失）
+#   status ：0 = 命令可用；3 = 不可用
+# ==============================================================================
+set -u
+
+APPNAME="gh"
+APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
+PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"
+HELPER="$APPDEST/gh-link.sh"
+
+log_msg() {
+  printf '%s - %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$PKGVAR/info.log" 2>/dev/null || true
+}
+
+case "${1:-}" in
+  start)
+    if [ ! -f "$HELPER" ]; then
+      log_msg "缺少 $HELPER（payload 不完整？）"
+      echo "缺少 $HELPER，无法建立 gh 命令入口" >&2
+      exit 1
+    fi
+    bash "$HELPER" ensure
+    exit $?
+    ;;
+  stop)
+    log_msg "stop：命令式应用，无进程需要停止（保留 $APPDEST/bin/gh 与 /usr/local/bin/gh）"
+    exit 0
+    ;;
+  status)
+    [ -f "$HELPER" ] || exit 3
+    bash "$HELPER" status
+    exit $?
+    ;;
+  *)
+    echo "usage: $0 {start|stop|status}" >&2
+    exit 1
+    ;;
+esac

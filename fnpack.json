@@ -555,6 +555,29 @@
         }
       },
       "readme_url": "assets/uv/README.md"
+    },
+    "gh": {
+      "display_name": "GitHub CLI",
+      "desc": "GitHub 官方命令行工具（官方静态二进制）：在终端管理仓库、Issue、PR、Actions、Release 与 API；安装向导可选填 GitHub Token，填了之后同机终端用户直接可用 gh。源自 <a href='https://github.com/cli/cli'>cli/cli</a>（MIT）。",
+      "platform": [
+        "x86",
+        "arm"
+      ],
+      "categories": [
+        "编程开发"
+      ],
+      "icon_url": "assets/gh/ICON.PNG",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "bekafka",
+      "maintainer_url": "https://github.com/bekafka/FnDepot",
+      "source_author": "cli",
+      "source_author_url": "https://github.com/cli/cli",
+      "releases": {},
+      "readme_url": "assets/gh/README.md"
     }
   }
 }

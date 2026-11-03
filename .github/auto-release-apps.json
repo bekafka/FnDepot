@@ -51,6 +51,15 @@
       "cooldown_hours": 24,
       "changelog_from": "release_body",
       "note": "上游 tag 不带 v 前缀（0.13.7），故 tag_pattern 不接受 v 开头。Linux 资产按目标三元组命名（uv-aarch64-unknown-linux-gnu.tar.gz / uv-x86_64-…），本包固定取 gnu 口味；校验优先用上游随包的 .sha256 文件。只跟正式版；包的 VERSION 必须等于上游版本，纯打包修订走 workflow_dispatch 的 version 输入（0.13.7-2）。"
+    },
+    "gh": {
+      "enabled": true,
+      "upstream_repo": "cli/cli",
+      "include_prerelease": false,
+      "tag_pattern": "^v?[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "cooldown_hours": 24,
+      "changelog_from": "release_body",
+      "note": "上游 tag 形如 v2.103.3，release 带 gh_<ver>_linux_<arm64|amd64>.tar.gz 与 gh_<ver>_checksums.txt。只跟正式版；冷却 24h。包版本必须等于上游版本，纯打包修订走 workflow_dispatch 的 version 输入。"
     }
   }
 }

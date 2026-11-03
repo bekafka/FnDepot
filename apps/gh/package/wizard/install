@@ -1,0 +1,23 @@
+[
+  {
+    "stepTitle": "GitHub Token（可选）",
+    "items": [
+      {
+        "type": "text",
+        "field": "wizard_github_token",
+        "label": "GitHub Token（留空 = 不预置，稍后各自 gh auth login）",
+        "initValue": "",
+        "rules": [
+          {
+            "pattern": "^$|^[A-Za-z0-9_-]{20,255}$",
+            "message": "留空或填完整 token（20 位以上，只含字母数字与 _ -，注意不要带空格或引号）"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "填了之后，终端里任何用户执行 gh 都会自动带上它（以 GH_TOKEN 注入），不必再跑 gh auth login。为让同机终端用户都能用，token 会以 0644 存放在应用目录（/var/apps/gh/target/etc/github-token），同机有 shell 权限的账号都能读到 —— 建议填最小权限的 fine-grained token（只勾需要的仓库与只读权限）。不想如此就留空，或装好后把该文件改成 0600。留空时 gh 命令照样可用，只是需要认证的操作要各自登录。"
+      }
+    ]
+  }
+]

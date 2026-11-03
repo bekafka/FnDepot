@@ -1,0 +1,36 @@
+#!/bin/bash
+# 升级后：命令入口指向新版本；并把已有 token 重新镜像到新的 payload 目录
+# （升级会整体替换 target/，上次安装写进去的 0644 副本会消失）。
+set -u
+APPNAME="gh"
+APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
+PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"
+HELPER="$APPDEST/gh-link.sh"
+LOG="$PKGVAR/info.log"
+TOKEN_FILE="$PKGVAR/github-token"
+TOKEN_MIRROR="$APPDEST/etc/github-token"
+
+emit() {
+  printf '%s - [upgrade] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true
+  [ -n "${TRIM_TEMP_LOGFILE:-}" ] && printf '[upgrade] %s\n' "$*" >> "$TRIM_TEMP_LOGFILE" 2>/dev/null || true
+  echo "[upgrade] $*"
+}
+
+chmod 0755 "$APPDEST/bin/gh" "$APPDEST/bin/gh.real" 2>/dev/null || true
+
+if [ -f "$HELPER" ]; then
+  bash "$HELPER" ensure >> "$LOG" 2>&1 && emit "命令入口已指向新版本：$APPDEST/bin/gh" \
+    || emit "命令入口刷新失败，详见 $LOG"
+else
+  emit "缺少 $HELPER，跳过命令入口刷新"
+fi
+
+if [ -s "$TOKEN_FILE" ]; then
+  if mkdir -p "$APPDEST/etc" 2>/dev/null && cp -f "$TOKEN_FILE" "$TOKEN_MIRROR" 2>/dev/null; then
+    chmod 644 "$TOKEN_MIRROR" 2>/dev/null || true
+    emit "已把已有 token 重新镜像到 $TOKEN_MIRROR（0644）"
+  else
+    emit "token 重新镜像失败；终端用户可能拿不到自动注入的 GH_TOKEN（可重装时重新填写）"
+  fi
+fi
+exit 0

@@ -1,0 +1,6 @@
+#!/bin/bash
+# 安装前：只做不依赖包内文件的准备。真正的工作都在 install_callback。
+set -u
+PKGVAR="${TRIM_PKGVAR:?}"
+mkdir -p "$PKGVAR" 2>/dev/null || true
+exit 0
