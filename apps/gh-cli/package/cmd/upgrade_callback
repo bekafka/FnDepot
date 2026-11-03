@@ -2,7 +2,7 @@
 # 升级后：命令入口指向新版本；并把已有 token 重新镜像到新的 payload 目录
 # （升级会整体替换 target/，上次安装写进去的 0644 副本会消失）。
 set -u
-APPNAME="gh"
+APPNAME="gh-cli"
 APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
 PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"
 HELPER="$APPDEST/gh-link.sh"

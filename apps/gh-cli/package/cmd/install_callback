@@ -12,7 +12,7 @@
 # ==============================================================================
 set -u
 
-APPNAME="gh"
+APPNAME="gh-cli"
 PKGVAR="${TRIM_PKGVAR:?}"
 APPDEST="${TRIM_APPDEST:?}"
 LOG="$PKGVAR/info.log"

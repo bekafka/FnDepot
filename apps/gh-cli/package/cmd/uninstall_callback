@@ -9,7 +9,7 @@
 # ==============================================================================
 set -u
 
-APPNAME="gh"
+APPNAME="gh-cli"
 PKGVAR="${TRIM_PKGVAR:-}"
 LINK="/usr/local/bin/gh"
 RECORD="${PKGVAR:+$PKGVAR/preserved-usr-local-bin-gh}"

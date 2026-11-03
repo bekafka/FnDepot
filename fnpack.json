@@ -516,46 +516,6 @@
       "service_port": "26890",
       "readme_url": "assets/CloudflareIP/README.md"
     },
-    "gh": {
-      "display_name": "GitHub CLI",
-      "desc": "GitHub 官方命令行工具（官方静态二进制）：在终端管理仓库、Issue、PR、Actions、Release 与 API；安装向导可选填 GitHub Token，填了之后同机终端用户直接可用 gh。源自 <a href='https://github.com/cli/cli'>cli/cli</a>（MIT）。",
-      "platform": [
-        "arm",
-        "x86"
-      ],
-      "categories": [
-        "编程开发"
-      ],
-      "icon_url": "assets/gh/ICON.PNG",
-      "run_as": "package",
-      "install_type": "",
-      "is_docker": false,
-      "distributor": "bekafka",
-      "distributor_url": "https://github.com/bekafka/FnDepot",
-      "maintainer": "bekafka",
-      "maintainer_url": "https://github.com/bekafka/FnDepot",
-      "source_author": "cli",
-      "source_author_url": "https://github.com/cli/cli",
-      "releases": {
-        "2.103.3": {
-          "changelog": "跟随上游 v2.103.3：fix(gh auth status): explain expired expiring tokens with `--no-refresh` by @babakks in [#14815](https://github.com/cli/cli/pull/14815)\r",
-          "updated_at": "2026-11-03T17:05:44Z",
-          "packages": {
-            "x86": {
-              "download_url": "https://github.com/bekafka/FnDepot/releases/download/gh-v2.103.3/gh-2.103.3-x86.fpk",
-              "sha256": "09a730e3d0fa71ee4ab677e5e00cbe11addce8404c84cda6d2058c521bf5fcb6",
-              "size": 15004429
-            },
-            "arm": {
-              "download_url": "https://github.com/bekafka/FnDepot/releases/download/gh-v2.103.3/gh-2.103.3-arm.fpk",
-              "sha256": "0b3126a5cd00ea13aa49e590c15e5b0fbbfd6830417ca1f165e1e2c393831d1b",
-              "size": 13631031
-            }
-          }
-        }
-      },
-      "readme_url": "assets/gh/README.md"
-    },
     "uvbin": {
       "display_name": "uv bin",
       "desc": "Astral 用 Rust 写的 Python 包与项目管理器（极快），替代 pip / virtualenv / pipx：官方 standalone 单文件版，装完终端直接可用 uv 与 uvx，不需要先装 Python。源自 <a href='https://github.com/astral-sh/uv'>astral-sh/uv</a>（MIT OR Apache-2.0）。",
@@ -578,6 +538,29 @@
       "source_author_url": "https://github.com/astral-sh/uv",
       "releases": {},
       "readme_url": "assets/uvbin/README.md"
+    },
+    "gh-cli": {
+      "display_name": "gh cli",
+      "desc": "GitHub 官方命令行工具（官方静态二进制）：在终端管理仓库、Issue、PR、Actions、Release 与 API；安装向导可选填 GitHub Token，填了之后同机终端用户直接可用 gh。源自 <a href='https://github.com/cli/cli'>cli/cli</a>（MIT）。",
+      "platform": [
+        "arm",
+        "x86"
+      ],
+      "categories": [
+        "编程开发"
+      ],
+      "icon_url": "assets/gh-cli/ICON.PNG",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "bekafka",
+      "maintainer_url": "https://github.com/bekafka/FnDepot",
+      "source_author": "cli",
+      "source_author_url": "https://github.com/cli/cli",
+      "releases": {},
+      "readme_url": "assets/gh-cli/README.md"
     }
   }
 }

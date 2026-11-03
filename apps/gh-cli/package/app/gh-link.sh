@@ -22,7 +22,7 @@
 # ==============================================================================
 set -u
 
-APPNAME="gh"
+APPNAME="gh-cli"
 APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
 PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"
 BIN="$APPDEST/bin/gh"
@@ -56,7 +56,7 @@ ensure_link() {
 
   # 生命周期脚本默认以包用户（run-as=package）运行，对 /usr/local/bin 没有写权限。
   # 这不是失败：manifest 里声明了 usr-local-linker，平台会在安装/启动时自己建立链接
-  # （本机实测：装完 /usr/local/bin/gh 已存在并指向 /var/apps/gh/target/bin/gh）。
+  # （本机实测：装完 /usr/local/bin/gh 已存在并指向 /var/apps/gh-cli/target/bin/gh）。
   # 只有在脚本以 root 跑（例如 privilege 改成 run-as=root）时，下面这套接管逻辑才会生效。
   if [ ! -w "$(dirname "$LINK")" ]; then
     log "当前身份（$(id -un)）无 $(dirname "$LINK") 写权限：命令入口交给平台的 usr-local-linker 建立"

@@ -1,4 +1,4 @@
-# GitHub CLI · 飞牛 fnOS 版
+# gh cli · 飞牛 fnOS 版
 
 [gh](https://github.com/cli/cli) 是 GitHub 官方命令行工具：在终端里管仓库、Issue、PR、Actions、Release、Gist，
 也能直接调 GitHub API。装好这个包后，飞牛终端的任意 shell 里都能直接用 `gh`。

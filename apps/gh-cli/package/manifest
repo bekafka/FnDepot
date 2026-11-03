@@ -1,8 +1,8 @@
 # fnOS 应用 manifest —— gh（GitHub 官方命令行工具，官方静态产物）
 # 占位符 ${VERSION} / ${PLATFORM} / ${CHANGELOG} 由 FnFactory 流水线（或 build-local.sh）注入。
-appname               = gh
+appname               = gh-cli
 version               = ${VERSION}
-display_name          = GitHub CLI
+display_name          = gh cli
 desc                  = "<p>gh 是 GitHub 官方命令行工具（MIT 开源，Go 编写的静态二进制）：在终端里管理仓库、Issue、PR、Actions、Release、Gist，也能直接调用 GitHub API。本包装的是上游官方发布的 linux 产物（arm64 / x86 各一份），<b>不依赖任何其它运行时</b>。</p><p>命令入口 <code>/usr/local/bin/gh</code>。安装向导里可以<b>可选</b>填一个 GitHub Token：填了之后，终端里任何用户执行 <code>gh</code> 都会自动带上它（以 <code>GH_TOKEN</code> 注入），不用再跑 <code>gh auth login</code>；留空则 gh 照常可用，需要认证时各自登录。常用：<code>gh auth status</code>、<code>gh repo list</code>、<code>gh pr list</code>、<code>gh api user</code>。</p><p>注意：为让同机终端用户都能直接用，token 会以 0644 存放在应用目录，同机有 shell 权限的账号都能读到 —— 建议填<b>最小权限</b>的 fine-grained token。上游项目：<a href='https://github.com/cli/cli'>cli/cli</a>（最初的创造者与权利源头，MIT）。</p>"
 platform              = ${PLATFORM}
 source                = thirdparty

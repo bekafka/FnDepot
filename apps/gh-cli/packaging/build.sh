@@ -126,7 +126,7 @@ BIN_SHA="$(sha256sum "$PAYLOAD_DIR/bin/gh.real" | awk '{print $1}')"
 
 cat > "$PAYLOAD_DIR/share/PROVENANCE.json" <<EOF
 {
-  "app": "gh",
+  "app": "gh-cli",
   "upstream_repo": "https://github.com/${UPSTREAM_REPO}",
   "upstream_tag": "${TAG}",
   "upstream_version": "${VERSION}",

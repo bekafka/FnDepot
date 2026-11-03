@@ -1,4 +1,4 @@
-# gh · 飞牛 fnOS 应用包
+# gh cli · 飞牛 fnOS 应用包
 
 把 [GitHub CLI](https://github.com/cli/cli) 做成飞牛 fnOS 可安装的 `gh.fpk`：装完终端里直接可用 `gh`，
 安装向导里可选填一个 GitHub Token，填了之后**同机终端用户都不用再 `gh auth login`**。
@@ -20,7 +20,7 @@
 `bin/gh` 不是裸二进制，而是一层包装（真实二进制是 `bin/gh.real`）：
 
 ```
-/usr/local/bin/gh → /var/apps/gh/target/bin/gh       # 包装层
+/usr/local/bin/gh → /var/apps/gh-cli/target/bin/gh       # 包装层
                       └─ exec bin/gh.real "$@"        # 真正的 gh
 ```
 
@@ -31,12 +31,12 @@ token 的两个落点：
 
 | 路径 | 权限 | 作用 |
 | --- | --- | --- |
-| `/vol1/@appdata/gh/github-token` | 0600 | 规范来源，重装/升级后仍在 |
-| `/var/apps/gh/target/etc/github-token` | 0644 | 给终端用户的副本（应用数据目录通常只有应用账号能进，命令行用户读不到 0600 那份） |
+| `/vol1/@appdata/gh-cli/github-token` | 0600 | 规范来源，重装/升级后仍在 |
+| `/var/apps/gh-cli/target/etc/github-token` | 0644 | 给终端用户的副本（应用数据目录通常只有应用账号能进，命令行用户读不到 0600 那份） |
 
 **这是一个有意的取舍**：0644 意味着同机有 shell 权限的账号都能读到这个 token。建议填
 **最小权限的 fine-grained token**（只勾需要的仓库、只读就够）；想收紧就
-`chmod 600 /var/apps/gh/target/etc/github-token`，代价是其它用户得自己 `gh auth login`。
+`chmod 600 /var/apps/gh-cli/target/etc/github-token`，代价是其它用户得自己 `gh auth login`。
 
 ## 用法
 
