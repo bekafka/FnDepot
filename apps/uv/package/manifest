@@ -1,0 +1,25 @@
+# fnOS 应用 manifest —— uv（Astral 的 Python 包与项目管理器，官方单文件可执行版）
+# 占位符 ${VERSION} / ${PLATFORM} / ${CHANGELOG} 由 FnFactory 流水线（或 build-local.sh）注入。
+# 作者口径：本应用全部按上游署名（见同目录 authorship.env）。
+appname               = uv
+version               = ${VERSION}
+display_name          = uv
+desc                  = "<p>uv 是 Astral 用 Rust 写的 Python 包与项目管理器（极快）：替代 pip / pip-tools / virtualenv / pipx 这一套。本项目分发的 fnOS 包使用的是 uv 官方发布的<b>单文件可执行版本</b>，装完就能在终端直接敲 <code>uv</code> 与 <code>uvx</code>，<b>不依赖</b>系统 Python 或 pip。</p><p>命令入口 <code>/usr/local/bin/uv</code> 与 <code>/usr/local/bin/uvx</code>，安装时建立、卸载时还原。常用：<code>uv venv</code>、<code>uv pip install</code>、<code>uv tool install &lt;工具&gt;</code>、<code>uv python install</code>、<code>uvx &lt;工具&gt;</code>。<br/>注意边界：这个包只提供 uv 命令本身；它不会替换系统 python3，也不会替你决定项目用哪个 Python（<code>uv python install</code> 拉下来的解释器由 uv 自己管理）。</p><p>上游项目：<a href='https://github.com/astral-sh/uv'>astral-sh/uv</a>（最初的创造者与权利源头，MIT / Apache-2.0 双许可）。</p>"
+platform              = ${PLATFORM}
+source                = thirdparty
+
+# ── 三个作者（specs/authorship.md；本包按上游署名）─────────────────────────
+maintainer            = astral-sh
+maintainer_url        = https://github.com/astral-sh/uv
+distributor           = astral-sh
+distributor_url       = https://github.com/astral-sh/uv
+source_author         = astral-sh
+source_author_url     = https://github.com/astral-sh/uv
+
+# 纯 CLI 应用：没有 Web 面板、没有端口、没有常驻进程
+desktop_uidir         =
+desktop_applaunchname =
+ctl_stop              = false
+checkport             = false
+disable_authorization_path = true
+changelog             = ${CHANGELOG}

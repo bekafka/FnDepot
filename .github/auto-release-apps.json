@@ -42,6 +42,15 @@
       "cooldown_hours": 24,
       "changelog_from": "release_body",
       "note": "上游 tag 形如 v12.16.1，release 里带 pnpm-linux-<x64|arm64>.tar.gz 两个资产。只跟正式版（CLI 工具对使用者是直接可用的命令，不跟 rc/beta）；冷却 24h，一天最多自动出一版。包版本必须等于上游版本，纯打包修订（如 12.16.1-2）走 workflow_dispatch 的 version 输入。"
+    },
+    "uv": {
+      "enabled": true,
+      "upstream_repo": "astral-sh/uv",
+      "include_prerelease": false,
+      "tag_pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "cooldown_hours": 24,
+      "changelog_from": "release_body",
+      "note": "上游 tag 不带 v 前缀（0.13.7），故 tag_pattern 不接受 v 开头。Linux 资产按目标三元组命名（uv-aarch64-unknown-linux-gnu.tar.gz / uv-x86_64-…），本包固定取 gnu 口味；校验优先用上游随包的 .sha256 文件。只跟正式版；包的 VERSION 必须等于上游版本，纯打包修订走 workflow_dispatch 的 version 输入（0.13.7-2）。"
     }
   }
 }

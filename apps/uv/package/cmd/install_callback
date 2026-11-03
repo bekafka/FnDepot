@@ -1,0 +1,58 @@
+#!/bin/bash
+# ==============================================================================
+# 安装后：建立 uv / uvx 命令入口，并自证二进制真的能跑。
+# 这一步是「装完就能在终端敲 uv」的唯一保证：平台链接在应用启动时建立，
+# 而本应用没有启动按钮（ctl_stop=false），所以这里主动建一次。
+# ==============================================================================
+set -u
+
+APPNAME="uv"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+LOG="$PKGVAR/info.log"
+TMPLOG="${TRIM_TEMP_LOGFILE:-}"
+HELPER="$APPDEST/uv-link.sh"
+
+emit() {
+  printf '%s - [install] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true
+  [ -n "$TMPLOG" ] && printf '[install] %s\n' "$*" >> "$TMPLOG" 2>/dev/null || true
+  echo "[install] $*"
+}
+
+mkdir -p "$PKGVAR" 2>/dev/null || true
+
+if [ ! -f "$APPDEST/bin/uv" ]; then
+  emit "payload 缺少 $APPDEST/bin/uv，安装失败"
+  [ -n "$TMPLOG" ] && echo "安装包不完整：缺少可执行文件 bin/uv" >> "$TMPLOG"
+  exit 1
+fi
+chmod 0755 "$APPDEST/bin/uv" 2>/dev/null || true
+[ -f "$APPDEST/bin/uvx" ] && chmod 0755 "$APPDEST/bin/uvx" 2>/dev/null || true
+
+# 自证：二进制能在本机跑起来（架构不对/缺 glibc 在这一步暴露）
+if ! VER="$(timeout 30 "$APPDEST/bin/uv" --version 2>>"$LOG")"; then
+  emit "uv 可执行文件无法运行（架构或运行时库不匹配），安装失败"
+  [ -n "$TMPLOG" ] && echo "uv 可执行文件无法在本机运行，请确认安装包架构与设备一致（arm 包 vs x86 包）" >> "$TMPLOG"
+  exit 1
+fi
+emit "uv 二进制自检通过：$VER"
+
+if [ ! -f "$HELPER" ]; then
+  emit "payload 缺少 $HELPER，安装失败"
+  exit 1
+fi
+chmod 0755 "$HELPER" 2>/dev/null || true
+bash "$HELPER" ensure >> "$LOG" 2>&1 || true
+
+for b in uv uvx; do
+  if [ -L "/usr/local/bin/$b" ] && \
+     [ "$(readlink -f "/usr/local/bin/$b")" = "$(readlink -f "$APPDEST/bin/$b")" ]; then
+    emit "命令入口就绪：/usr/local/bin/$b → $APPDEST/bin/$b"
+  else
+    emit "命令入口 /usr/local/bin/$b 尚未出现（当前身份 $(id -un) 无 /usr/local/bin 写权限）；manifest 已声明 usr-local-linker，平台会在安装收尾/启动时建立"
+  fi
+done
+
+emit "用法：uv --version / uv venv / uv pip install / uv tool install <工具> / uvx <工具>"
+emit "提示：这个包只提供 uv 命令；它不替换系统 python3，Python 解释器由 uv 自己管理（uv python install）"
+exit 0
