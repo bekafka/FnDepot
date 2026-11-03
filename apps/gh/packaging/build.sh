@@ -78,8 +78,15 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 tar -xzf "$CACHE_DIR/$TAG/$ASSET" -C "$WORK"
 
-BIN="$WORK/bin/gh"
-[ -f "$BIN" ] || { echo "压缩包里没有 bin/gh（实际内容：$(ls -A "$WORK" | tr '\n' ' ')）" >&2; exit 5; }
+# 上游 tar 包内层带一层版本目录（gh_<ver>_linux_<arch>/bin/gh、.../share/man、.../LICENSE），
+# 所以不能假设「解压根目录就是 bin/」——按结构查找，不写死目录名。
+BIN="$(find "$WORK" -maxdepth 3 -type f -path '*/bin/gh' | head -n 1)"
+[ -n "$BIN" ] || {
+  echo "压缩包里找不到 */bin/gh（实际内容：$(find "$WORK" -maxdepth 3 | head -n 20 | tr '\n' ' ')）" >&2
+  exit 5
+}
+GH_ROOT="$(dirname "$(dirname "$BIN")")"   # 含 bin/ 与 share/ 的那一层
+echo "解包结构：GH_ROOT=$GH_ROOT"
 
 # ELF e_machine（偏移 18 字节，小端）：0xB7=aarch64，0x3E=x86-64
 MACHINE="$(od -An -tx1 -j18 -N2 "$BIN" | tr -d ' \n')"
@@ -101,8 +108,10 @@ log "命令入口包装已就位：bin/gh（真实二进制 bin/gh.real）"
 
 # 许可证（MIT 再分发义务）：压缩包里带了就用，没带就从同一 tag 的仓库取
 LICENSE_SRC=""
-for f in LICENSE LICENSE.md LICENCE; do
-  [ -f "$WORK/$f" ] && { LICENSE_SRC="$WORK/$f"; break; }
+for base in "$GH_ROOT" "$WORK"; do
+  for f in LICENSE LICENSE.md LICENCE; do
+    [ -f "$base/$f" ] && { LICENSE_SRC="$base/$f"; break 2; }
+  done
 done
 if [ -n "$LICENSE_SRC" ]; then
   install -m 0644 "$LICENSE_SRC" "$PAYLOAD_DIR/share/LICENSE"
