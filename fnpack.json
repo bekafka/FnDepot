@@ -439,8 +439,8 @@
       "display_name": "pnpm",
       "desc": "Node.js 生态里更快、更省磁盘的包管理器，官方 standalone 单文件版：装完终端直接可用 pnpm，不依赖 nodejs 运行时。源自 <a href='https://github.com/pnpm/pnpm'>pnpm/pnpm</a>（MIT）。",
       "platform": [
-        "x86",
-        "arm"
+        "arm",
+        "x86"
       ],
       "categories": [
         "编程开发"
@@ -455,7 +455,24 @@
       "maintainer_url": "https://github.com/pnpm/pnpm",
       "source_author": "pnpm",
       "source_author_url": "https://github.com/pnpm/pnpm",
-      "releases": {},
+      "releases": {
+        "12.17.0": {
+          "changelog": "跟随上游 v12.17.0：`pnpm peers check` now accepts `--global` (`-g`) to check globally installed packages. After a global install or update, the peer dependency warning now suggests `pnpm peers check ",
+          "updated_at": "2026-11-03T16:11:56Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/pnpm-v12.17.0/pnpm-12.17.0-x86.fpk",
+              "sha256": "4d46d9da5132b68120436a81471398493d2406d076a8d2400568dcefdd38cd89",
+              "size": 26908976
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/pnpm-v12.17.0/pnpm-12.17.0-arm.fpk",
+              "sha256": "3bf193e59fa4831e135ea441e88e7111bb754c4e4df333fdf7137bcd3d8433df",
+              "size": 24894222
+            }
+          }
+        }
+      },
       "readme_url": "assets/pnpm/README.md"
     }
   }
