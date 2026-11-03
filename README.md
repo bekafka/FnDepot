@@ -10,8 +10,8 @@ fnOS 应用中心统一管理，和官方应用一样操作。
 | [Motrix](assets/Motrix/README.md) | `Motrix` | 2.2.1 | arm / x86 | [agalwood/Motrix](https://github.com/agalwood/Motrix) | 全功能下载管理器（HTTP / FTP / BT / 磁力）的服务端 Web 面板，aria2 内核 |
 | [Magpie](assets/Magpie/README.md) | `Magpie` | 0.1.2738-1 | arm / x86 | [yetone/magpie](https://github.com/yetone/magpie) | 多模型 API 反代网关 + 编程 Agent 模型切换器：OpenAI Responses / Anthropic Messages / Gemini 双向互译，路由组合、Skills/MCP、脱敏、额度统计、自动签到 |
 | [pnpm](assets/pnpm/README.md) | `pnpm` | 12.17.0 | arm / x86 | [pnpm/pnpm](https://github.com/pnpm/pnpm) | Node.js 生态里更快、更省磁盘的包管理器（官方 standalone 单文件版）：装完终端直接可用 `pnpm`，不依赖 nodejs 运行时 |
-| [gh](assets/gh/README.md) | `gh` | 2.103.3 | arm / x86 | [cli/cli](https://github.com/cli/cli) | GitHub 官方命令行工具（官方静态二进制）：终端里管仓库 / Issue / PR / Actions / Release / API；安装向导可选填 GitHub Token，填了之后同机终端用户直接可用 |
-| [uv](assets/uv/README.md) | `uv` | 0.13.7 | arm / x86 | [astral-sh/uv](https://github.com/astral-sh/uv) | Rust 写的 Python 包与项目管理器（官方 standalone 单文件版）：装完终端直接可用 `uv` / `uvx`，不需要先装 Python |
+| [gh cli](assets/gh-cli/README.md) | `gh-cli` | 2.103.3 | arm / x86 | [cli/cli](https://github.com/cli/cli) | GitHub 官方命令行工具（官方静态二进制）：终端里管仓库 / Issue / PR / Actions / Release / API；安装向导可选填 GitHub Token，填了之后同机终端用户直接可用 `gh` |
+| [uv bin](assets/uvbin/README.md) | `uvbin` | 0.13.7 | arm / x86 | [astral-sh/uv](https://github.com/astral-sh/uv) | Rust 写的 Python 包与项目管理器（官方 standalone 单文件版）：装完终端直接可用 `uv` / `uvx`，不需要先装 Python |
 | [Cloudflare 优选](assets/CloudflareIP/README.md) | `CloudflareIP` | 1.0.0 | arm / x86 | [bekafka/FnDepot](https://github.com/bekafka/FnDepot) | 给走 Cloudflare 的域名挑真正可用且落点近的边缘 IP，按页面级首字节耗时排名，结果写进本机 /etc/hosts 的受管区块（可一键还原） |
 
 > 版本与架构两列会随发版自动更新；「原作者」指上游项目最初的创造者与权利源头，人工维护、不随版本变。

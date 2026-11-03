@@ -12,7 +12,7 @@
 # ==============================================================================
 set -u
 
-APP="uv"
+APP="uvbin"
 APP_DIR="${APP_DIR:-/var/apps/$APP}"
 APPDEST="${APPDEST:-$(readlink -f "$APP_DIR/target" 2>/dev/null || echo "$APP_DIR/target")}"
 PKGVAR="${PKGVAR:-$(readlink -f "$APP_DIR/var" 2>/dev/null || echo "/vol1/@appdata/$APP")}"

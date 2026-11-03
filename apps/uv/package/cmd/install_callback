@@ -6,7 +6,7 @@
 # ==============================================================================
 set -u
 
-APPNAME="uv"
+APPNAME="uvbin"
 PKGVAR="${TRIM_PKGVAR:?}"
 APPDEST="${TRIM_APPDEST:?}"
 LOG="$PKGVAR/info.log"

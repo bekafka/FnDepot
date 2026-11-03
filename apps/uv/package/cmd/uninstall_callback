@@ -8,7 +8,7 @@
 # ==============================================================================
 set -u
 
-APPNAME="uv"
+APPNAME="uvbin"
 BINS="uv uvx"
 PKGVAR="${TRIM_PKGVAR:-}"
 LINKDIR="/usr/local/bin"

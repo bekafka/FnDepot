@@ -145,7 +145,7 @@ BIN_SHA="$(sha256sum "$PAYLOAD_DIR/bin/uv" | awk '{print $1}')"
 
 cat > "$PAYLOAD_DIR/share/PROVENANCE.json" <<EOF
 {
-  "app": "uv",
+  "app": "uvbin",
   "upstream_repo": "https://github.com/${UPSTREAM_REPO}",
   "upstream_tag": "${TAG}",
   "upstream_version": "${VERSION}",

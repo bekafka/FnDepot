@@ -516,46 +516,6 @@
       "service_port": "26890",
       "readme_url": "assets/CloudflareIP/README.md"
     },
-    "uv": {
-      "display_name": "uv",
-      "desc": "Astral 用 Rust 写的 Python 包与项目管理器（极快），替代 pip / virtualenv / pipx：官方 standalone 单文件版，装完终端直接可用 uv 与 uvx，不需要先装 Python。源自 <a href='https://github.com/astral-sh/uv'>astral-sh/uv</a>（MIT OR Apache-2.0）。",
-      "platform": [
-        "arm",
-        "x86"
-      ],
-      "categories": [
-        "编程开发"
-      ],
-      "icon_url": "assets/uv/ICON.PNG",
-      "run_as": "package",
-      "install_type": "",
-      "is_docker": false,
-      "distributor": "astral-sh",
-      "distributor_url": "https://github.com/astral-sh/uv",
-      "maintainer": "astral-sh",
-      "maintainer_url": "https://github.com/astral-sh/uv",
-      "source_author": "astral-sh",
-      "source_author_url": "https://github.com/astral-sh/uv",
-      "releases": {
-        "0.13.7": {
-          "changelog": "跟随上游 0.13.7：Add `--output-version` to `uv workspace metadata` for requesting a specific schema version ([#22958](https://github.com/astral-sh/uv/pull/22958))",
-          "updated_at": "2026-11-03T16:56:44Z",
-          "packages": {
-            "x86": {
-              "download_url": "https://github.com/bekafka/FnDepot/releases/download/uv-v0.13.7/uv-0.13.7-x86.fpk",
-              "sha256": "843e5cbdcec6d2c212ea44e7e9e1f67cdfdae214ea39618846e4676ce229595d",
-              "size": 17136339
-            },
-            "arm": {
-              "download_url": "https://github.com/bekafka/FnDepot/releases/download/uv-v0.13.7/uv-0.13.7-arm.fpk",
-              "sha256": "58eb4221bf323aeaa05ac503815d204dd01f6cb53b1c2237b2f780603031c87d",
-              "size": 16740739
-            }
-          }
-        }
-      },
-      "readme_url": "assets/uv/README.md"
-    },
     "gh": {
       "display_name": "GitHub CLI",
       "desc": "GitHub 官方命令行工具（官方静态二进制）：在终端管理仓库、Issue、PR、Actions、Release 与 API；安装向导可选填 GitHub Token，填了之后同机终端用户直接可用 gh。源自 <a href='https://github.com/cli/cli'>cli/cli</a>（MIT）。",
@@ -595,6 +555,29 @@
         }
       },
       "readme_url": "assets/gh/README.md"
+    },
+    "uvbin": {
+      "display_name": "uv bin",
+      "desc": "Astral 用 Rust 写的 Python 包与项目管理器（极快），替代 pip / virtualenv / pipx：官方 standalone 单文件版，装完终端直接可用 uv 与 uvx，不需要先装 Python。源自 <a href='https://github.com/astral-sh/uv'>astral-sh/uv</a>（MIT OR Apache-2.0）。",
+      "platform": [
+        "x86",
+        "arm"
+      ],
+      "categories": [
+        "编程开发"
+      ],
+      "icon_url": "assets/uvbin/ICON.PNG",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "astral-sh",
+      "distributor_url": "https://github.com/astral-sh/uv",
+      "maintainer": "astral-sh",
+      "maintainer_url": "https://github.com/astral-sh/uv",
+      "source_author": "astral-sh",
+      "source_author_url": "https://github.com/astral-sh/uv",
+      "releases": {},
+      "readme_url": "assets/uvbin/README.md"
     }
   }
 }

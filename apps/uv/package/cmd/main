@@ -9,7 +9,7 @@
 # ==============================================================================
 set -u
 
-APPNAME="uv"
+APPNAME="uvbin"
 APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
 PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"
 HELPER="$APPDEST/uv-link.sh"

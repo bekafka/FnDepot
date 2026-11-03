@@ -19,7 +19,7 @@
 # ==============================================================================
 set -u
 
-APPNAME="uv"
+APPNAME="uvbin"
 BINS="uv uvx"
 APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
 PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"

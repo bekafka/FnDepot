@@ -26,7 +26,7 @@ uv python install 3.12   # 让 uv 自己管理 Python 解释器
 uv cache dir             # 缓存位置
 ```
 
-命令入口是 `/usr/local/bin/uv` 与 `/usr/local/bin/uvx`，指向 `/var/apps/uv/target/bin/`；
+命令入口是 `/usr/local/bin/uv` 与 `/usr/local/bin/uvx`，指向 `/var/apps/uvbin/target/bin/`；
 这个位置在默认 PATH 上，登录 shell、非登录 shell、脚本、cron 都能直接用。
 
 ## 这个包为什么不需要 Python

@@ -1,6 +1,6 @@
 # uv · 飞牛 fnOS 应用包
 
-把 [Astral 的 uv](https://github.com/astral-sh/uv) 做成飞牛 fnOS 可安装的 `uv.fpk`：装完就能在终端直接敲 `uv` 与 `uvx`。
+把 [Astral 的 uv](https://github.com/astral-sh/uv) 做成飞牛 fnOS 可安装的 `uvbin.fpk`：装完就能在终端直接敲 `uv` 与 `uvx`。
 
 ## 这是什么形态
 
@@ -31,7 +31,7 @@ uv python install 3.12  # 自己管理 Python 解释器
 uv cache dir            # 缓存位置
 ```
 
-命令入口是 `/usr/local/bin/uv` 与 `/usr/local/bin/uvx`，指向 `/var/apps/uv/target/bin/`。
+命令入口是 `/usr/local/bin/uv` 与 `/usr/local/bin/uvx`，指向 `/var/apps/uvbin/target/bin/`。
 这个位置在默认 PATH 上，登录 shell、非登录 shell、脚本、cron 都能直接用。
 
 ## 命令入口怎么建立、怎么还原
@@ -42,7 +42,7 @@ uv cache dir            # 缓存位置
 → 与 pnpm 包的关键差异：uv 有**两条**命令，链接助手按名字逐条记账：
 
 - 安装时 `/usr/local/bin/uv` 或 `/usr/local/bin/uvx` 已被占用 → 把原指向记进
-  `/vol1/@appdata/uv/preserved-usr-local-bin-<name>`，再改指本应用；原物是真实文件则另存 `.bin`；
+  `/vol1/@appdata/uvbin/preserved-usr-local-bin-<name>`，再改指本应用；原物是真实文件则另存 `.bin`；
 - 卸载时只删「指向本应用」的那两条，并按各自记录还原；原目标早就不存在就只清理，不留悬空链接；
 - `cmd/main stop` 不动链接——命令式应用点一次「停止」不该让终端里的 uv 消失。
 
