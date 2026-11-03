@@ -576,7 +576,24 @@
       "maintainer_url": "https://github.com/bekafka/FnDepot",
       "source_author": "cli",
       "source_author_url": "https://github.com/cli/cli",
-      "releases": {},
+      "releases": {
+        "2.103.3": {
+          "changelog": "跟随上游 v2.103.3：fix(gh auth status): explain expired expiring tokens with `--no-refresh` by @babakks in [#14815](https://github.com/cli/cli/pull/14815)\r",
+          "updated_at": "2026-11-03T17:19:07Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/gh-cli-v2.103.3/gh-cli-2.103.3-x86.fpk",
+              "sha256": "e3643db0a088fb423d08d5128e6f23473537f601443e6946a0a3269cdfcf13ea",
+              "size": 15004364
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/gh-cli-v2.103.3/gh-cli-2.103.3-arm.fpk",
+              "sha256": "6bc95764779d2ef7efdf4c8f18dc896c9774e6bc11b68ea762b86102fccaee77",
+              "size": 13631079
+            }
+          }
+        }
+      },
       "readme_url": "assets/gh-cli/README.md"
     }
   }
