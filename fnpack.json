@@ -479,8 +479,8 @@
       "display_name": "Cloudflare 优选",
       "desc": "给走 Cloudflare 的域名挑一条更快、且真的能服务这个域名的边缘线路，并写进本机 /etc/hosts。用真实域名做 SNI + Host 请求 /cdn-cgi/trace，403 error 1034 会被淘汰；按页面级首字节耗时排序，每个域名独立测、独立出结果，最多展示 6 条候选，「应用优选」写入前 3 条（主 + 2 备）。只改自己标记的受管区块，可逐条删除或一键还原；未点应用前一律只预览。以 root 运行（写 hosts 必需），面板无登录口令，请勿暴露到公网。默认端口 26890。",
       "platform": [
-        "x86",
-        "arm"
+        "arm",
+        "x86"
       ],
       "categories": [
         "系统工具"
@@ -495,7 +495,24 @@
       "maintainer_url": "https://github.com/bekafka/FnDepot",
       "source_author": "bekafka",
       "source_author_url": "https://github.com/bekafka/FnDepot",
-      "releases": {},
+      "releases": {
+        "1.0.0": {
+          "changelog": "首版：Cloudflare 优选上架飞牛。面板按域名独立测速，用真实域名 SNI+Host 打 /cdn-cgi/trace 筛掉 403 error 1034 的边缘，按页面级首字节耗时排名，一键把前 3 条写进 /etc/hosts 受管区块并可整块还原；默认端口 26890，支持 arm/x86。",
+          "updated_at": "2026-11-03T16:21:40Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/CloudflareIP-v1.0.0/CloudflareIP-1.0.0-x86.fpk",
+              "sha256": "7afe9efa74263926efbc60aa6a52c16244b09bef388768029277b4fe1cc1a5e7",
+              "size": 3171418
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/CloudflareIP-v1.0.0/CloudflareIP-1.0.0-arm.fpk",
+              "sha256": "fc64da2e1471d7548cf05860291956df189f6a80e635efcb730a7364c31e4e45",
+              "size": 2873872
+            }
+          }
+        }
+      },
       "service_port": "26890",
       "readme_url": "assets/CloudflareIP/README.md"
     }
