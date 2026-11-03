@@ -139,6 +139,22 @@
               "size": 14341884
             }
           }
+        },
+        "2.2.1": {
+          "changelog": "跟随上游 v2.2.1：Keep a magnet task with missing torrent metadata or a deleted download directory",
+          "updated_at": "2026-11-03T14:20:01Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.2.1/Motrix-2.2.1-x86.fpk",
+              "sha256": "3d4f76b451646a81f068c2a708e34110e060fe3fc59e8652a516de687406440f",
+              "size": 14114421
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.2.1/Motrix-2.2.1-arm.fpk",
+              "sha256": "d2842799ae174d27795c6b08a5a06aefa3685da349b85e17e9b2bdc4c83ac7cb",
+              "size": 14347431
+            }
+          }
         }
       },
       "service_port": "26800",
