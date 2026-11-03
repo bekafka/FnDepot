@@ -426,6 +426,22 @@
               "size": 26735498
             }
           }
+        },
+        "0.1.2885": {
+          "changelog": "跟随上游 v0.1.2885：The app and Magpie Web now stay in sync with each other’s updates.",
+          "updated_at": "2026-11-03T23:27:50Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2885/Magpie-0.1.2885-x86.fpk",
+              "sha256": "702ec096d8218f6a9b1b8bc3da09d3ce920ff6632ca9e4259d2b225eefa98316",
+              "size": 29050384
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.2885/Magpie-0.1.2885-arm.fpk",
+              "sha256": "5d3af0bb6316f06ca5c0e2d42e355c48d6838276b0885ac320f0dff35a04ec90",
+              "size": 27090737
+            }
+          }
         }
       },
       "service_port": "3430",
