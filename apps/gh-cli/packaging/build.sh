@@ -104,6 +104,8 @@ install -m 0755 "$BIN" "$PAYLOAD_DIR/bin/gh.real"
 WRAPPER_SRC="$PAYLOAD_DIR/gh-wrapper.sh"
 [ -f "$WRAPPER_SRC" ] || { echo "模板缺少 app/gh-wrapper.sh，无法生成命令入口包装" >&2; exit 7; }
 install -m 0755 "$WRAPPER_SRC" "$PAYLOAD_DIR/bin/gh"
+# 模板源文件只在构建期有用，不要留在 payload 里（否则包内会多一份同内容的 gh-wrapper.sh）
+rm -f "$WRAPPER_SRC"
 log "命令入口包装已就位：bin/gh（真实二进制 bin/gh.real）"
 
 # 许可证（MIT 再分发义务）：压缩包里带了就用，没带就从同一 tag 的仓库取
