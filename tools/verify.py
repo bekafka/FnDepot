@@ -221,9 +221,17 @@ def main():
                 problems.append(f"{key}：分类 {c!r} 不在固定分类表内（见 categories.json）")
 
         # releases
+        # 注意：这里**不能**因为「还没有任何版本」就判失败。
+        # 新增应用是先上架（索引里有条目、releases 为空）再发首版，
+        # 而发版流水线正是先写 releases 再跑本门禁的 —— 若此处判失败，
+        # 任何一个「刚上架还没发首版」的应用都会把**所有应用**的发版一起卡死
+        # （实测：uvbin 上架后 gh-cli 的发版在 verify 处被拦，索引写不回去）。
         releases = app.get("releases")
-        if not isinstance(releases, dict) or not releases:
-            problems.append(f"{key}：没有 releases")
+        if not isinstance(releases, dict):
+            problems.append(f"{key}：releases 必须是对象，现在是 {type(releases).__name__}")
+            releases = {}
+        elif not releases:
+            print(f"ℹ️  {key}：尚无版本节点（新上架待发首版，不算问题）")
 
         for ver, rel in (releases or {}).items():
             pkgs = (rel or {}).get("packages") or {}
