@@ -474,6 +474,30 @@
         }
       },
       "readme_url": "assets/pnpm/README.md"
+    },
+    "CloudflareIP": {
+      "display_name": "Cloudflare 优选",
+      "desc": "给走 Cloudflare 的域名挑一条更快、且真的能服务这个域名的边缘线路，并写进本机 /etc/hosts。用真实域名做 SNI + Host 请求 /cdn-cgi/trace，403 error 1034 会被淘汰；按页面级首字节耗时排序，每个域名独立测、独立出结果，最多展示 6 条候选，「应用优选」写入前 3 条（主 + 2 备）。只改自己标记的受管区块，可逐条删除或一键还原；未点应用前一律只预览。以 root 运行（写 hosts 必需），面板无登录口令，请勿暴露到公网。默认端口 26890。",
+      "platform": [
+        "x86",
+        "arm"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/CloudflareIP/ICON.PNG",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "bekafka",
+      "maintainer_url": "https://github.com/bekafka/FnDepot",
+      "source_author": "bekafka",
+      "source_author_url": "https://github.com/bekafka/FnDepot",
+      "releases": {},
+      "service_port": "26890",
+      "readme_url": "assets/CloudflareIP/README.md"
     }
   }
 }

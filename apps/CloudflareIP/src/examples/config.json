@@ -1,0 +1,16 @@
+{
+  "domains": ["openlist.fnnas.bond"],
+  "hosts_path": "/etc/hosts",
+  "probe_path": "/cdn-cgi/trace",
+  "page_path": "/",
+  "listen": "127.0.0.1:17890",
+  "candidates_per_range": 8,
+  "conc": 64,
+  "timeout_s": 3,
+  "top_n": 8,
+  "repeat": 4,
+  "probe_interval_s": 60,
+  "retest_interval_s": 21600,
+  "fail_streak": 3,
+  "switch_threshold_pct": 25
+}

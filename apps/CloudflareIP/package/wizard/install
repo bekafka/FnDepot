@@ -1,0 +1,54 @@
+[
+  {
+    "stepTitle": "Cloudflare 优选 · 端口与访问",
+    "items": [
+      {
+        "type": "text",
+        "field": "wizard_port",
+        "label": "服务端口（面板，默认 26890）",
+        "initValue": "26890",
+        "rules": [
+          { "required": true, "message": "请填写服务端口" },
+          { "pattern": "^[0-9]+$", "message": "端口必须是数字" },
+          { "min": 1, "max": 65535, "message": "端口范围 1-65535" }
+        ]
+      },
+      {
+        "type": "radio",
+        "field": "wizard_host",
+        "label": "监听范围",
+        "initValue": "0.0.0.0",
+        "options": [
+          {
+            "label": "局域网可访问（推荐）：同一网段的电脑、手机都能打开面板",
+            "value": "0.0.0.0"
+          },
+          {
+            "label": "仅本机（127.0.0.1）",
+            "value": "127.0.0.1"
+          }
+        ]
+      },
+      {
+        "type": "radio",
+        "field": "wizard_allow_write",
+        "label": "是否允许写入系统 hosts",
+        "initValue": "1",
+        "options": [
+          {
+            "label": "允许（推荐）：面板里点「应用优选」会把选中的线路写进 /etc/hosts",
+            "value": "1"
+          },
+          {
+            "label": "只预览：能测速看排名，但不会改动系统文件",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "本应用以 root 身份运行：写 /etc/hosts 必须 root，没有更窄的做法。它只在自己标记的「受管区块」内增删行，块外内容一字不动，右上角「还原默认」可整块清掉。未点「应用」之前一律只预览。面板没有登录口令，请勿把端口暴露到公网。"
+      }
+    ]
+  }
+]

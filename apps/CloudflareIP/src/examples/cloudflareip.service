@@ -1,0 +1,18 @@
+[Unit]
+Description=cloudflareip - pick a faster Cloudflare edge IP and write it to /etc/hosts
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cloudflareip -write
+Environment=NO_BROWSER=1
+Restart=on-failure
+RestartSec=30s
+User=root
+NoNewPrivileges=yes
+ProtectSystem=full
+ReadWritePaths=/etc/hosts
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,20 @@
+#!/bin/bash
+# 升级后：包内文件是新的（二进制换了），配置与桌面入口同步一遍，数据目录不动。
+# 注意：hosts 里的受管区块属于「用户当前生效的解析」，升级不碰它。
+set -u
+APPNAME="CloudflareIP"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+LOG="$PKGVAR/info.log"
+
+log() { printf '%s - [upgrade] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true; }
+
+if [ -x "$APPDEST/apply-config.sh" ]; then
+  bash "$APPDEST/apply-config.sh" upgrade || log "apply-config 失败（配置保持原样）"
+else
+  log "缺少 $APPDEST/apply-config.sh，跳过配置同步"
+fi
+
+log "升级完成（数据目录 $PKGVAR 与 hosts 受管区块均未改动）"
+log "提示：若新版本行为有变，重启一次应用即可；hosts 内容需要重测请用面板「重新测速」"
+exit 0

@@ -1,0 +1,50 @@
+#!/bin/bash
+# 安装后：建运行目录、把向导值落成 config.env、同步桌面入口、做一次启动前预检。
+# 本应用以 root 运行（写 /etc/hosts 必需），所以没有「属主还给应用用户」这一步。
+set -u
+APPNAME="CloudflareIP"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+LOG="$PKGVAR/info.log"
+TMPLOG="${TRIM_TEMP_LOGFILE:-}"
+
+emit() {
+  printf '%s - [install] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true
+  [ -n "$TMPLOG" ] && printf '[install] %s\n' "$*" >> "$TMPLOG" 2>/dev/null || true
+  echo "[install] $*"
+}
+
+mkdir -p "$PKGVAR"/{home,tmp,config} || { emit "创建数据目录失败"; exit 1; }
+
+if [ ! -x "$APPDEST/apply-config.sh" ]; then
+  emit "缺少 $APPDEST/apply-config.sh，安装失败"
+  exit 1
+fi
+
+if ! bash "$APPDEST/apply-config.sh" install; then
+  emit "apply-config.sh 执行失败，安装失败（详见 $LOG）"
+  exit 1
+fi
+
+PORT="$(sed -n 's/^CFIP_PORT=//p' "$PKGVAR/config.env" 2>/dev/null | tail -n 1)"
+HOST="$(sed -n 's/^CFIP_LISTEN=//p' "$PKGVAR/config.env" 2>/dev/null | tail -n 1)"
+WRITE="$(sed -n 's/^CFIP_WRITE=//p' "$PKGVAR/config.env" 2>/dev/null | tail -n 1)"
+
+# 启动前预检（只查二进制与目录，不起服务）：发现问题现在就报，别等到用户点启动。
+CMD_DIR="$(dirname "$0")"
+[ -f "$CMD_DIR/main" ] || CMD_DIR="/var/apps/$APPNAME/cmd"
+if [ -f "$CMD_DIR/main" ]; then
+  if ! bash "$CMD_DIR/main" bootstrap >> "$LOG" 2>&1; then
+    emit "安装期预检未通过（不影响安装：首次启动会再试一次，详见 $LOG）"
+  fi
+fi
+
+emit "安装完成：面板 http://<NAS-IP>:${PORT:-26890}/（端口在设置页可改）"
+if [ "${WRITE:-1}" = "1" ]; then
+  emit "写 hosts：允许（面板里点「应用优选」才会真正写入 /etc/hosts 的受管区块）"
+else
+  emit "写 hosts：已按向导设置关闭，只能测速预览；可在应用设置页重新打开"
+fi
+emit "本应用以 root 运行（修改 /etc/hosts 必须）；面板没有登录口令，请不要把端口暴露到公网"
+emit "数据目录：$PKGVAR（配置、测速状态、hosts 备份都在这里；卸载默认保留）"
+exit 0

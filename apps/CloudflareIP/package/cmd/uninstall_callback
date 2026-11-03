@@ -1,0 +1,45 @@
+#!/bin/bash
+# 卸载后：
+#   keep  （默认）→ 什么都不删：配置、测速状态、历史、hosts 备份都留着，重装即沿用
+#   purge        → 删除应用状态（配置、状态、历史、备份、日志、pid）
+#
+# 两种方式都【不动 /etc/hosts 里的受管区块】——那属于用户当前生效的系统解析。
+# 想彻底回到系统默认，请在面板「系统 hosts」里点「还原默认」再卸载。
+#
+# 路径护栏固定为 /vol1/@appdata/*：不在预期路径时一律不删，
+# 避免 TRIM_PKGVAR 被环境变量污染时 rm -rf 打偏。
+set -u
+
+PKGVAR="${TRIM_PKGVAR:-}"
+MODE="${wizard_uninstall_mode:-keep}"
+
+log() {
+  printf '%s - [uninstall] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" \
+    >> "${TRIM_TEMP_LOGFILE:-/dev/null}" 2>/dev/null || true
+  echo "[uninstall] $1"
+}
+
+case "$MODE" in
+  purge)
+    case "$PKGVAR" in
+      /vol1/@appdata/*)
+        log "完全卸载：删除配置 / 测速状态 / 历史 / hosts 备份 / 日志"
+        for rel in config home tmp; do
+          rm -rf "${PKGVAR:?}/$rel" 2>/dev/null || true
+        done
+        rm -f "$PKGVAR/config.env" "$PKGVAR/app.pid" "$PKGVAR/info.log.1" 2>/dev/null
+        log "残留内容：$(ls -A "$PKGVAR" 2>/dev/null | tr '\n' ' ')"
+        # 日志最后删：前面的记录都写 TRIM_TEMP_LOGFILE，不受影响
+        rm -f "$PKGVAR/info.log" 2>/dev/null
+        ;;
+      *)
+        log "PKGVAR 不在预期路径（$PKGVAR），为安全起见跳过删除"
+        ;;
+    esac
+    ;;
+  *)
+    log "保留配置卸载：配置、测速状态与历史都保留，重装后继续使用"
+    ;;
+esac
+log "/etc/hosts 的受管区块未改动；如需恢复系统默认解析，请先启动应用并在面板里点「还原默认」"
+exit 0

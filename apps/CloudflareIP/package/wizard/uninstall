@@ -1,0 +1,27 @@
+[
+  {
+    "stepTitle": "卸载 Cloudflare 优选",
+    "items": [
+      {
+        "type": "radio",
+        "field": "wizard_uninstall_mode",
+        "label": "卸载方式",
+        "initValue": "keep",
+        "options": [
+          {
+            "label": "保留配置卸载（域名列表、测速历史、hosts 备份都留着，重装后继续用）",
+            "value": "keep"
+          },
+          {
+            "label": "完全卸载（删除配置、测速状态、历史与日志）",
+            "value": "purge"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "两种方式都不会改动 /etc/hosts：那里的受管区块是你当前生效的系统解析。想彻底回到系统默认，请先启动应用、在面板「系统 hosts」里点「还原默认」，再卸载。"
+      }
+    ]
+  }
+]

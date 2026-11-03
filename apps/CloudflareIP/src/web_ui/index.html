@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cloudflare IP</title>
+<style>
+  :root{
+    --bg:#fafbfc; --card:#fff; --line:#e9ebef; --line2:#f2f4f7;
+    --fg:#1b1f24; --muted:#68707c; --faint:#a3aab4;
+    --blue:#2563eb; --blue-bg:#f2f6ff;
+    --green:#0f7b57; --green-bg:#eefaf4;
+    --red:#bf3b30; --red-bg:#fdefed;
+    --gray-bg:#f4f5f7;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg)}
+  body{font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Noto Sans CJK SC",sans-serif;
+       padding:34px 20px 60px}
+  .wrap{max-width:980px;margin:0 auto}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
+  h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.2px}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 11px;
+        border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted)}
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--faint)}
+  .pill.on{color:var(--green);border-color:#cfeade;background:var(--green-bg)}
+  .pill.on .dot{background:var(--green)}
+
+  button{font:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--line);
+         background:var(--card);color:var(--fg);padding:7px 15px;transition:.15s;font-size:13px;
+         white-space:nowrap}
+  button:hover{border-color:#d3d8e0;background:#fcfcfd}
+  button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+  button.primary:hover{background:#1e52cf}
+  button:disabled{opacity:.45;cursor:default}
+  button.mini{padding:4px 12px;font-size:12.5px}
+  button.ghost{border:0;background:none;color:var(--faint);padding:2px 6px;font-size:15px;line-height:1}
+  button.ghost:hover{color:var(--red);background:none}
+  .msg{min-height:19px;font-size:12.5px;color:var(--muted);margin-top:8px}
+  .msg.err{color:var(--red)}
+  .spin{display:inline-block;flex:none;width:12px;height:12px;box-sizing:border-box;
+        border:2px solid rgba(37,99,235,.22);border-top-color:var(--blue);border-radius:50%;
+        animation:sp .85s linear infinite;vertical-align:-2px;margin-right:8px;
+        will-change:transform;transform:translateZ(0)}
+  @keyframes sp{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 18px 12px;margin-bottom:14px}
+  .card > h2{font-size:13px;font-weight:600;color:var(--muted);margin:16px 0 10px;display:flex;
+             align-items:center;gap:10px;flex-wrap:wrap}
+  .card > h2 .spacer{flex:1}
+  .card .name{color:var(--fg);font-size:13.5px;font-weight:600;
+              font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .idle{color:var(--faint);font-size:13px;padding:2px 0 10px}
+
+  .mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:2px 0 12px}
+  @media(max-width:700px){.mini-stats{grid-template-columns:repeat(2,1fr)}}
+  .mini-stat{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 11px}
+  .mini-stat .k{color:var(--muted);font-size:11.5px}
+  .mini-stat .v{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;
+                font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .mini-stat .v.dim{color:var(--faint);font-weight:500}
+
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  th{text-align:left;font-weight:500;color:var(--faint);font-size:11.5px;padding:5px 8px;
+     border-bottom:1px solid var(--line)}
+  td{padding:8px;border-bottom:1px solid var(--line2);font-size:13px}
+  tr:last-child td{border-bottom:none}
+  td.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+  td.act{white-space:nowrap;width:1%;text-align:right}
+  tr.mine td{background:#f8fbff}
+  tr.best td{background:#f3fbf7}
+  tr.best td.mono{color:var(--green);font-weight:600}
+  tr.best td:first-child{color:var(--green);font-weight:600}
+  .tag.best{color:#fff;background:var(--green);margin-left:8px;font-size:11px;
+            padding:1px 7px;border-radius:999px;vertical-align:1px;font-weight:500;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}
+  .tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px}
+  .tag.ok{color:var(--green);background:var(--green-bg)}
+  .tag.no{color:var(--red);background:var(--red-bg)}
+  .tag.mine{color:var(--blue);background:var(--blue-bg)}
+  .tag.sys{color:var(--muted);background:var(--gray-bg)}
+  .empty{color:var(--faint);font-size:13px;padding:14px 8px}
+
+  .doms-bar{display:flex;gap:12px;align-items:flex-end;justify-content:flex-end;
+            margin:12px 0 0}
+  .doms-bar .chips{margin:0;flex:1;min-width:0}
+  .doms-bar button{flex:none}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);
+        border-radius:9px;padding:6px 10px 6px 12px;font-size:12.5px;
+        font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .chip button{border:0;background:none;color:var(--faint);font-size:15px;line-height:1;padding:0 2px}
+  .chip button:hover{color:var(--red)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  input{flex:1;min-width:220px;border:1px solid var(--line);border-radius:9px;padding:9px 12px;
+        font:inherit;font-size:13px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--card)}
+  input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
+  footer{color:var(--faint);font-size:12px;text-align:center;margin-top:26px}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Cloudflare IP</h1>
+    <span class="pill" id="mode"><span class="dot"></span><span id="mode-text">—</span></span>
+  </header>
+
+  <div class="card">
+    <h2 id="doms-title">添加域名</h2>
+    <div class="row">
+      <input id="newdom" autocomplete="off" spellcheck="false" placeholder="输入域名，例如 example.com">
+      <button class="primary" id="add">添加</button>
+    </div>
+    <div class="doms-bar hidden" id="doms-bar">
+      <div class="chips" id="doms"></div>
+      <button class="primary" id="test-all">一键测速</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div id="perdomain"></div>
+
+  <div class="card" id="card-hosts">
+    <h2><span>系统 hosts</span><span class="spacer"></span><button class="mini" id="restore">还原默认</button></h2>
+    <table>
+      <thead><tr><th>IP</th><th>域名</th><th style="width:86px">来源</th><th style="width:86px">状态</th><th style="width:40px"></th></tr></thead>
+      <tbody id="hosts"><tr><td colspan="5" class="empty">读取中…</td></tr></tbody>
+    </table>
+    <div class="msg" id="hosts-msg"></div>
+  </div>
+
+  <div class="card hidden" id="card-hist">
+    <h2><span>历史</span><span class="spacer"></span><button class="mini" id="clear-hist">清空历史</button></h2>
+    <table>
+      <thead><tr><th style="width:112px">时间</th><th>域名</th><th>节点 IP</th><th style="width:96px">位置</th><th style="width:88px">速度</th><th>说明</th></tr></thead>
+      <tbody id="hist"></tbody>
+    </table>
+  </div>
+
+  <footer>测速需要十几秒到半分钟，期间请不要关闭页面</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const CITIES = {
+  HKG:'香港',NRT:'东京',KIX:'大阪',ICN:'首尔',TPE:'台北',SIN:'新加坡',KUL:'吉隆坡',
+  BKK:'曼谷',MNL:'马尼拉',HAN:'河内',SGN:'胡志明',CGK:'雅加达',BOM:'孟买',DEL:'新德里',
+  LAX:'洛杉矶',SJC:'圣何塞',SEA:'西雅图',DEN:'丹佛',DFW:'达拉斯',ORD:'芝加哥',
+  IAD:'华盛顿',ATL:'亚特兰大',MIA:'迈阿密',YYZ:'多伦多',AMS:'阿姆斯特丹',
+  FRA:'法兰克福',LHR:'伦敦',CDG:'巴黎',MAD:'马德里',MIL:'米兰',WAW:'华沙',
+  SYD:'悉尼',GRU:'圣保罗',EZE:'布宜诺斯艾利斯',JNB:'约翰内斯堡',CPT:'开普敦'
+};
+let ST = {domains:[], results:[], history:[]}, HOSTS = {rows:[], managed:[]};
+let BUSY = false, SAVING = false, POLL = null;
+
+// 把 https://gemini.fnnas.bond/ 、gemini.fnnas.bond:443 之类收敛成裸域名
+function cleanDomain(raw){
+  let s = String(raw || '').trim();
+  const i = s.indexOf('://');
+  if (i >= 0) s = s.slice(i + 3);
+  s = s.split(/[\/?#]/)[0];
+  const at = s.lastIndexOf('@');
+  if (at >= 0) s = s.slice(at + 1);
+  s = s.replace(/:\d+$/, '');
+  s = s.replace(/\.+$/, '');
+  return s.toLowerCase().trim();
+}
+
+const city = c => c ? (CITIES[c] || c) : '—';
+const p2 = n => String(n).padStart(2, '0');
+function timeStr(s){
+  if(!s) return '—';
+  const d = new Date(s);
+  if (isNaN(d)) return s;
+  return `${p2(d.getMonth()+1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+}
+const speed = v => (v && v > 0 && v < 1e8) ? Math.round(v) + ' ms' : '—';
+function say(el, t, err, spin){
+  const node = $(el);
+  node.textContent = '';
+  if (spin){
+    const s = document.createElement('span');
+    s.className = 'spin';
+    node.appendChild(s);
+  }
+  node.appendChild(document.createTextNode(t || ''));
+  node.className = 'msg' + (err ? ' err' : '');
+}
+function btn(text, cls, onclick, disabled){
+  const b = document.createElement('button');
+  b.className = cls || '';
+  b.textContent = text;
+  b.onclick = onclick;
+  if (disabled) b.disabled = true;
+  return b;
+}
+function emptyRow(tb, cols, text){
+  const tr = document.createElement('tr');
+  const td = document.createElement('td');
+  td.colSpan = cols; td.className = 'empty'; td.textContent = text;
+  tr.appendChild(td); tb.appendChild(tr);
+}
+const resultOf = d => (ST.results || []).find(r => r.domain === d);
+const rowsOf = d => (HOSTS.managed || []).filter(r => (r.names || '').split(/\s+/).includes(d));
+
+/* ---------- 渲染 ---------- */
+function render(){
+  $('mode').className = 'pill' + (ST.mode === 'write' ? ' on' : '');
+  $('mode-text').textContent = ST.mode === 'write' ? '改写模式' : '预览模式';
+
+  const doms = ST.domains || [];
+  $('doms-title').textContent = doms.length ? '已添加的域名' : '添加域名';
+  $('doms-bar').className = 'doms-bar' + (doms.length ? '' : ' hidden');
+  renderChips(doms);
+  renderPerDomain(doms);
+  renderHist();
+  $('card-hist').className = 'card' + ((ST.history || []).length ? '' : ' hidden');
+}
+
+function renderChips(doms){
+  const box = $('doms');
+  box.textContent = '';
+  doms.forEach(d => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    const t = document.createElement('span');
+    t.textContent = d;
+    const b = document.createElement('button');
+    b.textContent = '×';
+    b.title = '移除域名';
+    b.onclick = () => saveDomains(doms.filter(x => x !== d));
+    chip.appendChild(t); chip.appendChild(b);
+    box.appendChild(chip);
+  });
+}
+
+function renderPerDomain(doms){
+  const box = $('perdomain');
+  box.textContent = '';
+  doms.forEach(d => box.appendChild(domainCard(d)));
+}
+
+function domainCard(d){
+  const r = resultOf(d);
+  const mine = rowsOf(d);
+  const testing = (ST.testing_domains || []).includes(d);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  /* 标题行 */
+  const h2 = document.createElement('h2');
+  const name = document.createElement('span');
+  name.className = 'name';
+  name.textContent = d;
+  h2.appendChild(name);
+  const spacer = document.createElement('span');
+  spacer.className = 'spacer';
+  h2.appendChild(spacer);
+
+  if (testing){
+    const s = document.createElement('span');
+    s.className = 'msg';
+    s.style.margin = '0';
+    s.style.display = 'inline-flex';
+    s.style.alignItems = 'center';
+    s.dataset.prog = d;
+    s.appendChild(Object.assign(document.createElement('span'), {className:'spin'}));
+    s.appendChild(document.createTextNode('正在测速…'));
+    h2.appendChild(s);
+  } else if (!r){
+    h2.appendChild(btn('开始测速', 'mini primary', () => doTest(d)));
+  } else {
+    h2.appendChild(btn('重新测速', 'mini', () => doTest(d)));
+    h2.appendChild(btn('应用优选', 'mini', () => doApply(d, '')));
+  }
+  card.appendChild(h2);
+
+  /* 没有结果：先只给一句提示 */
+  if (testing){
+    const prog = document.createElement('div');
+    prog.className = 'idle';
+    prog.style.color = 'var(--muted)';
+    prog.dataset.progText = d;
+    prog.textContent = (ST.progress_by_domain || {})[d] || '正在筛选可用节点…';
+    card.appendChild(prog);
+  }
+  if (!r){
+    if (!testing){
+      const idle = document.createElement('div');
+      idle.className = 'idle';
+      idle.textContent = '还没有测速';
+      card.appendChild(idle);
+    }
+    return card;
+  }
+
+  /* 四格小数字（该域名的） */
+  const stats = document.createElement('div');
+  stats.className = 'mini-stats';
+  const applied = mine.length ? mine[0].ip : '';
+  let appliedColo = '', appliedMs = 0;
+  (r.candidates || []).forEach(c => {
+    if (applied && c.ip === applied){ appliedColo = c.colo; appliedMs = c.ttfb_ms; }
+  });
+  [
+    ['当前节点', applied || '未写入', !applied],
+    ['线路位置', applied ? city(appliedColo) : '—', !applied],
+    ['打开速度', applied ? speed(appliedMs) : '—', !applied],
+    ['已写入', mine.length ? mine.length + ' 条' : '0 条', false]
+  ].forEach(([k, v, dim]) => {
+    const box = document.createElement('div');
+    box.className = 'mini-stat';
+    const kk = document.createElement('div');
+    kk.className = 'k'; kk.textContent = k;
+    const vv = document.createElement('div');
+    vv.className = 'v' + (dim ? ' dim' : '');
+    vv.textContent = v;
+    box.appendChild(kk); box.appendChild(vv);
+    stats.appendChild(box);
+  });
+  card.appendChild(stats);
+
+  if (r.stage === '初筛'){
+    const tip = document.createElement('div');
+    tip.className = 'idle';
+    tip.style.color = 'var(--muted)';
+    tip.style.padding = '0 0 8px';
+    if (ST.testing){
+      const sp = document.createElement('span');
+      sp.className = 'spin';
+      tip.appendChild(sp);
+    }
+    tip.appendChild(document.createTextNode(ST.testing
+      ? '初筛结果（按握手速度），正在复测页面真实打开速度…'
+      : '初筛结果（按握手速度），未做页面复测'));
+    card.appendChild(tip);
+  }
+
+  /* 候选表 */
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const trh = document.createElement('tr');
+  [['#','40px'],['节点 IP',''],['位置','104px'],['打开速度','96px'],['','64px']].forEach(([t, w]) => {
+    const th = document.createElement('th');
+    th.textContent = t;
+    if (w) th.style.width = w;
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh); table.appendChild(thead);
+
+  const tb = document.createElement('tbody');
+  const all = r.candidates || [];
+  const cands = all.slice(0, 6);
+  if (!cands.length){
+    emptyRow(tb, 5, `没有可用节点（共测 ${r.total || 0} 个 IP）`);
+  } else {
+    cands.forEach((x, i) => {
+      const tr = document.createElement('tr');
+      if (i === 0) tr.className = 'best';
+      [String(i + 1), x.ip, city(x.colo), speed(x.ttfb_ms)].forEach((t, k) => {
+        const td = document.createElement('td');
+        td.textContent = t;
+        if (k === 1) {
+          td.className = 'mono';
+          if (i === 0) {
+            const tag = document.createElement('span');
+            tag.className = 'tag best';
+            tag.textContent = '最快';
+            td.appendChild(tag);
+          }
+        }
+        tr.appendChild(td);
+      });
+      const act = document.createElement('td');
+      act.className = 'act';
+      act.appendChild(btn('应用', 'mini', () => doApply(d, x.ip)));
+      tr.appendChild(act);
+      tb.appendChild(tr);
+    });
+  }
+  table.appendChild(tb);
+  card.appendChild(table);
+  if (all.length > cands.length){
+    const more = document.createElement('div');
+    more.className = 'idle';
+    more.style.padding = '6px 0 0';
+    more.textContent = `只显示前 ${cands.length} 个（本次共筛出 ${all.length} 个可用）`;
+    card.appendChild(more);
+  }
+  return card;
+}
+
+function renderHist(){
+  const tb = $('hist');
+  tb.textContent = '';
+  const hist = ST.history || [];
+  if (!hist.length) return;
+  hist.forEach(r => {
+    const tr = document.createElement('tr');
+    [timeStr(r.at), r.domain || '—', r.best_ip || '—', city(r.colo), speed(r.ttfb_ms), r.note || ''].forEach((t, k) => {
+      const td = document.createElement('td');
+      td.textContent = t;
+      if (k === 2) td.className = 'mono';
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+}
+
+function renderHosts(){
+  const tb = $('hosts');
+  tb.textContent = '';
+  const rows = (HOSTS.rows || []).filter(r => !r.comment);
+  if (!rows.length){ emptyRow(tb, 5, HOSTS.error ? '读不到 hosts 文件' : '没有内容'); return; }
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    if (r.managed) tr.className = 'mine';
+
+    const ip = document.createElement('td'); ip.className = 'mono'; ip.textContent = r.ip;
+    const nm = document.createElement('td'); nm.className = 'mono'; nm.textContent = r.names;
+
+    const src = document.createElement('td');
+    const sp = document.createElement('span');
+    sp.className = 'tag ' + (r.managed ? 'mine' : 'sys');
+    sp.textContent = r.managed ? '本工具' : '系统';
+    src.appendChild(sp);
+
+    const stc = document.createElement('td');
+    const ep = document.createElement('span');
+    if (r.managed){
+      const names = (r.names || '').split(/\s+/);
+      let hit = null;
+      names.forEach(n => { if (hit === null && HOSTS.matches && n in HOSTS.matches) hit = HOSTS.matches[n]; });
+      ep.className = 'tag ' + (hit ? 'ok' : 'no');
+      ep.textContent = hit ? '已生效' : '未生效';
+    } else {
+      ep.className = 'tag sys'; ep.textContent = '—';
+    }
+    stc.appendChild(ep);
+
+    const act = document.createElement('td');
+    if (r.managed){
+      const names = (r.names || '').split(/\s+/);
+      const b = document.createElement('button');
+      b.className = 'ghost'; b.textContent = '×'; b.title = '从 hosts 删除这条';
+      b.onclick = () => doDelete(r.ip, names[0]);
+      act.appendChild(b);
+    }
+
+    tr.appendChild(ip); tr.appendChild(nm); tr.appendChild(src); tr.appendChild(stc); tr.appendChild(act);
+    tb.appendChild(tr);
+  });
+}
+
+/* ---------- 数据 ---------- */
+async function post(url, body){
+  const opt = {method:'POST', headers:{'Content-Type':'application/json'}};
+  if (body !== undefined) opt.body = JSON.stringify(body);
+  const r = await fetch(url, opt);
+  let j = {};
+  try { j = await r.json(); } catch(e){}
+  if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+  return j;
+}
+let STATE_SIG = '', HOSTS_SIG = '';
+
+function stateSig(st){
+  return JSON.stringify({
+    d: st.domains || [],
+    m: st.mode,
+    t: st.testing_domains || [],
+    r: (st.results || []).map(r => [r.domain, r.stage || '',
+      (r.candidates || []).map(c => c.ip + '|' + Math.round(c.ttfb_ms || 0))]),
+    h: (st.history || []).length
+  });
+}
+function hostsSig(h){
+  return JSON.stringify([(h.rows || []).map(r => r.ip + '|' + r.names + '|' + (r.managed ? 1 : 0)),
+    (h.matches || {}), h.error || '']);
+}
+
+// 测速期间只刷新「进度文字」，不动表格 DOM，否则按钮会在两次点击之间被替换掉
+function patchProgress(){
+  document.querySelectorAll('[data-prog]').forEach(el => {
+    const d = el.dataset.prog;
+    const on = (ST.testing_domains || []).includes(d);
+    el.style.display = on ? '' : 'none';
+  });
+  document.querySelectorAll('[data-prog-text]').forEach(el => {
+    const d = el.dataset.progText;
+    el.textContent = (ST.progress_by_domain || {})[d] || '正在筛选可用节点…';
+  });
+}
+
+async function refresh(){
+  const [s, h] = await Promise.all([
+    fetch('/api/state', {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch('/api/hosts', {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null)
+  ]);
+  if (s) ST = s;
+  if (h) HOSTS = h;
+
+  const sSig = stateSig(ST);
+  if (sSig !== STATE_SIG){
+    STATE_SIG = sSig;
+    render();
+  } else {
+    patchProgress();
+  }
+  const hSig = hostsSig(HOSTS);
+  if (hSig !== HOSTS_SIG){
+    HOSTS_SIG = hSig;
+    renderHosts();
+  }
+}
+
+// 任何写操作后强制整块重绘（否则签名没变会看不到状态变化）
+function invalidate(){ STATE_SIG = ''; HOSTS_SIG = ''; }
+
+/* ---------- 操作 ---------- */
+function stopPoll(){
+  if (POLL){ clearInterval(POLL); POLL = null; }
+}
+function startPoll(){
+  stopPoll();
+  let sawTesting = false;
+  POLL = setInterval(async () => {
+    await refresh();
+    const running = (ST.testing_domains || []).length > 0;
+    if (running) sawTesting = true;
+    if (sawTesting && !running){
+      stopPoll();
+      await refresh();
+      if (ST.last_error) say('msg', '测速失败：' + ST.last_error, true);
+      else say('msg', '测速完成');
+    }
+  }, 900);
+}
+
+async function doTest(domain){
+  const d = domain || '';
+  if ((ST.testing_domains || []).includes(d) && d !== '') return;
+  say('msg', '');
+  try{
+    await post('/api/test', {domain: d});
+    await refresh();   // 立刻把「测试中」显示出来
+    startPoll();
+  }catch(e){
+    if (/正在测速中|已经有一轮测速在跑|already/i.test(e.message)){
+      say('msg', '这个域名正在测速，等它跑完');
+      startPoll();
+      return;
+    }
+    say('msg', '测速失败：' + e.message, true);
+  }
+}
+
+async function doApply(domain, ip){
+  if (BUSY) return;   // 只防同一个写操作重入，不受测速影响
+  BUSY = true;
+  render();
+  let err = '';
+  try{
+    await post('/api/apply', {domain, ip});
+  }catch(e){ err = e.message; }
+  BUSY = false;
+  invalidate();
+  await refresh();
+  if (err) say('hosts-msg', '应用失败：' + err, true);
+  else say('hosts-msg', '已应用');
+}
+
+async function doDelete(ip, domain){
+  if (BUSY) return;
+  BUSY = true;
+  let err = '';
+  try{
+    await post('/api/hosts/delete', {ip, domain});
+  }catch(e){ err = e.message; }
+  BUSY = false;
+  invalidate();
+  await refresh();
+  if (err) say('hosts-msg', '删除失败：' + err, true);
+  else say('hosts-msg', '已删除 ' + ip);
+}
+
+async function saveDomains(list){
+  if (SAVING) return;
+  SAVING = true;
+  let err = '';
+  try{
+    await post('/api/domains', {domains:list});
+  }catch(e){ err = e.message; }
+  SAVING = false;
+  invalidate();
+  await refresh();
+  say('msg', err ? '保存失败：' + err : '', !!err);
+}
+
+$('add').onclick = () => {
+  const v = cleanDomain($('newdom').value);
+  if (!v) return;
+  $('newdom').value = v;
+  if ((ST.domains || []).includes(v)) { say('msg', '这个域名已经在了', true); return; }
+  saveDomains((ST.domains || []).concat([v]));
+  $('newdom').value = '';
+};
+$('newdom').addEventListener('blur', () => {
+  const v = cleanDomain($('newdom').value);
+  if (v !== $('newdom').value) $('newdom').value = v;
+});
+$('newdom').addEventListener('paste', () => {
+  setTimeout(() => { $('newdom').value = cleanDomain($('newdom').value); }, 0);
+});
+$('newdom').addEventListener('keydown', e => { if (e.key === 'Enter') $('add').click(); });
+
+function waitDomainDone(d){
+  return new Promise(resolve => {
+    const t = setInterval(async () => {
+      await refresh();
+      if (!(ST.testing_domains || []).includes(d)) { clearInterval(t); resolve(); }
+    }, 700);
+  });
+}
+
+async function testAllScreen(){
+  const doms = [...(ST.domains || [])];
+  if (!doms.length){ say('msg', '还没有域名', true); return; }
+  const btn = $('test-all');
+  btn.disabled = true;
+  for (let i = 0; i < doms.length; i++){
+    const d = doms[i];
+    say('msg', `正在测速 ${i + 1}/${doms.length}：${d}`, false, true);
+    try{
+      await post('/api/test', {domain: d, screen_only: true});
+    }catch(e){
+      if (!/正在测速中|已经有一轮/.test(e.message)) say('msg', `${d} 测速失败：` + e.message, true);
+    }
+    await refresh();
+    await waitDomainDone(d);
+  }
+  btn.disabled = false;
+  invalidate();
+  await refresh();
+  say('msg', '一键测速完成（只做了初筛，未复测页面）');
+}
+
+$('test-all').onclick = testAllScreen;
+
+$('restore').onclick = async () => {
+  if (BUSY) return;
+  BUSY = true;
+  say('hosts-msg', '正在还原…');
+  let err = '';
+  try{
+    await post('/api/restore');
+  }catch(e){ err = e.message; }
+  BUSY = false;
+  invalidate();
+  await refresh();
+  if (err) say('hosts-msg', '还原失败：' + err, true);
+  else say('hosts-msg', '已还原为系统默认');
+};
+
+$('clear-hist').onclick = async () => {
+  if (BUSY) return;
+  BUSY = true;
+  let err = '';
+  try{
+    await post('/api/history/clear');
+  }catch(e){ err = e.message; }
+  BUSY = false;
+  invalidate();
+  await refresh();
+  if (err) say('msg', '清空历史失败：' + err, true);
+};
+
+(async function init(){
+  await refresh();
+  if ((ST.testing_domains || []).length) startPoll();
+})();
+</script>
+</body>
+</html>

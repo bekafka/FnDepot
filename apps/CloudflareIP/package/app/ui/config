@@ -1,0 +1,13 @@
+{
+  ".url": {
+    "CloudflareIP.main": {
+      "title": "Cloudflare 优选",
+      "icon": "images/icon_{0}.png",
+      "type": "url",
+      "protocol": "http",
+      "port": "${wizard_port}",
+      "url": "/",
+      "allUsers": true
+    }
+  }
+}

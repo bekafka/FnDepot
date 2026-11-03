@@ -1,0 +1,27 @@
+# fnOS 应用 manifest —— CloudflareIP（Cloudflare 优选）
+# 占位符 ${VERSION} / ${PLATFORM} / ${CHANGELOG} 由 FnFactory 流水线（或 build-local.sh）注入。
+# 三个作者口径见 FnFactory specs/authorship.md。
+appname               = CloudflareIP
+version               = ${VERSION}
+display_name          = Cloudflare 优选
+desc                  = "<p>给走 Cloudflare 的域名挑一条更快、且<b>真的能服务这个域名</b>的边缘线路，并把结果写进本机 <code>/etc/hosts</code>。</p><p>与「只测带宽」的工具不同：每个候选 IP 都用你的真实域名做 SNI + Host 去请求 <code>/cdn-cgi/trace</code>，只有返回 200 且能读出机房代码才算可用（403 error code 1034 会被明确淘汰），排名看的是你的线路到该机房的真实首字节耗时。每个域名独立测、独立出结果，最多展示 6 条候选，「应用优选」写入前 3 条（主 + 2 备）。</p><p>写入只发生在自己标记的受管区块内，可逐条删除或一键「还原默认」；未点「应用」之前一律只预览，不动系统文件。</p><p><b>注意：</b>改 <code>/etc/hosts</code> 需要 root，因此本应用以 root 身份运行（包里不再有降权进程）；面板无登录口令，请勿把端口直接暴露到公网。默认端口 26890，可在安装向导与应用设置页里改。</p><p>源作者：<a href='https://github.com/bekafka/FnDepot'>bekafka/FnDepot</a>（本项目最初的创造者与权利源头）。</p>"
+platform              = ${PLATFORM}
+source                = thirdparty
+
+# ── 三个作者（specs/authorship.md）─────────────────────────────────────────
+# 开发者：做 fnOS 适配、写生命周期脚本、打包的人
+maintainer            = bekafka
+maintainer_url        = https://github.com/bekafka/FnDepot
+# 发布者：把 .fpk 发出来、维护应用源的人
+distributor           = bekafka
+distributor_url       = https://github.com/bekafka/FnDepot
+# 源作者：本项目最初的创造者与权利源头（自建应用 = 本源仓库）
+source_author         = bekafka
+source_author_url     = https://github.com/bekafka/FnDepot
+
+desktop_uidir         = ui
+desktop_applaunchname = CloudflareIP.main
+ctl_stop              = true
+checkport             = false
+disable_authorization_path = false
+changelog             = ${CHANGELOG}

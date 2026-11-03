@@ -10,6 +10,7 @@ fnOS 应用中心统一管理，和官方应用一样操作。
 | [Motrix](assets/Motrix/README.md) | `Motrix` | 2.2.1 | arm / x86 | [agalwood/Motrix](https://github.com/agalwood/Motrix) | 全功能下载管理器（HTTP / FTP / BT / 磁力）的服务端 Web 面板，aria2 内核 |
 | [Magpie](assets/Magpie/README.md) | `Magpie` | 0.1.2738-1 | arm / x86 | [yetone/magpie](https://github.com/yetone/magpie) | 多模型 API 反代网关 + 编程 Agent 模型切换器：OpenAI Responses / Anthropic Messages / Gemini 双向互译，路由组合、Skills/MCP、脱敏、额度统计、自动签到 |
 | [pnpm](assets/pnpm/README.md) | `pnpm` | 12.17.0 | arm / x86 | [pnpm/pnpm](https://github.com/pnpm/pnpm) | Node.js 生态里更快、更省磁盘的包管理器（官方 standalone 单文件版）：装完终端直接可用 `pnpm`，不依赖 nodejs 运行时 |
+| [Cloudflare 优选](assets/CloudflareIP/README.md) | `CloudflareIP` | 1.0.0 | arm / x86 | [bekafka/FnDepot](https://github.com/bekafka/FnDepot) | 给走 Cloudflare 的域名挑真正可用且落点近的边缘 IP，按页面级首字节耗时排名，结果写进本机 /etc/hosts 的受管区块（可一键还原） |
 
 > 版本与架构两列会随发版自动更新；「原作者」指上游项目最初的创造者与权利源头，人工维护、不随版本变。
 
@@ -30,7 +31,7 @@ https://github.com/bekafka/FnDepot
 | --- | --- |
 | 系统版本 | 飞牛 fnOS 1.x（应用包格式 V2） |
 | 架构 | x86_64 / arm64（每个应用的具体架构见列表） |
-| 运行方式 | 应用以独立低权限用户运行，数据落在应用自己的空间，卸载时可选择是否保留配置 |
+| 运行方式 | 应用以独立低权限用户运行（个别需要改系统文件的应用以 root 运行，见其应用页说明），数据落在应用自己的空间，卸载时可选择是否保留配置 |
 
 ## 关于应用
 

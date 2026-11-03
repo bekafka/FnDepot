@@ -1,0 +1,45 @@
+#!/bin/bash
+# 应用设置页提交后：重新落配置；只有在跑着的时候才重启（用户主动停掉的不许偷偷拉起）。
+set -u
+APPNAME="CloudflareIP"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+MAIN="${CFIP_MAIN:-/var/apps/$APPNAME/cmd/main}"
+CONF="$PKGVAR/config.env"
+LOG="$PKGVAR/info.log"
+
+log() { printf '%s - [config] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true; }
+
+OLD_HASH="$(sha256sum "$CONF" 2>/dev/null | awk '{print $1}')"
+
+was_running=0
+if [ -x "$MAIN" ] && "$MAIN" status >/dev/null 2>&1; then
+  was_running=1
+fi
+
+if ! bash "$APPDEST/apply-config.sh" config; then
+  log "apply-config 失败，配置未生效"
+  exit 1
+fi
+
+NEW_HASH="$(sha256sum "$CONF" 2>/dev/null | awk '{print $1}')"
+log "配置已更新（端口/监听/写hosts $([ "$OLD_HASH" = "$NEW_HASH" ] && echo 未变 || echo 已变)）"
+
+if [ "$was_running" != "1" ]; then
+  log "应用当前未运行，不自动启动（下次点启动时按新配置生效）"
+  exit 0
+fi
+
+if [ "$OLD_HASH" = "$NEW_HASH" ]; then
+  log "配置无变化，不重启"
+  exit 0
+fi
+
+log "重启服务以应用新配置"
+"$MAIN" stop >/dev/null 2>&1 || true
+if ! "$MAIN" start >/dev/null 2>&1; then
+  log "重启失败，请查看 $LOG"
+  exit 1
+fi
+log "重启完成"
+exit 0
