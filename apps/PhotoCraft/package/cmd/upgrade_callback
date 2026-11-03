@@ -1,0 +1,18 @@
+#!/bin/bash
+# 升级后：包内文件是新的（站点与二进制换了），同步一次配置与桌面入口；数据目录不动。
+set -u
+APPNAME="PhotoCraft"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+LOG="$PKGVAR/info.log"
+log() { printf '%s - [upgrade] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true; }
+
+if [ -x "$APPDEST/apply-config.sh" ]; then
+  bash "$APPDEST/apply-config.sh" upgrade || log "apply-config 失败（配置保持原样）"
+else
+  log "缺少 $APPDEST/apply-config.sh，跳过配置同步"
+fi
+
+log "升级完成（数据目录 $PKGVAR 未改动）"
+log "提示：新版本站点文件名带新哈希，浏览器会重新下载；若页面没变，刷新一次即可"
+exit 0

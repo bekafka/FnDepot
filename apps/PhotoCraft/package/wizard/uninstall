@@ -1,0 +1,27 @@
+[
+  {
+    "stepTitle": "卸载 PhotoCraft",
+    "items": [
+      {
+        "type": "radio",
+        "field": "wizard_uninstall_mode",
+        "label": "卸载方式",
+        "initValue": "keep",
+        "options": [
+          {
+            "label": "保留配置卸载（端口、监听设置与日志都留着，重装后继续用）",
+            "value": "keep"
+          },
+          {
+            "label": "完全卸载（删除运行期配置与日志）",
+            "value": "purge"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "两种方式都不涉及你的图片或文档：编辑器运行在你自己的浏览器里，NAS 上本来就没有保存任何文件。"
+      }
+    ]
+  }
+]

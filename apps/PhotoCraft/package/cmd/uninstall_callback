@@ -1,0 +1,43 @@
+#!/bin/bash
+# 卸载后：
+#   keep  （默认）→ 什么都不删：config.env 与日志留着，重装即沿用
+#   purge        → 删除应用状态（config.env、pid、日志、临时目录）
+#
+# 本应用在 NAS 上不保存任何用户图片或文档（编辑器在浏览器里跑），所以这里没有
+# 「用户数据目录」可删；purge 只清本应用自己的运行期状态。
+#
+# 路径护栏固定为 /vol1/@appdata/*：不在预期路径时一律不删，
+# 避免 TRIM_PKGVAR 被环境变量污染时 rm -rf 打偏。
+set -u
+
+PKGVAR="${TRIM_PKGVAR:-}"
+MODE="${wizard_uninstall_mode:-keep}"
+
+log() {
+  printf '%s - [uninstall] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" \
+    >> "${TRIM_TEMP_LOGFILE:-/dev/null}" 2>/dev/null || true
+  echo "[uninstall] $1"
+}
+
+case "$MODE" in
+  purge)
+    case "$PKGVAR" in
+      /vol1/@appdata/*)
+        log "完全卸载：删除运行期状态（config.env / pid / 日志 / 临时目录）"
+        for rel in home tmp; do rm -rf "${PKGVAR:?}/$rel" 2>/dev/null || true; done
+        rm -f "$PKGVAR/config.env" "$PKGVAR/app.pid" "$PKGVAR/info.log.1" 2>/dev/null
+        log "残留内容：$(ls -A "$PKGVAR" 2>/dev/null | tr '\n' ' ')"
+        # 日志最后删：前面的记录都写 TRIM_TEMP_LOGFILE，不受影响
+        rm -f "$PKGVAR/info.log" 2>/dev/null
+        ;;
+      *)
+        log "PKGVAR 不在预期路径（$PKGVAR），为安全起见跳过删除"
+        ;;
+    esac
+    ;;
+  *)
+    log "保留配置卸载：config.env 与日志都保留，重装后继续使用"
+    ;;
+esac
+log "NAS 上没有保存任何图片/文档（编辑器运行在访客浏览器内），无需另行清理"
+exit 0

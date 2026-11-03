@@ -1,0 +1,27 @@
+# fnOS 应用 manifest —— PhotoCraft（Web 版，浏览器内运行）
+# 占位符 ${VERSION} / ${PLATFORM} / ${CHANGELOG} 由 FnFactory 流水线（或 build-local.sh）注入。
+# 三个作者口径见 FnFactory specs/authorship.md。
+appname               = PhotoCraft
+version               = ${VERSION}
+display_name          = PhotoCraft
+desc                  = "<p>PhotoCraft 是纯 Rust 从零重写的开源图像编辑器（图层、蒙版、调整图层、图层样式、文字、矢量、真实 PSD 读写），这里是它的<b>浏览器运行版</b>：整个编辑器以 WebAssembly 形式在你的浏览器里跑，NAS 只负责把静态文件发出来。</p><p><b>要点：</b>图像编辑、文件打开与保存都发生在打开页面的这台设备上（浏览器选文件、下载回本地），<b>不经过 NAS 存储</b>，也不在 NAS 上产生任何图片数据；没有账号与登录，同网段能访问该端口的人都能打开这个编辑器，但看到的只是他自己本机打开的文件。默认端口 28200，可在安装向导与应用设置里改。</p><p>上游处于 alpha 阶段，功能可用但不是 Photoshop 的替代品。建议用局域网 https 入口以获得 WebGPU 加速；明文 http 会退化为 WebGL2（功能可用、较慢）。</p><p>源作者：<a href='https://github.com/storytold/photocraft'>storytold/photocraft</a>（上游项目，最初的创造者与权利源头）；本包由 bekafka 打包适配，未改动上游代码，仅修正其 Web 包的自托管路径缺陷。</p>"
+platform              = ${PLATFORM}
+source                = thirdparty
+
+# ── 三个作者（specs/authorship.md）─────────────────────────────────────────
+# 开发者：做 fnOS 适配、写生命周期脚本、打包的人
+maintainer            = bekafka
+maintainer_url        = https://github.com/bekafka/FnDepot
+# 发布者：把 .fpk 发出来、维护应用源的人
+distributor           = bekafka
+distributor_url       = https://github.com/bekafka/FnDepot
+# 源作者：上游项目最初的创造者与权利源头
+source_author         = storytold
+source_author_url     = https://github.com/storytold/photocraft
+
+desktop_uidir         = ui
+desktop_applaunchname = PhotoCraft.main
+ctl_stop              = true
+checkport             = false
+disable_authorization_path = false
+changelog             = ${CHANGELOG}
