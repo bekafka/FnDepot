@@ -1,6 +1,6 @@
 #!/bin/bash
 # 升级后：命令入口指向新版本；并把已有 token 重新镜像到新的 payload 目录
-# （升级会整体替换 target/，上次安装写进去的 0644 副本会消失）。
+# （升级会整体替换 target/，上次安装写进去的 0640 副本会消失）。
 set -u
 APPNAME="gh-cli"
 APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
@@ -26,9 +26,22 @@ else
 fi
 
 if [ -s "$TOKEN_FILE" ]; then
+  TOKEN_GROUP="${GH_FNOS_TOKEN_GROUP:-Users}"
   if mkdir -p "$APPDEST/etc" 2>/dev/null && cp -f "$TOKEN_FILE" "$TOKEN_MIRROR" 2>/dev/null; then
-    chmod 644 "$TOKEN_MIRROR" 2>/dev/null || true
-    emit "已把已有 token 重新镜像到 $TOKEN_MIRROR（0644）"
+    # 与安装期一致：ACL 授予普通用户组读（包用户 chgrp 会 EPERM），再抬 mask
+    chmod 0600 "$TOKEN_MIRROR" 2>/dev/null || true
+    if getent group "$TOKEN_GROUP" >/dev/null 2>&1 \
+       && setfacl -m "g:${TOKEN_GROUP}:r--" "$TOKEN_MIRROR" 2>/dev/null \
+       && chmod 0640 "$TOKEN_MIRROR" 2>/dev/null; then
+      emit "已把已有 token 重新镜像到 $TOKEN_MIRROR（0640 + ACL 授予组 ${TOKEN_GROUP} 读）"
+    elif getent group "$TOKEN_GROUP" >/dev/null 2>&1 \
+       && chgrp "$TOKEN_GROUP" "$TOKEN_MIRROR" 2>/dev/null \
+       && chmod 0640 "$TOKEN_MIRROR" 2>/dev/null; then
+      emit "已把已有 token 重新镜像到 $TOKEN_MIRROR（0640，属组 ${TOKEN_GROUP}）"
+    else
+      chmod 0600 "$TOKEN_MIRROR" 2>/dev/null || true
+      emit "token 已镜像但未能设为组可读（$TOKEN_MIRROR 0600）：其它用户需各自 gh auth login"
+    fi
   else
     emit "token 重新镜像失败；终端用户可能拿不到自动注入的 GH_TOKEN（可重装时重新填写）"
   fi

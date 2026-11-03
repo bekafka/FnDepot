@@ -32,11 +32,11 @@ token 的两个落点：
 | 路径 | 权限 | 作用 |
 | --- | --- | --- |
 | `/vol1/@appdata/gh-cli/github-token` | 0600 | 规范来源，重装/升级后仍在 |
-| `/var/apps/gh-cli/target/etc/github-token` | 0644 | 给终端用户的副本（应用数据目录通常只有应用账号能进，命令行用户读不到 0600 那份） |
+| `/var/apps/gh-cli/target/etc/github-token` | 0640 + ACL 授予设备普通用户组（默认 `Users`）读 | 给终端用户的副本：该组成员可读，组外账号读不到 |
 
-**这是一个有意的取舍**：0644 意味着同机有 shell 权限的账号都能读到这个 token。建议填
-**最小权限的 fine-grained token**（只勾需要的仓库、只读就够）；想收紧就
-`chmod 600 /var/apps/gh-cli/target/etc/github-token`，代价是其它用户得自己 `gh auth login`。
+**可见范围**：终端副本是 `0640` + ACL 授予设备普通用户组（默认 `Users`）读权限，只有该组成员能读；组外账号读不到。
+想更严：把 `GH_FNOS_TOKEN_GROUP` 指到一个专用组（安装时按该组授权），或直接 `chmod 600` 该文件 / 删掉它，
+代价是其它用户得自己 `gh auth login`。仍建议用**最小权限的 fine-grained token**。
 
 ## 用法
 
@@ -49,7 +49,7 @@ gh api user
 ```
 
 改 token（应用中心里没有「设置页」）：重装并在向导里重填，或直接覆盖上面两个文件里的值
-（0644 那份是终端用户实际读到的那份，两份都改才一致）。
+（`etc/github-token` 那份是终端用户实际读到的那份，两份都改才一致）。
 
 ## 目录
 
@@ -82,4 +82,4 @@ gh workflow run auto-release.yml -f app=gh
 - **卸载走应用中心界面**：本包带卸载向导，`appcenter-cli uninstall` 会被要求改用界面。
 - **不预置 `gh` 的 git 凭据助手**：`gh auth setup-git` 需要每个用户各自执行；本包只解决
   `GH_TOKEN` 注入，不改各用户的 `~/.gitconfig`。
-- **token 可见性**：见上文，0644 那份对本机账号可见。
+- **token 可见性**：见上文，终端副本 0640 + ACL，仅设备普通用户组成员可读。

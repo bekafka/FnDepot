@@ -8,7 +8,7 @@
 # 取值优先级（与 gh 自身一致，我们不覆盖用户已有设置）：
 #   1. 环境里已经有 GH_TOKEN / GITHUB_TOKEN → 原样透传，什么都不做
 #   2. 应用目录里的 token 文件（安装时由 install_callback 写入）：
-#        首选 /var/apps/gh-cli/target/etc/github-token（0644，终端用户可读）
+#        首选 /var/apps/gh-cli/target/etc/github-token（0640 + ACL 授予设备普通用户组读）
 #        备选 /var/apps/gh-cli/var/github-token（0600，仅应用账号可读）
 #   3. 都没有 → 直接执行 gh，需要认证时它会照常提示
 #

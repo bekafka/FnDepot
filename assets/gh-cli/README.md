@@ -28,10 +28,10 @@ gh api user
 
 - **可选**。留空也能用 gh，只是需要认证的操作要各自 `gh auth login`。
 - 填了之后，同机终端用户执行 `gh` 会自动带上它（以 `GH_TOKEN` 注入），不用重复登录。
-- 为让所有终端用户都能用，token 会额外以 0644 存放在
-  `/var/apps/gh/target/etc/github-token`——**同机有 shell 权限的账号都能读到**。
-  建议填最小权限的 fine-grained token（只勾需要的仓库、只读即可）。
-  想收紧就把它改成 0600（之后其它用户需自行登录）。
+- token 副本以 **0640** + ACL 授予设备普通用户组（默认 `Users`）读，存放在
+  `/var/apps/gh-cli/target/etc/github-token`：**仅该组成员可读**，组外账号读不到。
+  想更严可把 `GH_FNOS_TOKEN_GROUP` 指向专用组，或把它改成 0600 / 删掉（其它用户需自行 `gh auth login`）。
+  仍建议填最小权限的 fine-grained token（只勾需要的仓库、只读即可）。
 - 你自己在环境里设置的 `GH_TOKEN` / `GITHUB_TOKEN` 优先级更高，不会被安装时的值覆盖。
 
 ## 从哪来

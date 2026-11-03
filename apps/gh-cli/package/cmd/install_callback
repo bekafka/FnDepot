@@ -4,11 +4,10 @@
 #
 # Token 的两份落点（有意为之）：
 #   · $PKGVAR/github-token          0600，规范来源，重装/升级后仍在
-#   · $APPDEST/etc/github-token     0644，供终端里任何用户通过 bin/gh 包装层
-#                                   自动注入 GH_TOKEN（应用数据目录通常只有
-#                                   应用账号可进，命令行用户读不到那份 0600）
-# 所以这是「一次配置、全员可用」与「令牌对本机账号可见」之间的取舍：
-# 想收紧就把 0644 那份 chmod 600（届时其它用户需自行 gh auth login）。
+#   · $APPDEST/etc/github-token     0640 + ACL 授予设备普通用户组（默认 Users）读，
+#                                   供该组成员通过 bin/gh 包装层自动注入 GH_TOKEN
+# 即「普通用户组可用、组外账号不可读」。更严可把 GH_FNOS_TOKEN_GROUP 指到专用组，
+# 或干脆删掉副本（其它用户各自 gh auth login）。
 # ==============================================================================
 set -u
 
@@ -71,13 +70,33 @@ if [ -n "$TOKEN" ]; then
   ( umask 077; printf '%s\n' "$TOKEN" > "$TOKEN_FILE" ) 2>>"$LOG" || emit "写入 $TOKEN_FILE 失败（继续）"
   chmod 600 "$TOKEN_FILE" 2>/dev/null || true
 
-  # 终端可读副本：让 bin/gh 包装层能为任意用户注入 GH_TOKEN
+  # 终端可读副本：让 bin/gh 包装层能为「普通用户组」成员注入 GH_TOKEN。
+  # 可见范围收紧：0640 + 属组 = 设备普通用户组（默认 Users），不再是 0644 的
+  # 「任何账号可读」；不在该组的账号读不到，需要时各自 gh auth login。
+  # 可用 GH_FNOS_TOKEN_GROUP 指定别的组；该组不存在时降级为 0600（仅应用账号）。
+  TOKEN_GROUP="${GH_FNOS_TOKEN_GROUP:-Users}"
   if mkdir -p "$TOKEN_MIRROR_DIR" 2>>"$LOG" \
-     && ( umask 022; printf '%s\n' "$TOKEN" > "$TOKEN_MIRROR" ) 2>>"$LOG"; then
-    chmod 644 "$TOKEN_MIRROR" 2>/dev/null || true
-    emit "已写入终端可读的 token 副本：$TOKEN_MIRROR（0644，同机有 shell 权限的账号都能读到）"
+     && ( umask 077; printf '%s\n' "$TOKEN" > "$TOKEN_MIRROR" ) 2>>"$LOG"; then
+    chmod 0600 "$TOKEN_MIRROR" 2>/dev/null || true
+    # 注意：本脚本以包用户身份运行，chgrp 到「自己不属于的组」会被拒（EPERM），
+    # 所以主路径是用 ACL 授予目标组读（属主可以给任意组加 ACL），
+    # 再用 chmod 0640 把 ACL mask 抬到 r--（否则 mask 为 --- 时授权不生效）。
+    if getent group "$TOKEN_GROUP" >/dev/null 2>&1; then
+      if setfacl -m "g:${TOKEN_GROUP}:r--" "$TOKEN_MIRROR" 2>>"$LOG" \
+         && chmod 0640 "$TOKEN_MIRROR" 2>>"$LOG"; then
+        emit "已写入终端 token 副本：$TOKEN_MIRROR（0640 + ACL 授予组 ${TOKEN_GROUP} 读，组外账号不可读）"
+      elif chgrp "$TOKEN_GROUP" "$TOKEN_MIRROR" 2>>"$LOG" \
+           && chmod 0640 "$TOKEN_MIRROR" 2>>"$LOG"; then
+        emit "已写入终端 token 副本：$TOKEN_MIRROR（0640，属组 ${TOKEN_GROUP}，仅该组成员可读）"
+      else
+        chmod 0600 "$TOKEN_MIRROR" 2>/dev/null || true
+        emit "无法把 token 副本授权给组 ${TOKEN_GROUP}（ACL/chgrp 都失败）：已设为 0600，其它用户需各自 gh auth login"
+      fi
+    else
+      emit "设备上不存在用户组 ${TOKEN_GROUP}：token 副本设为 0600（仅应用账号可读），其它用户需各自 gh auth login；可用 GH_FNOS_TOKEN_GROUP 指定组名后重装"
+    fi
   else
-    emit "写入终端可读副本失败（$TOKEN_MIRROR）：命令行用户将拿不到自动注入的 GH_TOKEN"
+    emit "写入终端副本失败（$TOKEN_MIRROR）：命令行用户将拿不到自动注入的 GH_TOKEN"
   fi
 
   # 验证（网络不通或 token 权限不足都只告警，不阻断安装）
