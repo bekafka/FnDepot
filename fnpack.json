@@ -560,8 +560,8 @@
       "display_name": "GitHub CLI",
       "desc": "GitHub 官方命令行工具（官方静态二进制）：在终端管理仓库、Issue、PR、Actions、Release 与 API；安装向导可选填 GitHub Token，填了之后同机终端用户直接可用 gh。源自 <a href='https://github.com/cli/cli'>cli/cli</a>（MIT）。",
       "platform": [
-        "x86",
-        "arm"
+        "arm",
+        "x86"
       ],
       "categories": [
         "编程开发"
@@ -576,7 +576,24 @@
       "maintainer_url": "https://github.com/bekafka/FnDepot",
       "source_author": "cli",
       "source_author_url": "https://github.com/cli/cli",
-      "releases": {},
+      "releases": {
+        "2.103.3": {
+          "changelog": "跟随上游 v2.103.3：fix(gh auth status): explain expired expiring tokens with `--no-refresh` by @babakks in [#14815](https://github.com/cli/cli/pull/14815)\r",
+          "updated_at": "2026-11-03T17:05:44Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/gh-v2.103.3/gh-2.103.3-x86.fpk",
+              "sha256": "09a730e3d0fa71ee4ab677e5e00cbe11addce8404c84cda6d2058c521bf5fcb6",
+              "size": 15004429
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/gh-v2.103.3/gh-2.103.3-arm.fpk",
+              "sha256": "0b3126a5cd00ea13aa49e590c15e5b0fbbfd6830417ca1f165e1e2c393831d1b",
+              "size": 13631031
+            }
+          }
+        }
+      },
       "readme_url": "assets/gh/README.md"
     }
   }
