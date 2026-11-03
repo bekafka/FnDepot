@@ -1,0 +1,26 @@
+# fnOS 应用 manifest —— pnpm（Node.js 生态的包管理器，官方「单文件可执行」版）
+# 占位符 ${VERSION} / ${PLATFORM} / ${CHANGELOG} 由 FnFactory 流水线（或 build-local.sh）注入。
+# 作者口径：本应用全部按上游署名（见同目录 authorship.env），
+# 开发者 / 发布者 / 源作者三项都写 pnpm。
+appname               = pnpm
+version               = ${VERSION}
+display_name          = pnpm
+desc                  = "<p>pnpm 是 Node.js 生态里更快、更省磁盘的包管理器（MIT 开源）。本项目分发的 fnOS 包使用的是 pnpm 官方发布的<b>单文件可执行版本</b>：Node 引擎已经编译进 pnpm 这个可执行文件内部，<b>不依赖</b>应用中心里的 nodejs 运行时，装完就能在终端直接敲 <code>pnpm</code>。</p><p>命令入口 <code>/usr/local/bin/pnpm</code>，安装时建立、卸载时还原。常用：<code>pnpm -v</code>、<code>pnpm install</code>、<code>pnpm store path</code>。<br/>注意边界：这个包只提供 pnpm 命令本身；<b>项目要跑起来仍然需要 Node</b>（装应用中心的 nodejs 运行时即可），pnpm 不会替项目提供解释器。</p><p>上游项目：<a href='https://github.com/pnpm/pnpm'>pnpm/pnpm</a>（最初的创造者与权利源头，MIT 许可）。</p>"
+platform              = ${PLATFORM}
+source                = thirdparty
+
+# ── 三个作者（specs/authorship.md；本包按上游署名）─────────────────────────
+maintainer            = pnpm
+maintainer_url        = https://github.com/pnpm/pnpm
+distributor           = pnpm
+distributor_url       = https://github.com/pnpm/pnpm
+source_author         = pnpm
+source_author_url     = https://github.com/pnpm/pnpm
+
+# 纯 CLI 应用：没有 Web 面板、没有端口、没有常驻进程
+desktop_uidir         =
+desktop_applaunchname =
+ctl_stop              = false
+checkport             = false
+disable_authorization_path = true
+changelog             = ${CHANGELOG}

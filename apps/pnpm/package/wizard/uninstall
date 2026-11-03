@@ -1,0 +1,27 @@
+[
+  {
+    "stepTitle": "卸载 pnpm",
+    "items": [
+      {
+        "type": "radio",
+        "field": "wizard_uninstall_mode",
+        "label": "卸载方式",
+        "initValue": "keep",
+        "options": [
+          {
+            "label": "保留记录卸载（保留被接管命令的还原记录，重装后可直接还原）",
+            "value": "keep"
+          },
+          {
+            "label": "完全卸载（连还原记录与安装日志一起删掉）",
+            "value": "purge"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "两种方式都不动你的项目目录、不动 pnpm 的全局缓存（在各自用户的家目录里）。卸载时 /usr/local/bin/pnpm 会被移除；如果安装时接管了别人原有的同名命令，会按记录还原。"
+      }
+    ]
+  }
+]

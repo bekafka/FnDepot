@@ -1,0 +1,64 @@
+#!/bin/bash
+# ==============================================================================
+# 安装后：建立 pnpm 命令入口，并自证二进制真的能跑。
+#
+# 这一步是「装完就能在终端敲 pnpm」的唯一保证：
+# 平台的 usr-local-linker 在应用启动时建链接，而本应用没有启动按钮（ctl_stop=false），
+# 所以这里（root 身份）主动建一次；链接的接管与还原逻辑都在 payload 内的
+# pnpm-link.sh，卸载阶段用同一套记录还原。
+# ==============================================================================
+set -u
+
+APPNAME="pnpm"
+PKGVAR="${TRIM_PKGVAR:?}"
+APPDEST="${TRIM_APPDEST:?}"
+LOG="$PKGVAR/info.log"
+TMPLOG="${TRIM_TEMP_LOGFILE:-}"
+BIN="$APPDEST/bin/pnpm"
+HELPER="$APPDEST/pnpm-link.sh"
+
+emit() {
+  printf '%s - [install] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true
+  [ -n "$TMPLOG" ] && printf '[install] %s\n' "$*" >> "$TMPLOG" 2>/dev/null || true
+  echo "[install] $*"
+}
+
+mkdir -p "$PKGVAR" 2>/dev/null || true
+
+if [ ! -f "$BIN" ]; then
+  emit "payload 缺少 $BIN，安装失败"
+  [ -n "$TMPLOG" ] && echo "安装包不完整：缺少可执行文件 bin/pnpm" >> "$TMPLOG"
+  exit 1
+fi
+chmod 0755 "$BIN" 2>/dev/null || true
+
+# 自证：二进制能在本机跑起来（架构不对/缺 glibc 在这一步就会暴露）
+if ! VER="$(timeout 30 "$BIN" --version 2>>"$LOG")"; then
+  emit "pnpm 可执行文件无法运行（架构或运行时库不匹配），安装失败"
+  [ -n "$TMPLOG" ] && echo "pnpm 可执行文件无法在本机运行，请确认安装包架构与设备一致（arm 包 vs x86 包）" >> "$TMPLOG"
+  exit 1
+fi
+emit "pnpm 二进制自检通过：v${VER}"
+
+if [ ! -f "$HELPER" ]; then
+  emit "payload 缺少 $HELPER，安装失败"
+  exit 1
+fi
+chmod 0755 "$HELPER" 2>/dev/null || true
+
+bash "$HELPER" ensure >> "$LOG" 2>&1 || true
+
+# 以结果为准再说结论：脚本身份没有 /usr/local/bin 写权限时，入口由平台的
+# usr-local-linker 建（实测装完就在），所以这里只如实报告当前那一刻的状态。
+if [ -L /usr/local/bin/pnpm ] && \
+   [ "$(readlink -f /usr/local/bin/pnpm)" = "$(readlink -f "$BIN")" ]; then
+  emit "命令入口就绪：/usr/local/bin/pnpm → $BIN"
+else
+  emit "命令入口尚未出现（当前身份 $(id -un) 无 /usr/local/bin 写权限）；manifest 已声明 usr-local-linker，平台会在安装收尾/启动时建立"
+  emit "若启动后仍不可用：可执行文件在 $BIN，加一条软链即可"
+fi
+
+emit "用法：pnpm -v / pnpm install / pnpm store path"
+emit "需要 pnpm add -g 全局安装时，先跑一次 pnpm setup（把全局 bin 目录写进你的 shell 配置），再重开终端"
+emit "提示：这个包只提供 pnpm 命令；项目要跑起来仍需 Node（装应用中心的 nodejs 运行时）"
+exit 0

@@ -434,6 +434,29 @@
         "assets/Magpie/Preview/1-panel-agent.png",
         "assets/Magpie/Preview/2-desktop-iframe.png"
       ]
+    },
+    "pnpm": {
+      "display_name": "pnpm",
+      "desc": "Node.js 生态里更快、更省磁盘的包管理器，官方 standalone 单文件版：装完终端直接可用 pnpm，不依赖 nodejs 运行时。源自 <a href='https://github.com/pnpm/pnpm'>pnpm/pnpm</a>（MIT）。",
+      "platform": [
+        "x86",
+        "arm"
+      ],
+      "categories": [
+        "编程开发"
+      ],
+      "icon_url": "assets/pnpm/ICON.PNG",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "pnpm",
+      "distributor_url": "https://github.com/pnpm/pnpm",
+      "maintainer": "pnpm",
+      "maintainer_url": "https://github.com/pnpm/pnpm",
+      "source_author": "pnpm",
+      "source_author_url": "https://github.com/pnpm/pnpm",
+      "releases": {},
+      "readme_url": "assets/pnpm/README.md"
     }
   }
 }

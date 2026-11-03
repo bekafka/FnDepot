@@ -263,14 +263,23 @@ def main():
                     tasks.append((f"{key}/{arch}", size, url))
 
         # ── 作者口径（FnFactory/specs/authorship.md）────────────────────
-        dist = app.get("distributor")
-        dist_url = app.get("distributor_url")
-        if dist != FIXED_PUBLISHER:
+        # 发布者：默认固定本源（bekafka）；应用若声明了别的开发者（例如由上游
+        # 自己署名的包），允许发布者等于该开发者，但主页必须指向同一 owner。
+        dist = (app.get("distributor") or "").strip()
+        dist_url = (app.get("distributor_url") or "").strip()
+        maint = (app.get("maintainer") or "").strip()
+        allowed_publishers = {FIXED_PUBLISHER}
+        if maint:
+            allowed_publishers.add(maint)
+        if dist not in allowed_publishers:
             problems.append(
-                f"{key}：distributor 应为 {FIXED_PUBLISHER}（发布者固定本源），现在是 {dist!r}")
-        if dist_url != FIXED_PUBLISHER_URL:
+                f"{key}：distributor 应为 {FIXED_PUBLISHER}（发布者固定本源）"
+                f"或该应用的开发者 {maint!r}，现在是 {dist!r}")
+        if dist_url != FIXED_PUBLISHER_URL and not dist_url.startswith(
+                f"https://github.com/{dist}/"):
             problems.append(
-                f"{key}：distributor_url 应为 {FIXED_PUBLISHER_URL}，现在是 {dist_url!r}")
+                f"{key}：distributor_url 应为 {FIXED_PUBLISHER_URL}"
+                f" 或 https://github.com/{dist}/…，现在是 {dist_url!r}")
 
         src = (app.get("source_author") or "").strip()
         src_url = (app.get("source_author_url") or "").strip()

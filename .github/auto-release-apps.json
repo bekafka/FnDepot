@@ -33,6 +33,15 @@
       "cooldown_hours": 12,
       "changelog_from": "release_body",
       "note": "只跟正式版（2026-10-25 起，此前 2026-10-24 曾同时跟 beta）。上游已进稳定期：2.0.0 / 2.0.1 均为正式版，beta 线停在 beta.52（2026-10-21）不再推进。本应用跑在 NAS 当生产服务，不宜自动跟进 beta。tag_pattern 仍保留 -suffix 分支，便于手动 -f version=... 指定某个 beta。包版本必须等于上游版本：CI 把 VERSION 同时当镜像 tag 与 git tag 用，做安全修订（如 .1 后缀）须走本地 build-local.sh + UPSTREAM_VERSION。"
+    },
+    "pnpm": {
+      "enabled": true,
+      "upstream_repo": "pnpm/pnpm",
+      "include_prerelease": false,
+      "tag_pattern": "^v?[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "cooldown_hours": 24,
+      "changelog_from": "release_body",
+      "note": "上游 tag 形如 v12.16.1，release 里带 pnpm-linux-<x64|arm64>.tar.gz 两个资产。只跟正式版（CLI 工具对使用者是直接可用的命令，不跟 rc/beta）；冷却 24h，一天最多自动出一版。包版本必须等于上游版本，纯打包修订（如 12.16.1-2）走 workflow_dispatch 的 version 输入。"
     }
   }
 }

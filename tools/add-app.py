@@ -82,6 +82,14 @@ def main():
                     help="源作者：上游项目最初的创造者/组织（GitHub owner，例：agalwood）")
     ap.add_argument("--source-author-url", required=True,
                     help="源作者项目主页：https://github.com/<owner>/<repo>（不带 /releases）")
+    ap.add_argument("--maintainer", default="",
+                    help="开发者账号（默认 = --repo 的 owner）")
+    ap.add_argument("--maintainer-url", default="",
+                    help="开发者主页（默认 = https://github.com/<repo>）")
+    ap.add_argument("--distributor", default=DISTRIBUTOR,
+                    help=f"发布者账号（默认 {DISTRIBUTOR}；上游自署名的包可写上游账号）")
+    ap.add_argument("--distributor-url", default="",
+                    help="发布者主页（默认：bekafka 用本源仓库，其它用开发者主页）")
     ap.add_argument("--run-as", default="package", choices=["package", "root"])
     ap.add_argument("--install-type", default="",
                     help='"" = 存储空间（默认）；"root" = 系统空间，需物证（cmd/install_callback 碰 /boot 或注册 systemd）')
@@ -132,8 +140,16 @@ def main():
     # 自建应用：开发者 = bekafka，主页就是本仓库 https://github.com/bekafka/FnDepot；
     # 第三方收录：开发者 = 上游打包者 + 项目页（沿用 fndepot 口径）。
     owner = args.repo.split("/")[0]
-    maintainer = owner
-    maintainer_url = f"https://github.com/{args.repo}"
+    maintainer = (args.maintainer or owner).strip()
+    maintainer_url = (args.maintainer_url or f"https://github.com/{args.repo}").strip()
+    distributor = (args.distributor or DISTRIBUTOR).strip()
+    if args.distributor_url:
+        distributor_url = args.distributor_url.strip()
+    elif distributor == DISTRIBUTOR:
+        distributor_url = DISTRIBUTOR_URL
+    else:
+        # 上游自署名：默认发布者主页就是开发者主页（同一个项目页）
+        distributor_url = maintainer_url
 
     node = {
         "display_name": args.display_name,
@@ -144,8 +160,8 @@ def main():
         "run_as": args.run_as,
         "install_type": args.install_type,
         "is_docker": bool(args.is_docker),
-        "distributor": DISTRIBUTOR,
-        "distributor_url": DISTRIBUTOR_URL,
+        "distributor": distributor,
+        "distributor_url": distributor_url,
         "maintainer": maintainer,
         "maintainer_url": maintainer_url,
         "source_author": source_author,
@@ -154,8 +170,9 @@ def main():
     }
 
     # 自建应用：索引必须与 apps/<App>/package/manifest 的作者字段逐字一致
+    # （自建与否看仓库里有没有该应用的包模板，不看 owner 是谁——上游自署名的自建包同样适用）
     pkg_manifest = os.path.join(ROOT, "apps", args.key, "package", "manifest")
-    if owner == DISTRIBUTOR and os.path.isfile(pkg_manifest):
+    if os.path.isfile(pkg_manifest):
         mf = parse_manifest(pkg_manifest)
         diff = [(f, node[f], mf.get(f)) for f in AUTHOR_FIELDS if mf.get(f) != node[f]]
         if diff:
@@ -166,7 +183,7 @@ def main():
     if args.service_port:
         node["service_port"] = args.service_port
     if args.readme:
-        if owner == DISTRIBUTOR:
+        if os.path.isfile(pkg_manifest):
             rel = f"assets/{args.key}/README.md"
             if not os.path.isfile(os.path.join(ROOT, rel)):
                 sys.exit(f"--readme：自建应用的应用页应放在 {rel}（先写应用页，再上架）")

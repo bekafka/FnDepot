@@ -1,0 +1,27 @@
+#!/bin/bash
+# 升级后：命令入口重新指向新版本的可执行文件（install_callback 已写过一次，
+# 这里再幂等确保一遍，覆盖「升级路径不跑 install_callback」的实现差异）。
+set -u
+APPNAME="pnpm"
+APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
+PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"
+HELPER="$APPDEST/pnpm-link.sh"
+LOG="$PKGVAR/info.log"
+
+emit() {
+  printf '%s - [upgrade] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true
+  [ -n "${TRIM_TEMP_LOGFILE:-}" ] && printf '[upgrade] %s\n' "$*" >> "$TRIM_TEMP_LOGFILE" 2>/dev/null || true
+  echo "[upgrade] $*"
+}
+
+if [ -f "$HELPER" ]; then
+  chmod 0755 "$APPDEST/bin/pnpm" "$HELPER" 2>/dev/null || true
+  if bash "$HELPER" ensure >> "$LOG" 2>&1; then
+    emit "命令入口已指向新版本：$APPDEST/bin/pnpm"
+  else
+    emit "命令入口刷新失败，详见 $LOG"
+  fi
+else
+  emit "缺少 $HELPER，跳过命令入口刷新"
+fi
+exit 0

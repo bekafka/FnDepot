@@ -1,0 +1,52 @@
+#!/bin/bash
+# ==============================================================================
+# pnpm · 生命周期入口（start / stop / status）
+#
+# 这个应用装的是一个 CLI 可执行文件，没有常驻进程，所以语义要如实：
+#   start  ：幂等地确保 /usr/local/bin/pnpm 可用（平台若调用，这里补齐链接）
+#   stop   ：什么都不做。命令式应用「停止」不该让已装的命令从终端里消失，
+#            撤链接只发生在卸载阶段（uninstall_callback）。
+#   status ：0 = 命令可用（可执行文件在 + 链接指向它）；3 = 不可用。
+#            这里刻意不是「有没有进程在跑」——没有进程正是它的正常状态。
+#
+# 注意：不要照抄服务类模板的「无条件 exit 0 + 伪造运行态」。这个包 ctl_stop=false，
+# 应用中心不显示运行状态；status 的语义只用来回答「命令还在不在」。
+# ==============================================================================
+set -u
+
+APPNAME="pnpm"
+APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
+PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"
+HELPER="$APPDEST/pnpm-link.sh"
+
+log_msg() {
+  printf '%s - %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$PKGVAR/info.log" 2>/dev/null || true
+}
+
+case "${1:-}" in
+  start)
+    if [ ! -f "$HELPER" ]; then
+      log_msg "缺少 $HELPER（payload 不完整？）"
+      echo "缺少 $HELPER，无法建立 pnpm 命令入口" >&2
+      exit 1
+    fi
+    bash "$HELPER" ensure
+    exit $?
+    ;;
+  stop)
+    # 不撤链接：卸载才是撤链接的时机。
+    log_msg "stop：命令式应用，无进程需要停止（保留 $APPDEST/bin/pnpm 与 /usr/local/bin/pnpm）"
+    exit 0
+    ;;
+  status)
+    if [ ! -f "$HELPER" ]; then
+      exit 3
+    fi
+    bash "$HELPER" status
+    exit $?
+    ;;
+  *)
+    echo "usage: $0 {start|stop|status}" >&2
+    exit 1
+    ;;
+esac
