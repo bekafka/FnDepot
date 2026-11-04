@@ -1,0 +1,26 @@
+#!/bin/bash
+# 升级后：两条命令入口重新指向新版本（install_callback 已写过一次，这里幂等再确保一遍）。
+set -u
+APPNAME="bun"
+APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
+PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"
+HELPER="$APPDEST/bun-link.sh"
+LOG="$PKGVAR/info.log"
+
+emit() {
+  printf '%s - [upgrade] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true
+  [ -n "${TRIM_TEMP_LOGFILE:-}" ] && printf '[upgrade] %s\n' "$*" >> "$TRIM_TEMP_LOGFILE" 2>/dev/null || true
+  echo "[upgrade] $*"
+}
+
+if [ -f "$HELPER" ]; then
+  chmod 0755 "$APPDEST/bin/bun" "$APPDEST/bin/bunx" "$HELPER" 2>/dev/null || true
+  if bash "$HELPER" ensure >> "$LOG" 2>&1; then
+    emit "命令入口已指向新版本：$APPDEST/bin/{bun,bunx}"
+  else
+    emit "命令入口刷新失败，详见 $LOG"
+  fi
+else
+  emit "缺少 $HELPER，跳过命令入口刷新"
+fi
+exit 0

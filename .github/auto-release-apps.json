@@ -60,6 +60,15 @@
       "cooldown_hours": 24,
       "changelog_from": "release_body",
       "note": "上游 tag 形如 v2.103.3，release 带 gh_<ver>_linux_<arm64|amd64>.tar.gz 与 gh_<ver>_checksums.txt。只跟正式版；冷却 24h。包版本必须等于上游版本，纯打包修订走 workflow_dispatch 的 version 输入。"
+    },
+    "bun": {
+      "enabled": true,
+      "upstream_repo": "oven-sh/bun",
+      "include_prerelease": false,
+      "tag_pattern": "[0-9]+\\.[0-9]+\\.[0-9]+",
+      "cooldown_hours": 24,
+      "changelog_from": "release_body",
+      "note": "上游 tag 形如 bun-v1.4.4（前缀 bun-v），故 tag_pattern 不锚定开头，流水线用 grep -Eo 取出版本号 1.4.4。资产是 zip 且按平台命名（bun-linux-x64.zip / bun-linux-aarch64.zip），另有 baseline/musl/profile 变体，本包固定取标准 gnu 版；校验用上游汇总清单 SHASUMS256.txt。只跟正式版（canary 等 prerelease 会被 include_prerelease=false 过滤）。"
     }
   }
 }

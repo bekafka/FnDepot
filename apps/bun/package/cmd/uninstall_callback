@@ -1,0 +1,84 @@
+#!/bin/bash
+# ==============================================================================
+# 卸载后：撤掉本应用建立的两条命令入口（bun / bunx），并还原安装时接管掉的那份。
+#
+# 自带清理逻辑（不调 payload 里的助手）：uninstall_callback 执行时应用目录可能已被清掉。
+# 路径护栏：只删「指向本应用」的链接；记录文件只在 /vol1/@appdata/* 下才删；
+# 还原目标不存在就只清理，不制造悬空链接。
+# ==============================================================================
+set -u
+
+APPNAME="bun"
+BINS="bun bunx"
+PKGVAR="${TRIM_PKGVAR:-}"
+LINKDIR="/usr/local/bin"
+MODE="${wizard_uninstall_mode:-keep}"
+
+log() {
+  printf '%s - [uninstall] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" \
+    >> "${TRIM_TEMP_LOGFILE:-/dev/null}" 2>/dev/null || true
+  echo "[uninstall] $1"
+}
+
+for bin in $BINS; do
+  LINK="$LINKDIR/$bin"
+  REC="${PKGVAR:+$PKGVAR/preserved-usr-local-bin-$bin}"
+
+  # ── 1. 移除本应用建立的命令入口 ───────────────────────────────────────────
+  if [ -L "$LINK" ]; then
+    TARGET="$(readlink "$LINK" 2>/dev/null || true)"
+    case "$TARGET" in
+      /var/apps/$APPNAME/*|/vol1/@appcenter/$APPNAME/*)
+        rm -f "$LINK" 2>/dev/null && log "已移除命令入口 $LINK（原指向 $TARGET）"
+        ;;
+      *)
+        log "$LINK 指向别处（$TARGET），不属于本应用，不动它"
+        ;;
+    esac
+  elif [ -e "$LINK" ]; then
+    log "$LINK 是真实文件，不属于本应用，不动它"
+  else
+    log "$LINK 不存在，无需移除"
+  fi
+
+  # ── 2. 还原安装时被接管的同名命令 ─────────────────────────────────────────
+  if [ -n "$REC" ] && [ -s "$REC" ]; then
+    PREV="$(head -n 1 "$REC" | tr -d '\r\n' | sed 's/[[:space:]]*$//')"
+    if [ -n "$PREV" ] && { [ -e "$PREV" ] || [ -L "$PREV" ]; }; then
+      if [ ! -e "$LINK" ] && [ ! -L "$LINK" ]; then
+        ln -sfn "$PREV" "$LINK" 2>/dev/null && log "已还原被接管的命令入口：$LINK → $PREV"
+      else
+        log "还原跳过：$LINK 已被别的东西占用（记录的原指向是 $PREV）"
+      fi
+    else
+      log "安装时接管的 $bin 原命令已不存在（${PREV:-空}），不做还原以免留下悬空链接"
+    fi
+  fi
+done
+
+# ── 3. 按用户选择处理应用状态目录 ───────────────────────────────────────────
+case "$MODE" in
+  purge)
+    case "$PKGVAR" in
+      /vol1/@appdata/*)
+        log "完全卸载：删除还原记录与安装日志"
+        for bin in $BINS; do
+          rm -f "$PKGVAR/preserved-usr-local-bin-$bin" \
+                "$PKGVAR/preserved-usr-local-bin-$bin.bin" 2>/dev/null || true
+        done
+        rm -f "$PKGVAR/info.log.1" 2>/dev/null || true
+        log "残留内容：$(ls -A "$PKGVAR" 2>/dev/null | tr '\n' ' ')"
+        rm -f "$PKGVAR/info.log" 2>/dev/null || true
+        ;;
+      *)
+        log "PKGVAR 不在预期路径（${PKGVAR:-空}），为安全起见跳过删除"
+        ;;
+    esac
+    ;;
+  *)
+    log "保留记录卸载：还原记录与日志都留着，重装后会重新建立命令入口"
+    ;;
+esac
+
+log "提示：你的项目目录与 bun 的缓存（各自用户家目录下的 ~/.cache/bun 等）都未改动"
+exit 0

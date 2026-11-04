@@ -651,6 +651,29 @@
         }
       },
       "readme_url": "assets/PhotoCraft/README.md"
+    },
+    "bun": {
+      "display_name": "bun",
+      "desc": "Oven 用 Zig 写的 JavaScript / TypeScript 一体化工具链（极快）：一个可执行文件里同时提供运行时、包管理器、打包器、测试运行器，可替代 node + npm + esbuild + jest 这一套。官方 standalone 单文件版，装完终端直接可用 bun 与 bunx，不需要先装 Node.js。源自 <a href='https://github.com/oven-sh/bun'>oven-sh/bun</a>（MIT）。",
+      "platform": [
+        "x86",
+        "arm"
+      ],
+      "categories": [
+        "编程开发"
+      ],
+      "icon_url": "assets/bun/ICON.PNG",
+      "run_as": "package",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "oven-sh",
+      "distributor_url": "https://github.com/oven-sh/bun",
+      "maintainer": "oven-sh",
+      "maintainer_url": "https://github.com/oven-sh/bun",
+      "source_author": "oven-sh",
+      "source_author_url": "https://github.com/oven-sh/bun",
+      "releases": {},
+      "readme_url": "assets/bun/README.md"
     }
   }
 }

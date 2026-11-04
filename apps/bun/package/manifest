@@ -1,0 +1,25 @@
+# fnOS 应用 manifest —— bun（Oven 的 JavaScript 运行时 / 包管理器 / 打包器 / 测试器，官方单文件可执行版）
+# 占位符 ${VERSION} / ${PLATFORM} / ${CHANGELOG} 由 FnFactory 流水线（或 build-local.sh）注入。
+# 作者口径：本应用全部按上游署名（见同目录 authorship.env）。
+appname               = bun
+version               = ${VERSION}
+display_name          = bun
+desc                  = "<p>bun 是 Oven 用 Zig 写的 JavaScript / TypeScript 一体化工具链（极快）：一个可执行文件里同时提供<b>运行时、包管理器、打包器、测试运行器</b>，可以替代 node + npm + nodemon + esbuild + jest 这一套。本项目分发的 fnOS 包使用的是 bun 官方发布的<b>单文件可执行版本</b>，装完就能在终端直接敲 <code>bun</code> 与 <code>bunx</code>，<b>不依赖</b>系统 Node.js。</p><p>命令入口 <code>/usr/local/bin/bun</code>（<code>bunx</code> 是同一个二进制的别名入口，等价于 <code>bun x</code>），安装时建立、卸载时还原。常用：<code>bun --version</code>、<code>bun install</code>、<code>bun add &lt;包&gt;</code>、<code>bun run &lt;脚本&gt;</code>、<code>bun test</code>、<code>bun build</code>、<code>bunx &lt;工具&gt;</code>。<br/>注意边界：这个包只提供 bun 命令本身；它不会替换系统 node，也不会接管已有项目的 node_modules 结构（<code>bun install</code> 生成自己的 lockfile）。</p><p>上游项目：<a href='https://github.com/oven-sh/bun'>oven-sh/bun</a>（最初的创造者与权利源头，MIT 许可）。</p>"
+platform              = ${PLATFORM}
+source                = thirdparty
+
+# ── 三个作者（specs/authorship.md；本包按上游署名）─────────────────────────
+maintainer            = oven-sh
+maintainer_url        = https://github.com/oven-sh/bun
+distributor           = oven-sh
+distributor_url       = https://github.com/oven-sh/bun
+source_author         = oven-sh
+source_author_url     = https://github.com/oven-sh/bun
+
+# 纯 CLI 应用：没有 Web 面板、没有端口、没有常驻进程
+desktop_uidir         =
+desktop_applaunchname =
+ctl_stop              = false
+checkport             = false
+disable_authorization_path = true
+changelog             = ${CHANGELOG}

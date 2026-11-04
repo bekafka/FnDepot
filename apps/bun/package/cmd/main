@@ -1,0 +1,44 @@
+#!/bin/bash
+# ==============================================================================
+# bun · 生命周期入口（start / stop / status）
+#
+# 装的是 CLI 可执行文件（bun + bunx），没有常驻进程：
+#   start  ：幂等地确保 /usr/local/bin/{bun,bunx} 可用
+#   stop   ：什么都不做（命令式应用「停止」不该让终端里的 bun 消失；撤链接只在卸载时做）
+#   status ：0 = 两条命令都可用；3 = 有缺失。没有进程正是它的正常状态。
+# ==============================================================================
+set -u
+
+APPNAME="bun"
+APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
+PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"
+HELPER="$APPDEST/bun-link.sh"
+
+log_msg() {
+  printf '%s - %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$PKGVAR/info.log" 2>/dev/null || true
+}
+
+case "${1:-}" in
+  start)
+    if [ ! -f "$HELPER" ]; then
+      log_msg "缺少 $HELPER（payload 不完整？）"
+      echo "缺少 $HELPER，无法建立 bun 命令入口" >&2
+      exit 1
+    fi
+    bash "$HELPER" ensure
+    exit $?
+    ;;
+  stop)
+    log_msg "stop：命令式应用，无进程需要停止（保留 $APPDEST/bin 与 /usr/local/bin/bun）"
+    exit 0
+    ;;
+  status)
+    [ -f "$HELPER" ] || exit 3
+    bash "$HELPER" status
+    exit $?
+    ;;
+  *)
+    echo "usage: $0 {start|stop|status}" >&2
+    exit 1
+    ;;
+esac
