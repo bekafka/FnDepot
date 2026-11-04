@@ -1,7 +1,7 @@
 #!/bin/bash
 # 升级后：两条命令入口重新指向新版本（install_callback 已写过一次，这里幂等再确保一遍）。
 set -u
-APPNAME="bun"
+APPNAME="bunjs"
 APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
 PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"
 HELPER="$APPDEST/bun-link.sh"

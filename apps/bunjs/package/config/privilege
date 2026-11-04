@@ -2,6 +2,6 @@
     "defaults": {
         "run-as": "package"
     },
-    "username": "bun",
-    "groupname": "bun"
+    "username": "bunjs",
+    "groupname": "bunjs"
 }

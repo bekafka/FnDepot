@@ -12,7 +12,7 @@
 # ==============================================================================
 set -u
 
-APP="bun"
+APP="bunjs"
 APP_DIR="${APP_DIR:-/var/apps/$APP}"
 APPDEST="${APPDEST:-$(readlink -f "$APP_DIR/target" 2>/dev/null || echo "$APP_DIR/target")}"
 PKGVAR="${PKGVAR:-$(readlink -f "$APP_DIR/var" 2>/dev/null || echo "/vol1/@appdata/$APP")}"
@@ -56,6 +56,15 @@ stage_cmd() {
   head2 "命令可用性"
   if [ -x "$BIN" ]; then ok "可执行文件存在且可执行：$BIN"; else bad "缺少可执行文件 $BIN"; fi
   if [ -x "$BINX" ]; then ok "bunx 存在且可执行：$BINX"; else bad "缺少 bunx（$BINX）"; fi
+  # 体积断言：bunx 应该是几百字节的包装脚本，不是 102 MB 的二进制副本
+  if [ -e "$BINX" ]; then
+    SZ="$(stat -c '%s' "$BINX" 2>/dev/null || echo 0)"
+    if [ "$SZ" -gt 0 ] && [ "$SZ" -lt 204800 ]; then
+      ok "bunx 是包装脚本（${SZ} 字节），没有额外复制一份 102 MB 二进制"
+    else
+      bad "bunx 体积异常（${SZ} 字节）：疑似被打包器解引用成了二进制副本，磁盘会多占约 102 MB"
+    fi
+  fi
 
   if [ -f "$PROV" ]; then
     ok "溯源文件存在：$PROV"

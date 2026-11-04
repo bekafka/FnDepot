@@ -6,7 +6,7 @@
 # ==============================================================================
 set -u
 
-APPNAME="bun"
+APPNAME="bunjs"
 PKGVAR="${TRIM_PKGVAR:?}"
 APPDEST="${TRIM_APPDEST:?}"
 LOG="$PKGVAR/info.log"

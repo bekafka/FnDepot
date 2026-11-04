@@ -99,10 +99,21 @@ log "ELF 架构核对通过：$ARCH ($MACHINE)"
 # ── 4. 铺进 payload ─────────────────────────────────────────────────────────
 mkdir -p "$PAYLOAD_DIR/bin" "$PAYLOAD_DIR/share"
 install -m 0755 "$BIN_BUN" "$PAYLOAD_DIR/bin/bun"
-# bunx 是同一个二进制按 argv[0] 分派的别名入口（等价于 `bun x`），上游 npm 包也是软链形态；
-# 这里建同名软链，让「命令入口声明两条」在包内真的成立。
-ln -sfn bun "$PAYLOAD_DIR/bin/bunx"
-log "已建立 bin/bunx → bun 软链（bun 按调用名分派，行为等价于 bun x）"
+# bunx 等价于 `bun x`。上游 npm 包用软链实现，但**打包器归档时会跟随软链把 102 MB 的
+# bun 再存一份**（实测内层 app.tgz 因此从 ~40 MB 涨到 107 MB，装完磁盘上也是两份实体）。
+# 所以这里不建软链，改成几行小脚本：体积可忽略，行为与 `bun x` 完全一致。
+cat > "$PAYLOAD_DIR/bin/bunx" <<'WRAPPER'
+#!/bin/sh
+# bunx = bun x（与上游 npm 包的软链入口等价；这里用脚本，避免包里多存一份 102 MB 二进制）
+self=$0
+if command -v readlink >/dev/null 2>&1; then
+  r=$(readlink -f "$self" 2>/dev/null) && [ -n "$r" ] && self=$r
+fi
+dir=$(CDPATH= cd -- "$(dirname -- "$self")" && pwd) || exit 1
+exec "$dir/bun" x "$@"
+WRAPPER
+chmod 0755 "$PAYLOAD_DIR/bin/bunx"
+log "已生成 bin/bunx 包装脚本（$(wc -c < "$PAYLOAD_DIR/bin/bunx") 字节，替代 102 MB 的副本/软链）"
 
 # 许可证：MIT
 for f in LICENSE.md LICENSE; do
@@ -117,7 +128,7 @@ BIN_SHA="$(sha256sum "$PAYLOAD_DIR/bin/bun" | awk '{print $1}')"
 
 cat > "$PAYLOAD_DIR/share/PROVENANCE.json" <<EOF
 {
-  "app": "bun",
+  "app": "bunjs",
   "upstream_repo": "https://github.com/${UPSTREAM_REPO}",
   "upstream_tag": "${TAG}",
   "upstream_version": "${VERSION}",
@@ -131,7 +142,7 @@ cat > "$PAYLOAD_DIR/share/PROVENANCE.json" <<EOF
     "binary": "bin/bun",
     "binary_sha256": "${BIN_SHA}",
     "second_binary": "bin/bunx",
-    "second_binary_kind": "symlink-to-bun",
+    "second_binary_kind": "wrapper-script-exec-bun-x",
     "arch": "${ARCH}",
     "asset_platform": "${ASSET%.zip}",
     "elf_machine": "${MACHINE}",

@@ -12,7 +12,7 @@ fnOS 应用中心统一管理，和官方应用一样操作。
 | [pnpm](assets/pnpm/README.md) | `pnpm` | 12.17.0 | arm / x86 | [pnpm/pnpm](https://github.com/pnpm/pnpm) | Node.js 生态里更快、更省磁盘的包管理器（官方 standalone 单文件版）：装完终端直接可用 `pnpm`，不依赖 nodejs 运行时 |
 | [gh cli](assets/gh-cli/README.md) | `gh-cli` | 2.103.3 | arm / x86 | [cli/cli](https://github.com/cli/cli) | GitHub 官方命令行工具（官方静态二进制）：终端里管仓库 / Issue / PR / Actions / Release / API；安装向导可选填 GitHub Token，填了之后同机终端用户直接可用 `gh` |
 | [uv bin](assets/uvbin/README.md) | `uvbin` | 0.13.7 | arm / x86 | [astral-sh/uv](https://github.com/astral-sh/uv) | Rust 写的 Python 包与项目管理器（官方 standalone 单文件版）：装完终端直接可用 `uv` / `uvx`，不需要先装 Python |
-| [bun](assets/bun/README.md) | `bun` | 1.4.4 | arm / x86 | [oven-sh/bun](https://github.com/oven-sh/bun) | Oven 用 Zig 写的 JS/TS 一体化工具链（官方 standalone 单文件版）：一个可执行文件里同时是运行时、包管理器、打包器、测试运行器，装完直接可用 `bun` / `bunx` |
+| [Bun](assets/bunjs/README.md) | `bunjs` | 1.4.4 | arm / x86 | [oven-sh/bun](https://github.com/oven-sh/bun) | Oven 用 Zig 写的 JS/TS 一体化工具链（官方 standalone 单文件版）：一个可执行文件里同时是运行时、包管理器、打包器、测试运行器，装完直接可用 `bun` / `bunx`；沿用应用中心已有的 `bunjs` 键，覆盖升级 |
 | [Cloudflare 优选](assets/CloudflareIP/README.md) | `CloudflareIP` | 1.0.0 | arm / x86 | [bekafka/FnDepot](https://github.com/bekafka/FnDepot) | 给走 Cloudflare 的域名挑真正可用且落点近的边缘 IP，按页面级首字节耗时排名，结果写进本机 /etc/hosts 的受管区块（可一键还原） |
 | [PhotoCraft](assets/PhotoCraft/README.md) | `PhotoCraft` | 0.20.1 | arm / x86 | [storytold/photocraft](https://github.com/storytold/photocraft) | 浏览器里运行的图像编辑器（WebAssembly）：图层、蒙版、调整图层、图层样式、文字、矢量与真实 PSD 读写；NAS 只做静态托管，编辑与文件读写都在访客设备上完成 |
 

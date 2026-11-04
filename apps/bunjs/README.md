@@ -1,6 +1,8 @@
-# bun · 飞牛 fnOS 应用包
+# Bun（应用键 `bunjs`）· 飞牛 fnOS 应用包
 
-把 [Oven 的 bun](https://github.com/oven-sh/bun) 做成飞牛 fnOS 可安装的 `bun.fpk`：装完就能在终端直接敲 `bun` 与 `bunx`。
+把 [Oven 的 bun](https://github.com/oven-sh/bun) 做成飞牛 fnOS 可安装的应用包：装完就能在终端直接敲 `bun` 与 `bunx`。
+
+> **应用键为什么是 `bunjs` 而不是 `bun`**：飞牛应用中心里已有一个同名应用 `bunjs`（显示名 Bun，旧版 1.3.9，落盘 `/vol1/@appcenter/bunjs`）。本包沿用同一个键，安装时就是**覆盖升级**该应用，不会并排多装一个 bun。代价是：卸载本包会连同该目录一起清掉；商店若再推官方 1.3.9 更新，会把版本盖回去。
 
 ## 这是什么形态
 
@@ -34,7 +36,7 @@ bunx <工具>              # 上一条的别名入口
 bun -e 'console.log(1)'  # 直接求值
 ```
 
-命令入口是 `/usr/local/bin/bun` 与 `/usr/local/bin/bunx`，指向 `/var/apps/bun/target/bin/`；
+命令入口是 `/usr/local/bin/bun` 与 `/usr/local/bin/bunx`，指向 `/var/apps/bunjs/target/bin/`；
 这个位置在默认 PATH 上，登录 shell、非登录 shell、脚本、cron 都能直接用。
 
 ## 命令入口怎么建立、怎么还原
@@ -42,13 +44,12 @@ bun -e 'console.log(1)'  # 直接求值
 飞牛官方机制是 `config/resource` 里声明 `usr-local-linker`，平台在**应用启动时**建链接、停止时移除。
 这个应用没有常驻进程（`ctl_stop=false`，不显示启动按钮），「启动」不一定发生，所以**安装阶段自己挂一次**。
 
-`bunx` 不是第二个二进制：它是 `bun` 按调用名分派出的别名入口（等价于 `bun x`），
-包里以 `bin/bunx → bun` 软链的形式存在（上游 npm 包也是这个做法）。
+`bunx` 不是第二个二进制：它等价于 `bun x`。上游 npm 包用**软链**实现，但实测**打包器归档时会跟随软链把 102 MB 的 bun 再存一份**（内层 app.tgz 从约 40 MB 涨到 107 MB，装完磁盘上也是两份实体）。所以这里改成**几百字节的包装脚本**（解析自身真实路径后 `exec bun x`），行为一致、体积可忽略；`tests/accept.sh` 里有体积断言，防止它再被塞成二进制副本。
 
 链接助手按名字逐条记账：
 
 - 安装时 `/usr/local/bin/bun` 或 `/usr/local/bin/bunx` 已被占用 → 把原指向记进
-  `/vol1/@appdata/bun/preserved-usr-local-bin-<name>`，再改指本应用；原物是真实文件则另存 `.bin`；
+  `/vol1/@appdata/bunjs/preserved-usr-local-bin-<name>`，再改指本应用；原物是真实文件则另存 `.bin`；
 - 卸载时只删「指向本应用」的那两条，并按各自记录还原；原目标早就不存在就只清理，不留悬空链接；
 - `cmd/main stop` 不动链接——命令式应用点一次「停止」不该让终端里的 bun 消失。
 
@@ -59,7 +60,7 @@ package/                fnOS 包模板（manifest / config / cmd / wizard / app�
   app/bun-link.sh       命令入口助手（两条命令的 ensure / remove / status）
   cmd/install_callback  铺命令入口 + 二进制自检（--version 读不出来就判安装失败）
   cmd/uninstall_callback 撤两条入口 + 各自还原
-packaging/build.sh      payload 生产线（取上游 zip → 汇总清单校验 → 解压核对 ELF 架构 → 铺 bun/bunx）
+packaging/build.sh      payload 生产线（取上游 zip → 汇总清单校验 → 解压核对 ELF 架构 → 铺 bun + 生成 bunx 包装脚本）
 tests/accept.sh         设备上的验收阶梯（cmd / cache / realinstall / path + 卸载前后两段）
 build-local.sh          本地一键出包
 authorship.env          作者口径声明（本应用按上游署名 oven-sh）
@@ -69,7 +70,7 @@ authorship.env          作者口径声明（本应用按上游署名 oven-sh）
 
 ```bash
 # 本地出包（需能访问 GitHub releases；国内环境可用 BUN_DL_PROXY 指定代理）
-ARCH=arm64 VERSION=1.4.4 CHANGELOG="首版" bash build-local.sh
+ARCH=arm64 VERSION=1.4.4 CHANGELOG="首版" bash build-local.sh   # 出 bunjs-1.4.4-arm.fpk
 ARCH=amd64 VERSION=1.4.4 bash build-local.sh
 ```
 
@@ -108,6 +109,6 @@ sudo bash tests/accept.sh postuninstall  # 核对两条入口已移除/已还原
 
 - **不替换系统 node**：需要 node 的项目照旧用自己的 node；bun 是独立运行时。
 - **不接管已有 node_modules**：`bun install` 会用 `bun.lock`，与 npm 的 lockfile 互不干扰。
-- **体积偏大**：单文件约 99 MB，打进 fpk 后包体明显大于 pnpm / uv，属正常。
+- **体积**：bun 单文件约 102 MB；成品 fpk 约 40 MB 量级（两层 gzip），装完磁盘约 102 MB（不再有第二份副本）。
 - **卸载走应用中心界面**：本包带卸载选项，命令行卸载会被要求改用界面。
 - **自动跟版每 6 小时巡检上游正式版**（含 canary 之外的所有 prerelease 都会被过滤掉）。

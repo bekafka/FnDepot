@@ -19,7 +19,7 @@
 # ==============================================================================
 set -u
 
-APPNAME="bun"
+APPNAME="bunjs"
 BINS="bun bunx"
 APPDEST="${TRIM_APPDEST:-/var/apps/$APPNAME/target}"
 PKGVAR="${TRIM_PKGVAR:-/vol1/@appdata/$APPNAME}"

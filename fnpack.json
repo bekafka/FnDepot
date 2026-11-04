@@ -652,17 +652,17 @@
       },
       "readme_url": "assets/PhotoCraft/README.md"
     },
-    "bun": {
-      "display_name": "bun",
+    "bunjs": {
+      "display_name": "Bun",
       "desc": "Oven 用 Zig 写的 JavaScript / TypeScript 一体化工具链（极快）：一个可执行文件里同时提供运行时、包管理器、打包器、测试运行器，可替代 node + npm + esbuild + jest 这一套。官方 standalone 单文件版，装完终端直接可用 bun 与 bunx，不需要先装 Node.js。源自 <a href='https://github.com/oven-sh/bun'>oven-sh/bun</a>（MIT）。",
       "platform": [
-        "arm",
-        "x86"
+        "x86",
+        "arm"
       ],
       "categories": [
         "编程开发"
       ],
-      "icon_url": "assets/bun/ICON.PNG",
+      "icon_url": "assets/bunjs/ICON.PNG",
       "run_as": "package",
       "install_type": "",
       "is_docker": false,
@@ -672,25 +672,8 @@
       "maintainer_url": "https://github.com/oven-sh/bun",
       "source_author": "oven-sh",
       "source_author_url": "https://github.com/oven-sh/bun",
-      "releases": {
-        "1.4.4": {
-          "changelog": "跟随上游 1.4.4（bun-v1.4.4）：上游发布说明开头是贡献者名单，本轮要点请见上游 Release 页 https://github.com/oven-sh/bun/releases/tag/bun-v1.4.4",
-          "updated_at": "2026-11-04T09:19:12Z",
-          "packages": {
-            "x86": {
-              "download_url": "https://github.com/bekafka/FnDepot/releases/download/bun-v1.4.4/bun-1.4.4-x86.fpk",
-              "sha256": "f34562bc2cd5c516851a18b550a69689159ccd3172b62f1f18bb898b17d1c461",
-              "size": 105851122
-            },
-            "arm": {
-              "download_url": "https://github.com/bekafka/FnDepot/releases/download/bun-v1.4.4/bun-1.4.4-arm.fpk",
-              "sha256": "12550782aef1a3efa24a8341a058e7eea345055b17db19f34f4b0268bd32f06c",
-              "size": 107630361
-            }
-          }
-        }
-      },
-      "readme_url": "assets/bun/README.md"
+      "releases": {},
+      "readme_url": "assets/bunjs/README.md"
     }
   }
 }

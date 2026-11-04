@@ -61,14 +61,14 @@
       "changelog_from": "release_body",
       "note": "上游 tag 形如 v2.103.3，release 带 gh_<ver>_linux_<arm64|amd64>.tar.gz 与 gh_<ver>_checksums.txt。只跟正式版；冷却 24h。包版本必须等于上游版本，纯打包修订走 workflow_dispatch 的 version 输入。"
     },
-    "bun": {
+    "bunjs": {
       "enabled": true,
       "upstream_repo": "oven-sh/bun",
       "include_prerelease": false,
       "tag_pattern": "[0-9]+\\.[0-9]+\\.[0-9]+",
       "cooldown_hours": 24,
       "changelog_from": "release_body",
-      "note": "上游 tag 形如 bun-v1.4.4（前缀 bun-v），故 tag_pattern 不锚定开头，流水线用 grep -Eo 取出版本号 1.4.4。资产是 zip 且按平台命名（bun-linux-x64.zip / bun-linux-aarch64.zip），另有 baseline/musl/profile 变体，本包固定取标准 gnu 版；校验用上游汇总清单 SHASUMS256.txt。只跟正式版（canary 等 prerelease 会被 include_prerelease=false 过滤）。"
+      "note": "应用键用 bunjs（5 字符）：飞牛官方商店已有一个同名应用 bunjs（显示名 Bun，旧版 1.3.9，落盘 /vol1/@appcenter/bunjs），本包沿用该键以便「覆盖安装」升级到新版，不再并排装第二个 bun。上游 tag 形如 bun-v1.4.4（前缀 bun-v），tag_pattern 不锚定开头，流水线用 grep -Eo 取版本号 1.4.4。资产是 zip 按平台命名（bun-linux-x64.zip / bun-linux-aarch64.zip），另有 baseline/musl/profile 变体，本包固定取标准 gnu 版；校验用上游汇总清单 SHASUMS256.txt。bin/bunx 是几行包装脚本（exec bun x），不用软链——打包器会跟随软链把 102 MB 二进制再存一份。"
     }
   }
 }

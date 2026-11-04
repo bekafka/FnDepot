@@ -12,7 +12,7 @@ set -euo pipefail
 ARCH="${ARCH:-arm64}"
 VERSION="${VERSION:?VERSION is required (只写版本号，如 1.4.4；不含 bun-v 前缀)}"
 CHANGELOG="${CHANGELOG:-跟随上游版本重新打包}"
-APP_KEY="bun"
+APP_KEY="bunjs"
 
 case "$ARCH" in
   arm64) PLATFORM="arm" ;;

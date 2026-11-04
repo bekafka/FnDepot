@@ -8,7 +8,7 @@
 # ==============================================================================
 set -u
 
-APPNAME="bun"
+APPNAME="bunjs"
 BINS="bun bunx"
 PKGVAR="${TRIM_PKGVAR:-}"
 LINKDIR="/usr/local/bin"
