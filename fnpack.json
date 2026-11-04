@@ -674,7 +674,7 @@
       "source_author_url": "https://github.com/oven-sh/bun",
       "releases": {
         "1.4.4": {
-          "changelog": "跟随上游 bun-v1.4.4：[@0xh3x](https://github.com/0xh3x)",
+          "changelog": "跟随上游 1.4.4（bun-v1.4.4）：上游发布说明开头是贡献者名单，本轮要点请见上游 Release 页 https://github.com/oven-sh/bun/releases/tag/bun-v1.4.4",
           "updated_at": "2026-11-04T09:19:12Z",
           "packages": {
             "x86": {
