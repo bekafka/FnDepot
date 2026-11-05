@@ -442,6 +442,22 @@
               "size": 27090737
             }
           }
+        },
+        "0.1.3029": {
+          "changelog": "跟随上游 v0.1.3029：Manually added relays now automatically use the balance information provided by the relay.",
+          "updated_at": "2026-11-05T06:52:40Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3029/Magpie-0.1.3029-x86.fpk",
+              "sha256": "3ecadaa22b2312ec270aa80f63ae07f203d1e5abb39d868b06a151c68ae1b8e0",
+              "size": 29350931
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3029/Magpie-0.1.3029-arm.fpk",
+              "sha256": "abe601d1a5b8d432036ab6a9050abc4d9b01f153b06d94de082c836587cdd6bb",
+              "size": 27369852
+            }
+          }
         }
       },
       "service_port": "3430",
