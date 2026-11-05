@@ -458,6 +458,22 @@
               "size": 27369852
             }
           }
+        },
+        "0.1.3064": {
+          "changelog": "跟随上游 v0.1.3064：使用情况刷新按钮现在会再次加载已保存的 Claude 账户。同时取消系统 Bun 绑定，恢复 Magpie 内置 Bun（插件首次使用时自动下载），修复系统 Bun 场景下内存大量泄露。",
+          "updated_at": "2026-11-05T16:54:42Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3064/Magpie-0.1.3064-x86.fpk",
+              "sha256": "25ac026cbbe51c65629c67bba12150cccb43eb9eb399a8b9ba7e4e8304abd987",
+              "size": 29460492
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3064/Magpie-0.1.3064-arm.fpk",
+              "sha256": "2f62f4ddd4e7f185db3345611a9674255005a9261d37d450ad24617796778242",
+              "size": 27470719
+            }
+          }
         }
       },
       "service_port": "3430",
