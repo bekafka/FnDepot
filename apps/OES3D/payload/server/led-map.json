@@ -1,0 +1,9 @@
+{
+  "leds": [
+    { "name": "green:disk_2", "label": "硬盘 2（已插）", "probe": "ata3" },
+    { "name": "green:disk_1", "label": "空插槽", "probe": "ata2" },
+    { "name": "green:disk", "label": "硬盘 1（已插）", "probe": "ata1" },
+    { "name": "green:lan", "label": "网络", "probe": "net:end0" },
+    { "name": "green:power", "label": "电源", "probe": "always:on" }
+  ]
+}

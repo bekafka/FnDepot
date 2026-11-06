@@ -723,6 +723,29 @@
         }
       },
       "readme_url": "assets/bunjs/README.md"
+    },
+    "OES3D": {
+      "display_name": "OES3D",
+      "desc": "网心云 OES / OES-A311D 的 3D 实机模型与五颗绿色 LED 指示灯控制面板，arm64 专用",
+      "platform": [
+        "arm"
+      ],
+      "categories": [
+        "系统工具"
+      ],
+      "icon_url": "assets/OES3D/ICON.PNG",
+      "run_as": "root",
+      "install_type": "",
+      "is_docker": false,
+      "distributor": "bekafka",
+      "distributor_url": "https://github.com/bekafka/FnDepot",
+      "maintainer": "bekafka",
+      "maintainer_url": "https://github.com/bekafka/FnDepot",
+      "source_author": "bekafka",
+      "source_author_url": "https://github.com/bekafka/FnDepot",
+      "releases": {},
+      "service_port": "23080",
+      "readme_url": "assets/OES3D/README.md"
     }
   }
 }

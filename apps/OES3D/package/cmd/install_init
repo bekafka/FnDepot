@@ -1,0 +1,4 @@
+#!/bin/bash
+set -eu
+# All package files are not available yet at this stage; only pre-install checks belong here.
+exit 0

@@ -1,0 +1,49 @@
+#!/bin/bash
+# 卸载后：
+#   keep  （默认）→ 什么都不删，重装即沿用配置与数据
+#   purge        → 删除应用状态（数据库、设置、插件、日志、pid 等），用户数据目录一律不动
+#
+# 规范：FnFactory/specs/uninstall.md
+# 路径护栏固定为 /vol1/@appdata/*；led-schedule.json info.log info.log.1 app.pid 换成要删的相对路径。
+set -u
+
+PKGVAR="${TRIM_PKGVAR:-}"
+MODE="${wizard_uninstall_mode:-keep}"
+
+# 归一化后再做前缀判断，防止 TRIM_PKGVAR 带 .. 绕过 case 匹配
+if [ -n "$PKGVAR" ]; then
+  PKGVAR="$(readlink -f "$PKGVAR" 2>/dev/null || printf '%s' "$PKGVAR")"
+fi
+
+log() {
+  printf '%s - [uninstall] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" \
+    >> "${TRIM_TEMP_LOGFILE:-/dev/null}" 2>/dev/null || true
+  echo "[uninstall] $1"
+}
+
+case "$MODE" in
+  purge)
+    case "$PKGVAR" in
+      /vol1/@appdata/*)
+        log "完全卸载：删除应用状态（用户数据目录保留）"
+        # 只删状态，不删 PKGVAR 本身；缺哪个就跳过
+        for rel in led-schedule.json info.log info.log.1 app.pid; do
+          case "$rel" in
+            ""|/*|.|..|*..*) log "非法 state path：$rel，跳过"; continue ;;
+          esac
+          rm -rf "${PKGVAR:?}/$rel" 2>/dev/null || true
+        done
+        log "残留内容：$(ls -A "$PKGVAR" 2>/dev/null | tr '\n' ' ')"
+        # 日志放最后删，前面的记录都写 TRIM_TEMP_LOGFILE，不受影响
+        rm -f "$PKGVAR/info.log" "$PKGVAR/info.log.1" 2>/dev/null
+        ;;
+      *)
+        log "PKGVAR 不在预期路径（$PKGVAR），为安全起见跳过删除"
+        ;;
+    esac
+    ;;
+  *)
+    log "保留配置卸载：应用状态与用户数据都保留，重装后继续使用"
+    ;;
+esac
+exit 0

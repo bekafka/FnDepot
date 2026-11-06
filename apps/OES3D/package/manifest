@@ -1,0 +1,23 @@
+# fnOS 应用 manifest —— OES3D（网心云 OES 3D 指示灯控制台）
+# ${VERSION} / ${PLATFORM} / ${CHANGELOG} 由 FnFactory 流水线或本地 build-local.sh 注入。
+appname               = OES3D
+version               = ${VERSION}
+display_name          = OES3D
+desc                  = "<p>网心云 OES / OES-A311D 的 3D 实机模型与五颗绿色 LED 指示灯控制面板。支持逐颗开关、右侧电源键全开/全关、5 秒后按真实盘位状态自动校正，以及每日定时开/关。</p><p>本应用只面向 <b>OES-A311D / fnOS arm64</b> 机型，因此只构建 <b>arm64</b> 版本。LED 写入需要 root 权限（/sys/class/leds/*/brightness），应用以 root 身份运行；页面与接口只建议在局域网使用。</p><p>源作者：<a href='https://github.com/bekafka/FnDepot'>bekafka/FnDepot</a>（本项目最初的创造者与权利源头）。</p>"
+platform              = ${PLATFORM}
+source                = thirdparty
+
+maintainer            = bekafka
+maintainer_url        = https://github.com/bekafka/FnDepot
+distributor           = bekafka
+distributor_url       = https://github.com/bekafka/FnDepot
+source_author         = bekafka
+source_author_url     = https://github.com/bekafka/FnDepot
+
+desktop_uidir         = ui
+desktop_applaunchname = OES3D.main
+ctl_stop              = true
+service_port          = 23080
+checkport             = false
+disable_authorization_path = false
+changelog             = ${CHANGELOG}

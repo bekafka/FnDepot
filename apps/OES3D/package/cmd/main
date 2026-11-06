@@ -1,0 +1,118 @@
+#!/bin/bash
+set -u
+
+APP_DIR="${TRIM_APPDEST:?TRIM_APPDEST missing}"
+VAR_DIR="${TRIM_PKGVAR:?TRIM_PKGVAR missing}"
+SERVER="$APP_DIR/server/serve.py"
+STATIC_DIR="$APP_DIR/www"
+PID_FILE="$VAR_DIR/oes-3d.pid"
+LOG_FILE="$VAR_DIR/info.log"
+PORT="${TRIM_SERVICE_PORT:-23080}"
+TMP_DIR="${TRIM_PKGTMP:-$VAR_DIR/tmp}"
+RUNTIME_BIN="/usr/bin/python3"
+ENTRY="server/serve.py"
+
+mkdir -p "$VAR_DIR" "$TMP_DIR" 2>/dev/null || true
+log_msg() { echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"; }
+
+resolve_path() { readlink -f "$1" 2>/dev/null || printf '%s' "$1"; }
+
+check_identity() {
+    local pid="${1:-}" exe want cwd cmd
+    [ -n "$pid" ] || return 1
+    [ -r "/proc/$pid/exe" ] || return 1
+    exe="$(resolve_path "$(readlink "/proc/$pid/exe" 2>/dev/null)")"
+    want="$(resolve_path "$RUNTIME_BIN")"
+    [ -n "$exe" ] && [ "$exe" = "$want" ] || return 1
+    cwd="$(resolve_path "$(readlink "/proc/$pid/cwd" 2>/dev/null)")"
+    [ "$cwd" = "$(resolve_path "$APP_DIR")" ] || return 1
+    cmd="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)"
+    case "$cmd" in *"$ENTRY"*) return 0 ;; *) return 1 ;; esac
+}
+
+check_process() { check_identity "${1:-}"; }
+
+find_orphans() {
+    local pid exe want cmd
+    want="$(resolve_path "$RUNTIME_BIN")"
+    for pid in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
+        [ "$pid" = "$$" ] && continue
+        [ -r "/proc/$pid/exe" ] || continue
+        exe="$(resolve_path "$(readlink "/proc/$pid/exe" 2>/dev/null)")"
+        [ "$exe" = "$want" ] || continue
+        cmd="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)"
+        case "$cmd" in *"$SERVER"*) printf '%s\n' "$pid" ;; esac
+    done
+}
+
+status() {
+    if [ -r "$PID_FILE" ]; then
+        local pid
+        pid=$(head -n 1 "$PID_FILE" | tr -d '[:space:]')
+        if check_process "$pid"; then
+            return 0
+        fi
+        rm -f "$PID_FILE"
+    fi
+    return 1
+}
+
+start_process() {
+    if status; then
+        return 0
+    fi
+    if [ ! -f "$SERVER" ]; then
+        echo "server/serve.py missing" > "${TRIM_TEMP_LOGFILE:-/dev/stderr}"
+        return 1
+    fi
+    log_msg "Starting oes-3d on port $PORT"
+    cd "$APP_DIR" || return 1
+    PORT="$PORT" \
+    OES_STATIC_ROOT="$STATIC_DIR" \
+    OES_SCHEDULE_FILE="$VAR_DIR/led-schedule.json" \
+    /usr/bin/python3 "$SERVER" >> "$LOG_FILE" 2>&1 &
+    printf '%s' "$!" > "$PID_FILE"
+    sleep 1
+    if status; then
+        return 0
+    fi
+    log_msg "oes-3d failed to start"
+    echo "oes-3d failed to start, see $LOG_FILE" > "${TRIM_TEMP_LOGFILE:-/dev/stderr}"
+    return 1
+}
+
+stop_process() {
+    log_msg "Stopping oes-3d"
+    local pid=""
+    if [ -r "$PID_FILE" ]; then
+        pid=$(head -n 1 "$PID_FILE" | tr -d '[:space:]')
+    fi
+    if check_process "$pid"; then
+        kill -TERM "$pid" 2>/dev/null || true
+        local count=0
+        while check_process "$pid" && [ "$count" -lt 10 ]; do
+            sleep 1
+            count=$((count + 1))
+        done
+        if check_process "$pid"; then
+            kill -KILL "$pid" 2>/dev/null || true
+        fi
+    fi
+    rm -f "$PID_FILE"
+    # Defensive orphan cleanup for a stale pid file or a previously crashed start.
+    for orphan in $(find_orphans); do
+        kill -TERM "$orphan" 2>/dev/null || true
+    done
+    sleep 1
+    for orphan in $(find_orphans); do
+        kill -KILL "$orphan" 2>/dev/null || true
+    done
+    return 0
+}
+
+case "${1:-}" in
+    start) start_process; exit $? ;;
+    stop) stop_process; exit $? ;;
+    status) if status; then exit 0; else exit 3; fi ;;
+    *) exit 1 ;;
+esac

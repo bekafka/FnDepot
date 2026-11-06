@@ -1,0 +1,7 @@
+#!/bin/bash
+set -eu
+: "${TRIM_PKGVAR:?TRIM_PKGVAR missing}"
+TMP_DIR="${TRIM_PKGTMP:-$TRIM_PKGVAR/tmp}"
+mkdir -p "$TRIM_PKGVAR" "$TMP_DIR"
+chmod 700 "$TRIM_PKGVAR" 2>/dev/null || true
+exit 0

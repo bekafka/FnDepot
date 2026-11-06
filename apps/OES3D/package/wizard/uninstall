@@ -1,0 +1,27 @@
+[
+  {
+    "stepTitle": "卸载 OES3D",
+    "items": [
+      {
+        "type": "radio",
+        "field": "wizard_uninstall_mode",
+        "label": "卸载方式",
+        "initValue": "keep",
+        "options": [
+          {
+            "label": "保留配置卸载（数据库、设置、插件都留着，重装后继续用）",
+            "value": "keep"
+          },
+          {
+            "label": "完全卸载（删除数据库、设置、插件和日志）",
+            "value": "purge"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "两种方式都不会删除 应用数据目录 里的文件，需要清理请自行在「文件」里操作。"
+      }
+    ]
+  }
+]

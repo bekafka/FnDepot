@@ -1,0 +1,4 @@
+#!/bin/bash
+set -eu
+# Preserve led-schedule.json and all application data on uninstall.
+exit 0

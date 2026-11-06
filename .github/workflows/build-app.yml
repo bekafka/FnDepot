@@ -27,6 +27,11 @@ on:
         description: '更新日志'
         required: false
         type: string
+      matrix:
+        description: '构建矩阵 JSON；默认 amd64+arm64，OES3D 只传 arm64'
+        required: false
+        type: string
+        default: '{"include":[{"os":"ubuntu-24.04","arch":"amd64","platform":"x86"},{"os":"ubuntu-24.04-arm","arch":"arm64","platform":"arm"}]}'
 
 permissions:
   contents: write
@@ -39,6 +44,7 @@ jobs:
       changelog: ${{ steps.m.outputs.changelog }}
       app_key: ${{ steps.m.outputs.app_key }}
       release_tag: ${{ steps.m.outputs.release_tag }}
+      matrix: ${{ steps.m.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
 
@@ -48,6 +54,7 @@ jobs:
           IN_APP: ${{ github.event.inputs.app_key }}
           IN_VERSION: ${{ github.event.inputs.version }}
           IN_CHANGELOG: ${{ github.event.inputs.changelog }}
+          IN_MATRIX: ${{ github.event.inputs.matrix }}
         run: |
           set -euo pipefail
           APP="${IN_APP:?必须填 app_key}"
@@ -71,6 +78,7 @@ jobs:
             echo "changelog<<__EOF__"
             echo "$CHANGELOG"
             echo "__EOF__"
+            echo "matrix=${IN_MATRIX}"
           } >> "$GITHUB_OUTPUT"
 
   build:
@@ -84,6 +92,7 @@ jobs:
       publish:      true
       template_dir: 'apps/${{ needs.meta.outputs.app_key }}/package'
       build_script: 'apps/${{ needs.meta.outputs.app_key }}/packaging/build.sh'
+      matrix: ${{ needs.meta.outputs.matrix }}
       # 标准库漏洞只能靠修好的 Go 重编：go1.27.3 / go1.26.10 起修掉
       # crypto/x509 中间证书黑名单（GO-2026-6809 / CVE-2026-111943）。
       # 默认 'stable' 会随 runner 漂移，这里显式钉死（只有声明 needs-go 的应用才装 Go）。
