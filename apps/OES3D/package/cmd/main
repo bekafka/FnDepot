@@ -25,7 +25,12 @@ check_identity() {
     want="$(resolve_path "$RUNTIME_BIN")"
     [ -n "$exe" ] && [ "$exe" = "$want" ] || return 1
     cwd="$(resolve_path "$(readlink "/proc/$pid/cwd" 2>/dev/null)")"
-    [ "$cwd" = "$(resolve_path "$APP_DIR")" ] || return 1
+    # serve.py chdirs to its static root ($APP_DIR/www) at import time, so the
+    # running process can legitimately have either APP_DIR or STATIC_DIR as cwd.
+    case "$cwd" in
+        "$(resolve_path "$APP_DIR")"|"$(resolve_path "$STATIC_DIR")") ;;
+        *) return 1 ;;
+    esac
     cmd="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)"
     case "$cmd" in *"$ENTRY"*) return 0 ;; *) return 1 ;; esac
 }
