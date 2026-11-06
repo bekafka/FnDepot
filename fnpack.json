@@ -474,6 +474,22 @@
               "size": 27470719
             }
           }
+        },
+        "0.1.3194": {
+          "changelog": "跟随上游 v0.1.3194：Threads in CC Switch's OpenAI mirror now stay in sync with OpenAI in both directions, so updates made in either place are reflected on the other side.",
+          "updated_at": "2026-11-06T19:29:14Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3194/Magpie-0.1.3194-x86.fpk",
+              "sha256": "485496942c572646d66bdfad573d57dfc8a7bf680109aa592687d963785a7371",
+              "size": 29774745
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3194/Magpie-0.1.3194-arm.fpk",
+              "sha256": "3b4cd95fc6ed7aecf1af956c8ed102f1504e8d94a10b7cf27682c67f40dd6769",
+              "size": 27771561
+            }
+          }
         }
       },
       "service_port": "3430",
