@@ -743,7 +743,19 @@
       "maintainer_url": "https://github.com/bekafka/FnDepot",
       "source_author": "bekafka",
       "source_author_url": "https://github.com/bekafka/FnDepot",
-      "releases": {},
+      "releases": {
+        "1.0.1": {
+          "changelog": "OES3D 首次发布：3D 实机模型、五颗 LED 实机控制、硬件状态校正与定时开关（arm64）",
+          "updated_at": "2026-11-06T16:36:29Z",
+          "packages": {
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/OES3D-v1.0.1/OES3D-1.0.1-arm.fpk",
+              "sha256": "7bafd7cfd1020d8800465480f15dc6f61f1ae77562cbeba629025702aa3698f4",
+              "size": 199348
+            }
+          }
+        }
+      },
       "service_port": "23080",
       "readme_url": "assets/OES3D/README.md"
     }
