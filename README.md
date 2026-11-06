@@ -15,7 +15,7 @@ fnOS 应用中心统一管理，和官方应用一样操作。
 | [Bun](assets/bunjs/README.md) | `bunjs` | 1.4.4 | arm / x86 | [oven-sh/bun](https://github.com/oven-sh/bun) | Oven 用 Zig 写的 JS/TS 一体化工具链（官方 standalone 单文件版）：一个可执行文件里同时是运行时、包管理器、打包器、测试运行器，装完直接可用 `bun` / `bunx`；沿用应用中心已有的 `bunjs` 键，覆盖升级 |
 | [Cloudflare 优选](assets/CloudflareIP/README.md) | `CloudflareIP` | 1.0.0 | arm / x86 | [bekafka/FnDepot](https://github.com/bekafka/FnDepot) | 给走 Cloudflare 的域名挑真正可用且落点近的边缘 IP，按页面级首字节耗时排名，结果写进本机 /etc/hosts 的受管区块（可一键还原） |
 | [PhotoCraft](assets/PhotoCraft/README.md) | `PhotoCraft` | 0.20.1 | arm / x86 | [storytold/photocraft](https://github.com/storytold/photocraft) | 浏览器里运行的图像编辑器（WebAssembly）：图层、蒙版、调整图层、图层样式、文字、矢量与真实 PSD 读写；NAS 只做静态托管，编辑与文件读写都在访客设备上完成 |
-| [OES3D](assets/OES3D/README.md) | `OES3D` | 1.0.1 | arm | [bekafka/FnDepot](https://github.com/bekafka/FnDepot) | 网心云 OES 3D 实机模型与五颗绿色 LED 指示灯控制面板，arm64 专用 |
+| [OES3D](assets/OES3D/README.md) | `OES3D` | 1.0.2 | arm | [bekafka/FnDepot](https://github.com/bekafka/FnDepot) | 网心云 OES 3D 实机模型与五颗绿色 LED 指示灯控制面板，arm64 专用 |
 
 > 版本与架构两列会随发版自动更新；「原作者」指上游项目最初的创造者与权利源头，人工维护、不随版本变。
 

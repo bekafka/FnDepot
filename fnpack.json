@@ -754,6 +754,17 @@
               "size": 199348
             }
           }
+        },
+        "1.0.2": {
+          "changelog": "修复启动状态：serve.py 运行目录为 app/www，lifecycle status 同时接受应用根目录与静态根目录（arm64）",
+          "updated_at": "2026-11-06T16:47:10Z",
+          "packages": {
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/OES3D-v1.0.2/OES3D-1.0.2-arm.fpk",
+              "sha256": "e1bc19b9b716dae77d9418a5b91acb147deb7ef1d1c8f76a6beff5e74a53093e",
+              "size": 199519
+            }
+          }
         }
       },
       "service_port": "23080",
