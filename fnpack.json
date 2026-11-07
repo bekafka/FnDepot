@@ -490,6 +490,22 @@
               "size": 27771561
             }
           }
+        },
+        "0.1.3289": {
+          "changelog": "跟随上游 v0.1.3289：Kiro provider now waits out rate limits (429 throttling) the same way the Kiro IDE does.",
+          "updated_at": "2026-11-07T21:56:03Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3289/Magpie-0.1.3289-x86.fpk",
+              "sha256": "162f40b6634351e6a15b911812de5cdd91efdb16a895e8fd6e84cbdde31c627f",
+              "size": 30081165
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3289/Magpie-0.1.3289-arm.fpk",
+              "sha256": "ffb9223b277275012659db7e56544ef06936f1e3b6a0e61d06c530176741818d",
+              "size": 28065907
+            }
+          }
         }
       },
       "service_port": "3430",
