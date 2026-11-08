@@ -506,6 +506,22 @@
               "size": 28065907
             }
           }
+        },
+        "0.1.3344": {
+          "changelog": "跟随上游 v0.1.3344：Provider accounts can now be routed to return a conversation to the original provider.",
+          "updated_at": "2026-11-08T22:10:52Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3344/Magpie-0.1.3344-x86.fpk",
+              "sha256": "b7193a85370f011bf49f2812ed0ac259bf3e6238e9d630c0a5ff7aae015c1ff1",
+              "size": 30180731
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3344/Magpie-0.1.3344-arm.fpk",
+              "sha256": "8290467b0b28e8d96055acc0529cee28143e105fd1b307a0585d4c09e5e351b7",
+              "size": 28147382
+            }
+          }
         }
       },
       "service_port": "3430",
