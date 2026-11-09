@@ -522,6 +522,22 @@
               "size": 28147382
             }
           }
+        },
+        "0.1.3472": {
+          "changelog": "跟随上游 v0.1.3472：Optimized file and directory checks on Unix to reduce unnecessary system resource usage.",
+          "updated_at": "2026-11-09T22:26:22Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3472/Magpie-0.1.3472-x86.fpk",
+              "sha256": "4f9ebd573f7a077ae4d618eeb939087ce9117fc989ca9d1c96233e2f6672f538",
+              "size": 30946696
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.3472/Magpie-0.1.3472-arm.fpk",
+              "sha256": "51528e7848d03330cc9aa9577af32af5a9a4432487eb4ab27d2aec83502edd8a",
+              "size": 28850502
+            }
+          }
         }
       },
       "service_port": "3430",
