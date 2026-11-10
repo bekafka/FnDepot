@@ -583,6 +583,22 @@
               "size": 24894222
             }
           }
+        },
+        "12.19.0": {
+          "changelog": "跟随上游 v12.19.0：Added `pnpm fund`, which lists the funding URLs declared by the installed dependencies in the same tree `npm fund` prints. Use `--json` for the `npm fund --json` report and `--recu",
+          "updated_at": "2026-11-10T07:22:39Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/pnpm-v12.19.0/pnpm-12.19.0-x86.fpk",
+              "sha256": "f63e5c41577238d240dd3a270c853d7de4229eda5aac66da9e6f35bb9a8a0a4a",
+              "size": 28993923
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/pnpm-v12.19.0/pnpm-12.19.0-arm.fpk",
+              "sha256": "b478b3f8feb7ab36b9560783b5c1a0ead225c11520edc02b244b2a9432ee54de",
+              "size": 26766806
+            }
+          }
         }
       },
       "readme_url": "assets/pnpm/README.md"
