@@ -599,6 +599,22 @@
               "size": 26766806
             }
           }
+        },
+        "12.20.0": {
+          "changelog": "跟随上游 v12.20.0：With `lockfile.format: v13`, `pnpm install` records the dependency specifiers of local directory packages. Frozen installs reject changed specifiers even when the locked versions s",
+          "updated_at": "2026-11-12T07:18:02Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/pnpm-v12.20.0/pnpm-12.20.0-x86.fpk",
+              "sha256": "8ca1e0dc7a80f81fcfd77298d78cfedb3be7362273da3bc1198964f9abdd823d",
+              "size": 29314058
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/pnpm-v12.20.0/pnpm-12.20.0-arm.fpk",
+              "sha256": "2a6b70eb18fa731f376170a6903938b2f20638ecd3b944afa535ce23f842713b",
+              "size": 26906065
+            }
+          }
         }
       },
       "readme_url": "assets/pnpm/README.md"
