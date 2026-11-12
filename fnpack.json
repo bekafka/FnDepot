@@ -664,8 +664,8 @@
       "display_name": "uv bin",
       "desc": "Astral 用 Rust 写的 Python 包与项目管理器（极快），替代 pip / virtualenv / pipx：官方 standalone 单文件版，装完终端直接可用 uv 与 uvx，不需要先装 Python。源自 <a href='https://github.com/astral-sh/uv'>astral-sh/uv</a>（MIT OR Apache-2.0）。",
       "platform": [
-        "x86",
-        "arm"
+        "arm",
+        "x86"
       ],
       "categories": [
         "编程开发"
@@ -694,6 +694,22 @@
               "download_url": "https://github.com/bekafka/FnDepot/releases/download/uvbin-v0.13.7/uvbin-0.13.7-x86.fpk",
               "sha256": "dc775ac2d01e8585dd1e75b3642d7a266c474b44beafe8bb444a1f671bc416f0",
               "size": 17136298
+            }
+          }
+        },
+        "0.13.8": {
+          "changelog": "跟随上游 0.13.8：Add CPython 3.16.0a2 ([#23211](https://github.com/astral-sh/uv/pull/23211))",
+          "updated_at": "2026-11-12T19:59:52Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/uvbin-v0.13.8/uvbin-0.13.8-x86.fpk",
+              "sha256": "8450e06ca7ea5c1147200088f77283e8b14b22b8875962a4b6c07c4a089fa9c2",
+              "size": 17323891
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/uvbin-v0.13.8/uvbin-0.13.8-arm.fpk",
+              "sha256": "d841509ff66e3e330e573c5cd83bb688e6b0020499a6061cbf8b29b7cc65a998",
+              "size": 16916740
             }
           }
         }
