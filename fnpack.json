@@ -615,6 +615,22 @@
               "size": 26906065
             }
           }
+        },
+        "12.21.0": {
+          "changelog": "跟随上游 v12.21.0：`pnpm store add` run in a project now prepares downloaded tarballs for every lockfile entry that pins them. Besides registry packages, `pnpm install --offline --frozen-lockfile` ca",
+          "updated_at": "2026-11-14T06:30:19Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/pnpm-v12.21.0/pnpm-12.21.0-x86.fpk",
+              "sha256": "fa3406a6bd02ff1b0059b629d9ebdfd5f79fa9ca51fb31fce7c237cfc7e4f744",
+              "size": 29567333
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/pnpm-v12.21.0/pnpm-12.21.0-arm.fpk",
+              "sha256": "e5e1fda59e3c326af0c11b29226806a16e45943d600e5b10f2491b0bd28733fe",
+              "size": 27186370
+            }
+          }
         }
       },
       "readme_url": "assets/pnpm/README.md"
