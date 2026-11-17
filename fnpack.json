@@ -631,6 +631,22 @@
               "size": 27186370
             }
           }
+        },
+        "12.22.0": {
+          "changelog": "跟随上游 v12.22.0：Settings under `globalPackagesConfig` in the global `config.yaml` now apply only to commands that act on global packages, such as `pnpm add -g` and `pnpm update -g`. For example, `",
+          "updated_at": "2026-11-17T21:01:28Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/pnpm-v12.22.0/pnpm-12.22.0-x86.fpk",
+              "sha256": "0e5f504ef6d9c56346f783ee13a379d48e87d22d17613773d77386175ff0a25d",
+              "size": 31398605
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/pnpm-v12.22.0/pnpm-12.22.0-arm.fpk",
+              "sha256": "29999cb403e7dd4943099ab45d39cc2303dc9cf7bde16cdcfe1d0d9ab049c051",
+              "size": 28886652
+            }
+          }
         }
       },
       "readme_url": "assets/pnpm/README.md"
