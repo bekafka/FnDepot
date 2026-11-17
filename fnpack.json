@@ -744,6 +744,22 @@
               "size": 16916740
             }
           }
+        },
+        "0.13.9": {
+          "changelog": "跟随上游 0.13.9：Support PEP 832 `.venv` redirect files for project environments ([#21822](https://github.com/astral-sh/uv/pull/21822))",
+          "updated_at": "2026-11-17T21:02:44Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/uvbin-v0.13.9/uvbin-0.13.9-x86.fpk",
+              "sha256": "b3be637ae24f9d19dbac6b21f835c70962e76c804cd9944eaee89f9719c285b7",
+              "size": 17548823
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/uvbin-v0.13.9/uvbin-0.13.9-arm.fpk",
+              "sha256": "8aae1bc0fd6183afafae9c210477c82ae9e64494dcd80d1fdb9c32fa401a47b7",
+              "size": 16970438
+            }
+          }
         }
       },
       "readme_url": "assets/uvbin/README.md"
