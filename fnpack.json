@@ -800,6 +800,22 @@
               "size": 13631079
             }
           }
+        },
+        "2.105.0": {
+          "changelog": "跟随上游 v2.105.0：Add a server-sent events reader and Event Subscriptions API client by @babakks in [#15071](https://github.com/cli/cli/pull/15071)\r",
+          "updated_at": "2026-11-18T07:35:22Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/gh-cli-v2.105.0/gh-cli-2.105.0-x86.fpk",
+              "sha256": "0c3256807783d5475a63712ec9c010c3dfdfcfe89eb0d6ebfce26eafa5a001d0",
+              "size": 15019413
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/gh-cli-v2.105.0/gh-cli-2.105.0-arm.fpk",
+              "sha256": "78dc0b24ab1f37eb8cc565894dc0c5ff232068896b92aa769bca0d63796f6ffc",
+              "size": 13651213
+            }
+          }
         }
       },
       "readme_url": "assets/gh-cli/README.md"
