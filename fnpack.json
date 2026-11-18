@@ -155,6 +155,22 @@
               "size": 14347431
             }
           }
+        },
+        "2.4.3": {
+          "changelog": "跟随上游 v2.4.3：服务器端支持自定义访问密码（保留原自动生成与 CLI 管理流程）；优雅关停时保持处理完待写入数据；任务详情打开时可选保留下载统计；进度显示一位小数并加快刷新；适配 fnOS SDK 0.6.0（浏览器目录授权、取消与弹窗处理、主机主题同步）。",
+          "updated_at": "2026-11-18T11:02:20Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.4.3/Motrix-2.4.3-x86.fpk",
+              "sha256": "36edc51496c746ff9378871aa5180af1a62040cee54f708f0b16074da7a5a695",
+              "size": 14557796
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.4.3/Motrix-2.4.3-arm.fpk",
+              "sha256": "b3fe3409078a33592510c1a0489a2d42d8524f1118b0dd486c000beb21d7d91c",
+              "size": 14806641
+            }
+          }
         }
       },
       "service_port": "26800",
