@@ -43,6 +43,19 @@ BIN="$PAYLOAD_DIR/bin/magpie"
 
 log() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 
+# 依赖升级后必须把 go.sum 补全：go get 只为「解析/构建所需的模块」写 sum，
+# 而 govulncheck 会 type-check ./...（含可选子包，如 go-openapi/runtime 的
+# server-middleware 子模块、k8s.io/klog），缺 sum 时报 “missing go.sum entry”
+# 并被误当成 govulncheck 运行失败。tidy 一次即可把 go.mod/go.sum 收敛到自洽状态。
+sync_go_sum() {
+  local i
+  for i in 1 2 3; do
+    if ( cd "$SRC" && GOFLAGS=-mod=mod go mod tidy ); then return 0; fi
+    log "go mod tidy 失败，第 ${i} 次重试（${i}0s 后）"; sleep $((i * 10))
+  done
+  return 1
+}
+
 command -v git >/dev/null 2>&1 || { echo "需要 git" >&2; exit 3; }
 command -v go >/dev/null 2>&1 || { echo "需要 go（>= 1.26.3；GOTOOLCHAIN 会自动取固定版本）" >&2; exit 3; }
 
@@ -86,7 +99,8 @@ log "commit $COMMIT"
 #     交给 go get 一并解析，不在脚本里再写死；
 #   · 升完重新扫描，最多 3 轮，覆盖多模块 / 链式公告；
 #   · 只有「拿不到 Fixed in」或「3 轮后仍可达」才失败，并在日志里列出待人工处理的 advisory；
-#   · 标准库漏洞 go get 修不了：明确报错并提示抬 GO_TOOLCHAIN（不静默放过）。
+#   · 标准库漏洞 go get 修不了：自动把 GOTOOLCHAIN 抬到 advisory 要求的 Go 版本后重扫；
+#     抬不动（已是最新仍可达）才明确报错，不静默放过、也不死循环。
 # 临时排障仍用 MAGPIE_SKIP_VULNCHECK=1 跳过整个门禁。
 VULNLOG="${VULNLOG:-/tmp/magpie-govulncheck.log}"
 MAX_FIX_ROUNDS="${MAX_FIX_ROUNDS:-3}"
@@ -105,10 +119,18 @@ run_govulncheck() {
   return "$rc"
 }
 
-# A > B 时返回 0（这里只用于 x/*、compress 这类无 prerelease 的纯数字版本）
+# A > B 时返回 0（这里只用于 x/*、compress 这类无 prerelease 的纯数字版本，也用于 go1.27.x）
 ver_gt() {
   [ "$1" = "$2" ] && return 1
   [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n1)" = "$1" ]
+}
+
+# 标准库 advisory 记录的「需要的最低 Go 版本」，取多轮里的最大值。
+# 单独抽出来是因为 govulncheck 对标准库有两种写法（stdlib@ 与 包路径@），
+# 二者都只能靠抬 GOTOOLCHAIN 解决，绝不能塞进 go get。
+STDLIB_FIX=""
+note_stdlib_fix() {
+  if [ -z "$STDLIB_FIX" ] || ver_gt "$1" "$STDLIB_FIX"; then STDLIB_FIX="$1"; fi
 }
 
 # 已知安全的依赖「下限」——注意是 lower bound，不是 pin：
@@ -133,7 +155,11 @@ if [ "${MAGPIE_SKIP_VULNCHECK:-0}" != "1" ] && [ -z "${SKIP_VULNCHECK:-}" ] && [
       log "依赖安全下限 go get 失败，第 ${i} 次重试（${i}0s 后）"; sleep $((i * 10))
     done
     # 下限失败不硬停：交给下面 govulncheck 的按 Fixed-in 自愈兜底
-    [ "$FLOOR_OK" -eq 1 ] || echo "::warning::依赖安全下限升级失败，继续交给 govulncheck 自愈"
+    if [ "$FLOOR_OK" -eq 1 ]; then
+      sync_go_sum || echo "::warning::go mod tidy 失败（安全下限之后），若随后 govulncheck 报 go.sum 缺失请先修网络"
+    else
+      echo "::warning::依赖安全下限升级失败，继续交给 govulncheck 自愈"
+    fi
   fi
 fi
 
@@ -188,13 +214,21 @@ if [ "${MAGPIE_SKIP_VULNCHECK:-0}" != "1" ] && [ -z "${SKIP_VULNCHECK:-}" ]; the
     UNFIXED=""
     while IFS=$'\t' read -r found fixed; do
       [ -z "$found" ] && continue
-      case "$found" in
-        stdlib@*|go@*|go[0-9]*) STDLIB_FIX="$fixed"; continue ;;
-      esac
       case "$fixed" in
         ""|N/A|none|unknown) UNFIXED="$UNFIXED $found"; continue ;;
       esac
-      mod="${fixed%@*}"; want="${fixed##*@}"
+      fixed_ver="${fixed##*@}"
+      # 标准库 advisory 认两种写法：
+      #   Found in: stdlib@go1.27.3    （旧版 govulncheck）
+      #   Found in: net/http@go1.27.3  （新版直接给标准库包路径，实测踩过）
+      # go get 只认模块、不认标准库包，必须抬 GOTOOLCHAIN；这里统一收进 STDLIB_FIX。
+      case "$fixed_ver" in go[0-9]*) note_stdlib_fix "$fixed_ver"; continue ;; esac
+      mod="${fixed%@*}"
+      case "${mod%%/*}" in
+        *.*) ;;
+        *) note_stdlib_fix "$fixed_ver"; continue ;;   # 模块路径首段无点 = 标准库包
+      esac
+      want="$fixed_ver"
       cur="$( cd "$SRC" && go list -m -f '{{.Version}}' "$mod" 2>/dev/null || true )"
       if [ -n "$cur" ] && ! ver_gt "$want" "$cur"; then
         log "  $mod 现有 ${cur} 已不低于 Fixed in ${want}，跳过"
@@ -206,14 +240,33 @@ if [ "${MAGPIE_SKIP_VULNCHECK:-0}" != "1" ] && [ -z "${SKIP_VULNCHECK:-}" ]; the
     done <<< "$PAIRS"
 
     if [ -n "$STDLIB_FIX" ]; then
-      echo "::error::govulncheck 报标准库漏洞，go get 无法修复；请把 GO_TOOLCHAIN 抬到 ${STDLIB_FIX} 或更高（当前 ${GOTOOLCHAIN}）"
-      exit 9
+      if ver_gt "$STDLIB_FIX" "$GOTOOLCHAIN"; then
+        log "标准库漏洞需要 Go ${STDLIB_FIX}（当前 ${GOTOOLCHAIN}），抬工具链后重扫"
+        GO_TOOLCHAIN="$STDLIB_FIX"
+        export GOTOOLCHAIN="$GO_TOOLCHAIN"
+        TC_OK=0
+        for i in 1 2 3; do
+          if go version >/dev/null 2>&1; then TC_OK=1; break; fi
+          log "获取 Go 工具链 ${GO_TOOLCHAIN} 失败，第 ${i} 次重试（${i}0s 后）"; sleep $((i * 10))
+        done
+        [ "$TC_OK" -eq 1 ] || { echo "::error::无法获取 Go 工具链 ${GO_TOOLCHAIN}（网络或版本不可用）"; exit 9; }
+        GO_VERSION_RAW="$(go version)"
+        log "toolchain: $GO_VERSION_RAW"
+      else
+        echo "::error::govulncheck 报标准库漏洞，所需 Go ${STDLIB_FIX} 不高于当前 ${GOTOOLCHAIN}，仍可达则需人工介入（见上）"
+        grep -E 'Vulnerability #|Found in:|Fixed in:' "$VULNLOG" || true
+        exit 9
+      fi
     fi
     if [ -n "$UNFIXED" ]; then
       echo "::error::以下模块的 advisory 没有 Fixed in，无法自愈：${UNFIXED}"
       exit 9
     fi
     if [ "${#WANT[@]}" -eq 0 ]; then
+      if [ -n "$STDLIB_FIX" ]; then
+        log "本轮只有标准库需要修复（已抬到 ${GOTOOLCHAIN}），重新扫描"
+        continue
+      fi
       echo "::error::govulncheck 仍报可达漏洞，但没有可升级到的 Fixed in 版本（见上）"
       exit 9
     fi
@@ -223,18 +276,38 @@ if [ "${MAGPIE_SKIP_VULNCHECK:-0}" != "1" ] && [ -z "${SKIP_VULNCHECK:-}" ]; the
       exit 9
     fi
 
-    UPGRADES=""
-    for mod in "${!WANT[@]}"; do UPGRADES="$UPGRADES $mod@${WANT[$mod]}"; done
-    log "自动按 Fixed in 升级：${UPGRADES}"
+    # 注意：多个 advisory 各自的 Fixed in 之间可能互相「抬杠」——实测 sigstore-go@v1.2.1
+    # 要求 timestamp-authority/v2@v2.1.2，而另一条 advisory 只要求 v2.1.0。同一条 go get
+    # 里带两个显式版本会被 MVS 直接判错（requires ... not ...），此时必须把被要求的更高
+    # 版本也抬上去再试；这种连带升级是「被新 pin 的 go.mod 强制」，不是无谓漂移。
+    GET_LOG="$(mktemp)"
     GET_OK=0
-    for i in 1 2 3; do
+    for attempt in 1 2 3 4 5; do
+      UPGRADES=""
+      for mod in "${!WANT[@]}"; do UPGRADES="$UPGRADES $mod@${WANT[$mod]}"; done
+      log "自动按 Fixed in 升级（第 ${attempt} 次尝试）：${UPGRADES}"
       # shellcheck disable=SC2086
-      if ( cd "$SRC" && GOFLAGS=-mod=mod go get $UPGRADES ); then GET_OK=1; break; fi
-      log "go get 失败，第 ${i} 次重试（${i}0s 后）"; sleep $((i * 10))
+      if ( cd "$SRC" && GOFLAGS=-mod=mod go get $UPGRADES ) 2>&1 | tee "$GET_LOG"; then GET_OK=1; break; fi
+      CONFLICT=0
+      while read -r cmod cver; do
+        [ -z "$cmod" ] && continue
+        if [ -z "${WANT[$cmod]:-}" ] || ver_gt "$cver" "${WANT[$cmod]}"; then
+          log "  MVS 要求 ${cmod} >= ${cver}（当前候选 ${WANT[$cmod]:-未列入}），一并抬上去"
+          WANT[$cmod]="$cver"; CONFLICT=1
+        fi
+      done < <(grep -oE 'requires [^ ]+@[^ ,]+, not ' "$GET_LOG" | sed -E 's/^requires ([^ ]+)@([^ ,]+), not $/\1 \2/')
+      if [ "$CONFLICT" -eq 0 ]; then
+        log "go get 失败且无法自动化解依赖冲突，第 ${attempt} 次重试（$((attempt * 10))s 后）"
+        sleep $((attempt * 10))
+      fi
     done
-    [ "$GET_OK" -eq 1 ] || { echo "::error::依赖升级 go get 连续失败（网络或版本不可用）：${UPGRADES}"; exit 9; }
-    log "go.mod 现在锁定的关键版本："
-    grep -E 'golang.org/x/(image|net|text|sys) |github.com/klauspost/compress ' "$SRC/go.mod" | sed 's/^/  /' || true
+    rm -f "$GET_LOG"
+    [ "$GET_OK" -eq 1 ] || { echo "::error::依赖升级 go get 连续失败（网络或版本不可用/依赖冲突无法自动化解）"; exit 9; }
+    sync_go_sum || { echo "::error::依赖升级后 go mod tidy 失败，go.sum 不完整，无法继续扫描/构建"; exit 9; }
+    log "本轮实际落地的依赖版本："
+    for mod in "${!WANT[@]}"; do
+      printf '  %s %s\n' "$mod" "$( cd "$SRC" && go list -m -f '{{.Version}}' "$mod" 2>/dev/null || echo unknown )"
+    done
   done
 else
   log "govulncheck 已跳过（MAGPIE_SKIP_VULNCHECK=1）"

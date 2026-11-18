@@ -152,29 +152,42 @@ log "fetching aria2 engine for linux-$NODE_ARCH (verified against scripts/engine
 node scripts/fetch-engine.mjs --platform linux --arch "$NODE_ARCH"
 
 # ── ②b fnOS 兼容补丁：finalize-fs 的 O_PATH 回退 ────────────────────────────────
-# 上游 open_root 从 / 逐级 open(O_RDONLY|O_DIRECTORY)；飞牛 fnOS 的内核 trimacl 层
-# 只允许应用用户"穿过"数据卷根目录（/vol1 可执行不可读）→ 下载完成后的改名收尾
-# 必报 open_root: Permission denied。补丁让它对不可读的中间目录回退 O_PATH
-# （O_PATH 描述符足以支撑后续 openat/renameat2/linkat/statx），最终目录仍优先用
-# 可读句柄打开，因此普通系统上的行为完全不变。
+# 背景：打补丁时的上游 open_root 从 / 逐级 open(O_RDONLY|O_DIRECTORY)；飞牛 fnOS 的
+# 内核 trimacl 层只允许应用用户"穿过"数据卷根目录（/vol1 可执行不可读）→ 下载完成后的
+# 改名收尾必报 open_root: Permission denied。补丁让它对不可读的中间目录回退 O_PATH。
+# 现状：**上游已自行内置同一语义**（实测 v2.4.0 起 open_root 就对 Linux 祖先目录用
+# traversal_flags=O_PATH、末级仍按 O_RDONLY 打开），补丁打不上属于「已上游消化」而非回归。
+# 因此这里是三态：能打就打 → 已经打过就跳过 → 源码里确认有同等实现就跳过并留痕，
+# 只有「打不上且上游也没这逻辑」才失败（防止真回归被静默放过）。
 FINALIZE_PATCH="$SCRIPT_DIR/patches/finalize-fs-open-root-o_path.patch"
 RUST_IMAGE="${RUST_IMAGE:-rust:1.94.1-alpine}"
 FINALIZE_BIN_OVERRIDE="${MOTRIX_FINALIZE_FS_BIN:-}"
+
+FINALIZE_MOD_RS="$SRC/packages/finalize-fs/src/platform/unix/mod.rs"
+export MOTRIX_FINALIZE_PATCH_STATE="unknown"
 
 if [ -n "$FINALIZE_BIN_OVERRIDE" ]; then
   # 逃生口：本机没有能跑目标架构的容器运行时（例如 x86_64 上打 arm64 包）时，
   # 直接用别处构建好的、同样打过补丁的二进制。
   log "using prebuilt motrix-finalize-fs: $FINALIZE_BIN_OVERRIDE"
   [ -x "$FINALIZE_BIN_OVERRIDE" ] || { echo "MOTRIX_FINALIZE_FS_BIN is not executable" >&2; exit 6; }
+  MOTRIX_FINALIZE_PATCH_STATE="prebuilt binary from MOTRIX_FINALIZE_FS_BIN"
 else
   log "applying fnOS compatibility patch to packages/finalize-fs"
   if git apply --check "$FINALIZE_PATCH" 2>/dev/null; then
     git apply "$FINALIZE_PATCH"
     log "patch applied"
+    MOTRIX_FINALIZE_PATCH_STATE="applied packaging/patches/finalize-fs-open-root-o_path.patch (O_PATH fallback for fnOS trimacl)"
   elif git apply --reverse --check "$FINALIZE_PATCH" 2>/dev/null; then
     log "patch already applied"
+    MOTRIX_FINALIZE_PATCH_STATE="packaging/patches/finalize-fs-open-root-o_path.patch (already present in source)"
+  elif grep -q 'libc::O_PATH' "$FINALIZE_MOD_RS" 2>/dev/null && \
+       grep -q 'traversal_flags' "$FINALIZE_MOD_RS" 2>/dev/null; then
+    # 上游已自行实现：要求两个标记同时存在，避免把「上游换了别处写法」误判成已修复。
+    log "上游已内置 O_PATH 遍历（mod.rs:$(grep -n 'libc::O_PATH' "$FINALIZE_MOD_RS" | head -1 | cut -d: -f1) / traversal_flags:$(grep -n 'traversal_flags' "$FINALIZE_MOD_RS" | head -1 | cut -d: -f1)），跳过补丁"
+    MOTRIX_FINALIZE_PATCH_STATE="upstream-provided O_PATH traversal (patch not needed; present since upstream v2.4.0)"
   else
-    echo "packaging/patches/finalize-fs-open-root-o_path.patch does not apply cleanly" >&2
+    echo "packaging/patches/finalize-fs-open-root-o_path.patch does not apply cleanly，且 $FINALIZE_MOD_RS 里也没有 O_PATH/traversal_flags 回退逻辑；请核对上游是否改写了 open_root" >&2
     exit 5
   fi
 
@@ -307,8 +320,7 @@ const provenance = {
   aria2: aria2Version
     ? `motrixapp/aria2 v${aria2Version} (version read from the bundled binary; sha256 pinned in scripts/engine.lock.json)`
     : "motrixapp/aria2 (version not detectable from bundled binary; sha256 pinned in scripts/engine.lock.json)",
-  finalize_fs:
-    "built from upstream source + packaging/patches/finalize-fs-open-root-o_path.patch (O_PATH fallback for fnOS trimacl)",
+  finalize_fs: process.env.MOTRIX_FINALIZE_PATCH_STATE || "unknown",
   operator_auth:
     process.env.AUTH_MODE === "token"
       ? "upstream token gate (operator-token)"
