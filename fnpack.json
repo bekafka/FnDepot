@@ -570,6 +570,22 @@
               "size": 38075069
             }
           }
+        },
+        "0.1.4566": {
+          "changelog": "跟随上游 v0.1.4566：**macOS (Apple Silicon):** `magpie-darwin-arm64.dmg`",
+          "updated_at": "2026-11-19T20:44:19Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4566/Magpie-0.1.4566-x86.fpk",
+              "sha256": "52466276ecbffd9f30aa15317957ebc315375b412e94f4645d30a269a717134c",
+              "size": 41126045
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4566/Magpie-0.1.4566-arm.fpk",
+              "sha256": "c07452c30b22626ab77c45a92e1ce520e1bd2028c44b699442e15c52c8b3155f",
+              "size": 38429695
+            }
+          }
         }
       },
       "service_port": "3430",
