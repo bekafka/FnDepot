@@ -944,6 +944,22 @@
               "size": 53833373
             }
           }
+        },
+        "1.4.5": {
+          "changelog": "跟随上游 bun-v1.4.5：[@dylan-conway](https://github.com/dylan-conway)",
+          "updated_at": "2026-11-19T20:45:47Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/bunjs-v1.4.5/bunjs-1.4.5-x86.fpk",
+              "sha256": "339c3eb7304b9488a84ce65a853fbef7a640a85de9ebd6f8241a7814f531eefc",
+              "size": 52457118
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/bunjs-v1.4.5/bunjs-1.4.5-arm.fpk",
+              "sha256": "6554f41a354739036bf550d02b33598e66d02e85aab6ff89b47e03fc4deb1aed",
+              "size": 53282758
+            }
+          }
         }
       },
       "readme_url": "assets/bunjs/README.md"
