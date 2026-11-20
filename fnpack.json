@@ -171,6 +171,22 @@
               "size": 14806641
             }
           }
+        },
+        "2.4.5": {
+          "changelog": "跟随上游 v2.4.5：Desktop now accepts recoverable handoffs from paired browser extensions by default. Browser Extension **0.1.25** negotiates this capability for eligible paused downloads. If the co",
+          "updated_at": "2026-11-20T07:20:35Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.4.5/Motrix-2.4.5-x86.fpk",
+              "sha256": "6f09791120699da17da5062cc3c7084bc266041fa52d84ced39a0784c25f263e",
+              "size": 14571753
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.4.5/Motrix-2.4.5-arm.fpk",
+              "sha256": "caaee519c44ed682bb1709ef69c5aa70088c4a5100d3d252a0cf53f00d75cb63",
+              "size": 14811814
+            }
+          }
         }
       },
       "service_port": "26800",
