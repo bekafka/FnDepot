@@ -602,6 +602,22 @@
               "size": 38429695
             }
           }
+        },
+        "0.1.4633": {
+          "changelog": "跟随上游 v0.1.4633：Clicking \"Restart to update\" now waits for the update feed and download to finish before restarting.",
+          "updated_at": "2026-11-21T07:16:09Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4633/Magpie-0.1.4633-x86.fpk",
+              "sha256": "0183bbdfb9a382d27749618ad7ce1a79ef0b785eba3917834a8e0a72982f2429",
+              "size": 43845715
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4633/Magpie-0.1.4633-arm.fpk",
+              "sha256": "7deab26b090457726a2de769f236b292be917a0751bd3c578c8620e6f5731f7b",
+              "size": 40920302
+            }
+          }
         }
       },
       "service_port": "3430",
