@@ -618,6 +618,22 @@
               "size": 40920302
             }
           }
+        },
+        "0.1.4683": {
+          "changelog": "跟随上游 v0.1.4683：Updated routing so that plugin accounts using trial credits are considered to have available capacity.",
+          "updated_at": "2026-11-22T19:47:25Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4683/Magpie-0.1.4683-x86.fpk",
+              "sha256": "74d6ffe6245dfabba22fbd4796e50930d32d47cd511a8b6215e4634ba01583cb",
+              "size": 44000862
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4683/Magpie-0.1.4683-arm.fpk",
+              "sha256": "72b1b9d54d2aa3d24628741b9c31a5fbd0ef3613bfcdc715ea6448dc95801d33",
+              "size": 41069390
+            }
+          }
         }
       },
       "service_port": "3430",
