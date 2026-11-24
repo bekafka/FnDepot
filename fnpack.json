@@ -634,6 +634,22 @@
               "size": 41069390
             }
           }
+        },
+        "0.1.4730": {
+          "changelog": "跟随上游 v0.1.4730：Added local storage for Magpie Artifacts published by pages agents.",
+          "updated_at": "2026-11-24T00:00:26Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4730/Magpie-0.1.4730-x86.fpk",
+              "sha256": "f347ce32c55ba8b5d0dba6e5b15a9d8358a0bfa8f018b6a32cc81aa156ef3082",
+              "size": 44190271
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4730/Magpie-0.1.4730-arm.fpk",
+              "sha256": "cb83edd43f0566cc398e82e5aca1551be8390490e294668e9b9b5295b5f468c3",
+              "size": 41232021
+            }
+          }
         }
       },
       "service_port": "3430",
