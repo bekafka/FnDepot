@@ -872,6 +872,22 @@
               "size": 16970438
             }
           }
+        },
+        "0.13.10": {
+          "changelog": "跟随上游 0.13.10：Validate that dependency requirements in `uv.lock` match the locked package versions ([astral-sh/uv#23238](https://github.com/astral-sh/uv/pull/23238))\r",
+          "updated_at": "2026-11-24T22:29:53Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/uvbin-v0.13.10/uvbin-0.13.10-x86.fpk",
+              "sha256": "46ba23b36d56af3596f6cf2fd4cab5c8a738efb766698c4f1879a86f2208b718",
+              "size": 17588918
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/uvbin-v0.13.10/uvbin-0.13.10-arm.fpk",
+              "sha256": "b5076b9bea9d4a527cdfd49fb17f6c3b20e6ac6a884a0f92a5fa727ceabfabcd",
+              "size": 17135470
+            }
+          }
         }
       },
       "readme_url": "assets/uvbin/README.md"
