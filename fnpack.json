@@ -650,6 +650,22 @@
               "size": 41232021
             }
           }
+        },
+        "0.1.4783": {
+          "changelog": "跟随上游 v0.1.4783：Adjusted agent behavior when Claude Code’s own settings bypass Magpie routing.",
+          "updated_at": "2026-11-25T08:42:55Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4783/Magpie-0.1.4783-x86.fpk",
+              "sha256": "b446517f0f3502163f87ab02641dae3e142f3da786817db31227b5b1dca672db",
+              "size": 44538905
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4783/Magpie-0.1.4783-arm.fpk",
+              "sha256": "acf4b309efe27bf0aa9881ad06b07a1aa769d97b6482b641843cd3f41fe74829",
+              "size": 41553023
+            }
+          }
         }
       },
       "service_port": "3430",
