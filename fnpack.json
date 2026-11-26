@@ -960,6 +960,22 @@
               "size": 13651213
             }
           }
+        },
+        "2.106.0": {
+          "changelog": "跟随上游 v2.106.0：Revoke GitHub CLI OAuth tokens during `gh auth logout` by @BagToad in [#15100](https://github.com/cli/cli/pull/15100)\r",
+          "updated_at": "2026-11-26T08:22:52Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/gh-cli-v2.106.0/gh-cli-2.106.0-x86.fpk",
+              "sha256": "3997ef2c4dffc7615cedd0e3d65cae11f2a2d3054bdb00cac9b5cbab819c99e9",
+              "size": 15069658
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/gh-cli-v2.106.0/gh-cli-2.106.0-arm.fpk",
+              "sha256": "0cec0ea3e2e9909ecf3a2aac5901f60cf8cd997b07e047ead22bc14b2e1f6ebb",
+              "size": 13697118
+            }
+          }
         }
       },
       "readme_url": "assets/gh-cli/README.md"
