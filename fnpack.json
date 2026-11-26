@@ -666,6 +666,22 @@
               "size": 41553023
             }
           }
+        },
+        "0.1.4909": {
+          "changelog": "跟随上游 v0.1.4909：Fixed an issue where an agent in another container received a link at the address it called but could not access its files via `file_path`.",
+          "updated_at": "2026-11-26T21:39:09Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4909/Magpie-0.1.4909-x86.fpk",
+              "sha256": "9ca1778865542754a640c507f4a0e071e9d7de349c9e15a554cbe063bb52715b",
+              "size": 44964657
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4909/Magpie-0.1.4909-arm.fpk",
+              "sha256": "d261e606dac576fd92fbe2cb31f49f4fb768b4b07cf79a8f9c42b753b4afd420",
+              "size": 42003998
+            }
+          }
         }
       },
       "service_port": "3430",
