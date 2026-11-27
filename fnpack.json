@@ -187,6 +187,22 @@
               "size": 14811814
             }
           }
+        },
+        "2.4.8": {
+          "changelog": "跟随上游 v2.4.8：**Bundled aria2 1.37.0-motrix.27 (#2421, #2575)**: Clear aria2's in-memory `DNSCache` immediately when `async-dns` changes via `aria2.changeGlobalOption`, and skip non-UP network i",
+          "updated_at": "2026-11-27T21:21:39Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.4.8/Motrix-2.4.8-x86.fpk",
+              "sha256": "210af2b00823b12640c47467d2b9da622cb6b6f86ef251657c104656f666276d",
+              "size": 14599478
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Motrix-v2.4.8/Motrix-2.4.8-arm.fpk",
+              "sha256": "10165f3cb5e32ae685b6450e8ea5ca1a0d3543f0f6430f310664b51c4f36c92f",
+              "size": 14846093
+            }
+          }
         }
       },
       "service_port": "26800",
