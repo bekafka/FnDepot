@@ -698,6 +698,22 @@
               "size": 42003998
             }
           }
+        },
+        "0.1.4994": {
+          "changelog": "跟随上游 v0.1.4994：Fixed an issue where a model list’s modalities could be lost when provided as a flat array or unexpected value. (#7901)",
+          "updated_at": "2026-11-28T07:56:20Z",
+          "packages": {
+            "x86": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4994/Magpie-0.1.4994-x86.fpk",
+              "sha256": "b5794a461d199b125aadadd16225b18fdc9313e519755b0895d55488d03cee9b",
+              "size": 45566077
+            },
+            "arm": {
+              "download_url": "https://github.com/bekafka/FnDepot/releases/download/Magpie-v0.1.4994/Magpie-0.1.4994-arm.fpk",
+              "sha256": "bed6f9be6d96d696bcc832d852e43e8dd35931d451d70b245af48a2db687cb57",
+              "size": 42552778
+            }
+          }
         }
       },
       "service_port": "3430",
